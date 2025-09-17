@@ -1,6 +1,9 @@
 @import "tailwindcss";
+@plugin "daisyui"{
+  themes: caramellatte --default, coffee --prefersdark;
+}
 @import "tw-animate-css";
-
+/* 
 @custom-variant dark (&:is(.dark *));
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -183,4 +186,4 @@ button:focus-visible {
   body {
     @apply bg-background text-foreground;
   }
-}
+} */

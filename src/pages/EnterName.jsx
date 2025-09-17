@@ -1,45 +1,50 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router';
-import Slogan from '@/components/Slogan';
-import { Button } from "@/components/ui/button"
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useGame } from '../context/GameContext';
 
 const EnterName = () => {
-    const [nickname, setNickname] = useState('');
-    const navigate = useNavigate();
+  const [name, setName] = useState('');
+  const { setNickname } = useGame();
+  const navigate = useNavigate();
 
-    const handleEnter = () => {
-        if (nickname.trim()) {
-            localStorage.setItem('nickname', nickname);
-            navigate('/choose-char');
-        } else {
-            // A non-blocking notification is better than alert()
-            <Alert variant="destructive" className="max-w-md mx-auto mt-4">
-                <AlertTitle>錯誤</AlertTitle>
-                <AlertDescription>請輸入暱稱</AlertDescription>
-            </Alert>
-        }
-    };
+  const handleSubmit = () => {
+    if (name.trim()) {
+      setNickname(name.trim());
+      navigate('/choose-char');
+    } else {
+      alert('Please enter a nickname');
+    }
+  };
 
-    return (
-        <div className="flex flex-col items-center min-h-screen font-sans">
-            <Slogan>不會動的玩具<br />才正常吧</Slogan>
-            <div className="flex flex-col items-center gap-8 mt-48 text-center px-4">
-                <label htmlFor="nickname" className="text-lg">請輸入您的暱稱</label>
-                <input
-                    id="nickname"
-                    type="text"
-                    placeholder="某某某"
-                    value={nickname}
-                    onChange={(e) => setNickname(e.target.value)}
-                    className="w-80 max-w-full h-12 text-xl text-center px-4 border-none rounded-full bg-gray-200"
-                />
-            </div>
-            <div className="mt-48">
-                <Button onClick={handleEnter}>確定</Button>
-            </div>
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-4" data-theme="dark">
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-bold">不會動的玩具<br/>才正常吧</h1>
+      </div>
+      <div className="card w-full max-w-sm shadow-2xl bg-base-200">
+        <div className="card-body">
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text">請輸入您的暱稱</span>
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+              placeholder="某某某"
+              className="input input-bordered"
+            />
+          </div>
+          <div className="form-control mt-6">
+            <button onClick={handleSubmit} className="btn btn-primary">
+              確定
+            </button>
+          </div>
         </div>
-    );
+      </div>
+    </div>
+  );
 };
 
-export default EnterName
+export default EnterName;

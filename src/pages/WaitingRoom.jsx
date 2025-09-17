@@ -1,41 +1,72 @@
-import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router';
-import PlayerRow from './PlayerRow.jsx';
-import {images} from '@/assets/constants';
-import Slogan from '@/components/Slogan';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useGame } from '../context/GameContext';
 
+const mockPlayers = [
+  { name: '黃小姿', avatar: '/images/green.png' },
+  { name: '爆香怪人', avatar: '/images/red.png' },
+  { name: '柳橙恩', avatar: '/images/yellow.png' },
+];
 
 const WaitingRoom = () => {
-    const navigate = useNavigate();
-    const [player, setPlayer] = useState({ name: '', image: '' });
-    
-    const otherPlayers = [
-        { name: '黃小姿', image: images.green },
-        { name: '爆香怪人', image: images.red },
-        { name: '柳橙恩', image: images.yellow }
-    ];
+  const { nickname, character, players, setPlayers } = useGame();
+  const navigate = useNavigate();
 
-    useEffect(() => {
-        const nickname = localStorage.getItem('nickname') || '你';
-        const characterImage = localStorage.getItem('characterImage') || images.green;
-        setPlayer({ name: nickname, image: characterImage });
-    }, []);
+  // For now, we'll treat the first player as the host.
+  const isHost = players.length > 0 && players[0].name === nickname;
 
-    return (
-        <div className="flex flex-col items-center min-h-screen bg-white font-sans">
-            <Slogan>不會動的玩具<br />才正常吧</Slogan>
-            <div className="flex flex-col items-center gap-12 mt-12 w-full px-5">
-                <div className="my-6 text-xl">等待玩家進入...</div>
-                <div className="bg-gray-100 mx-auto py-4 rounded-2xl w-full max-w-sm flex flex-col gap-4 items-center">
-                    <PlayerRow name={player.name} image={player.image} />
-                    {otherPlayers.map(p => <PlayerRow key={p.name} name={p.name} image={p.image} />)}
-                </div>
-                <button onClick={() => navigate('/')} className="mt-8 bg-gray-200 text-xl py-4 rounded-full w-full max-w-xs border-none">
-                    離開房間
-                </button>
+  useEffect(() => {
+    // Add the current player to the list
+    if (nickname && character) {
+      setPlayers([{ name: nickname, avatar: character.src }, ...mockPlayers]);
+    } else {
+      // If there's no player info, go back to the start
+      navigate('/');
+    }
+  }, [nickname, character, setPlayers, navigate]);
+
+  const handleNext = () => {
+    navigate('/choose-level');
+  };
+
+  const handleLeave = () => {
+    // Clear context and go back to home
+    // (This would be more robust with a proper state reset)
+    navigate('/');
+  };
+
+  return (
+    <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
+      <div className="text-center mb-6">
+        <h1 className="text-4xl font-bold">不會動的玩具<br/>才正常吧</h1>
+      </div>
+      <div className="bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md">
+        <h2 className="text-xl mb-4 text-center">等待玩家進入...</h2>
+        
+        <div className="space-y-3">
+          {players.map((player, index) => (
+            <div key={index} className="flex items-center bg-gray-700 p-2 rounded-lg">
+              <img src={player.avatar} alt={player.name} className="w-12 h-12 rounded-full object-cover mr-4" />
+              <span className="text-lg">{player.name}</span>
             </div>
+          ))}
         </div>
-    );
+
+        <div className="mt-6 flex flex-col space-y-2">
+          {isHost ? (
+            <button onClick={handleNext} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300">
+              下一步
+            </button>
+          ) : (
+            <p className='text-center'>等待房主開始遊戲...</p>
+          )}
+          <button onClick={handleLeave} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300">
+            離開房間
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
-export default WaitingRoom
+export default WaitingRoom;
