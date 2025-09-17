@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist", // Specify the output directory for compiled files
+    "allowJs": true,
+    "checkJs": false,
+    "declaration": true,
+    "sourceMap": true,
+    "strict": true,
+    "jsx": "react-jsx",
+    "module": "nodenext",
+    "target": "esnext",
+    "moduleResolution": "NodeNext",
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
