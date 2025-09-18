@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @plugin "daisyui"{
-  themes: bumblebee --default, sunset --prefersdark;
+  themes: bumblebee --default, halloween --prefersdark;
 }
 /* 
 @custom-variant dark (&:is(.dark *));
