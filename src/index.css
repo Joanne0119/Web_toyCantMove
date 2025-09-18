@@ -1,8 +1,7 @@
 @import "tailwindcss";
 @plugin "daisyui"{
-  themes: caramellatte --default, coffee --prefersdark;
+  themes: bumblebee --default, sunset --prefersdark;
 }
-@import "tw-animate-css";
 /* 
 @custom-variant dark (&:is(.dark *));
 :root {

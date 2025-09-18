@@ -27,54 +27,77 @@ const Award = () => {
   };
 
   return (
-    <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center p-4">
-      <h1 className="text-4xl font-bold my-6">頒獎台</h1>
-      <div className="bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-lg">
-        {/* Podium */}
-        <div className="flex justify-center items-end h-48 mb-6">
-          {top3[1] && (
-            <div className="text-center mx-2">
-              <img src={top3[1].avatar} className="w-16 h-16 rounded-full border-2 border-gray-400 mx-auto"/>
-              <div className="font-bold">{top3[1].name}</div>
-              <div className="bg-gray-400 text-black p-2 rounded-t-lg h-16 flex items-center justify-center">2</div>
-            </div>
-          )}
-          {top3[0] && (
-            <div className="text-center mx-2">
-              <img src={top3[0].avatar} className="w-20 h-20 rounded-full border-2 border-yellow-400 mx-auto"/>
-              <div className="font-bold">{top3[0].name}</div>
-              <div className="bg-yellow-400 text-black p-2 rounded-t-lg h-24 flex items-center justify-center">1</div>
-            </div>
-          )}
-          {top3[2] && (
-            <div className="text-center mx-2">
-              <img src={top3[2].avatar} className="w-16 h-16 rounded-full border-2 border-yellow-700 mx-auto"/>
-              <div className="font-bold">{top3[2].name}</div>
-              <div className="bg-yellow-700 text-black p-2 rounded-t-lg h-12 flex items-center justify-center">3</div>
-            </div>
-          )}
-        </div>
-
-        {/* Leaderboard */}
-        <div className="space-y-2">
-          {results.map((r, i) => (
-            <div key={i} className={`flex justify-between items-center p-2 rounded-lg ${r.name === nickname ? 'bg-blue-600' : 'bg-gray-700'}`}>
-              <div className="flex items-center">
-                <span className="w-8">{i + 1}</span>
-                <span>{r.name}</span>
+    <div className="hero min-h-screen bg-base-200">
+      <div className="hero-content text-center">
+        <div className="max-w-lg">
+          <h1 className="text-5xl font-bold mb-8">頒獎台</h1>
+          <div className="card bg-base-100 shadow-xl">
+            <div className="card-body">
+              {/* Podium */}
+              <div className="flex justify-center items-end h-48 mb-6">
+                {top3[1] && (
+                  <div className="text-center mx-2">
+                    <div className="avatar">
+                      <div className="w-16 rounded-full ring ring-gray-400">
+                        <img src={top3[1].avatar} />
+                      </div>
+                    </div>
+                    <div className="font-bold">{top3[1].name}</div>
+                    <div className="bg-gray-400 text-black p-2 rounded-t-lg h-16 flex items-center justify-center">2</div>
+                  </div>
+                )}
+                {top3[0] && (
+                  <div className="text-center mx-2">
+                     <div className="avatar">
+                      <div className="w-20 rounded-full ring ring-yellow-400">
+                        <img src={top3[0].avatar} />
+                      </div>
+                    </div>
+                    <div className="font-bold">{top3[0].name}</div>
+                    <div className="bg-yellow-400 text-black p-2 rounded-t-lg h-24 flex items-center justify-center">1</div>
+                  </div>
+                )}
+                {top3[2] && (
+                  <div className="text-center mx-2">
+                    <div className="avatar">
+                      <div className="w-16 rounded-full ring ring-yellow-700">
+                        <img src={top3[2].avatar} />
+                      </div>
+                    </div>
+                    <div className="font-bold">{top3[2].name}</div>
+                    <div className="bg-yellow-700 text-black p-2 rounded-t-lg h-12 flex items-center justify-center">3</div>
+                  </div>
+                )}
               </div>
-              <span>{r.score}</span>
-            </div>
-          ))}
-        </div>
 
-        <div className="mt-6 flex space-x-2">
-          <button onClick={handleLeave} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
-            離開房間
-          </button>
-          <button onClick={handlePlayAgain} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
-            再玩一次
-          </button>
+              {/* Leaderboard */}
+              <div className="overflow-x-auto">
+                <table className="table w-full">
+                  <thead>
+                    <tr>
+                      <th>Rank</th>
+                      <th>Name</th>
+                      <th>Score</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {results.map((r, i) => (
+                      <tr key={i} className={`${r.name === nickname ? 'active' : ''}`}>
+                        <th>{i + 1}</th>
+                        <td>{r.name}</td>
+                        <td>{r.score}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="card-actions justify-center mt-6">
+                <button onClick={handleLeave} className="btn btn-ghost">離開房間</button>
+                <button onClick={handlePlayAgain} className="btn btn-primary">再玩一次</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

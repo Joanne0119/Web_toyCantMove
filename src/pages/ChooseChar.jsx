@@ -24,38 +24,58 @@ const ChooseChar = () => {
   };
 
   return (
-    <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
-      <div className="text-center mb-6">
-        <h1 className="text-4xl font-bold">不會動的玩具<br/>才正常吧</h1>
-      </div>
-      <div className="bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md">
-        <h2 className="text-xl mb-4 text-center">你好，{nickname}，請選擇角色</h2>
-        
-        <div className="flex flex-col items-center mb-4">
-          <img id="main-character-img" src={selectedChar.src} alt={selectedChar.name} className="w-48 h-48 object-cover mb-4 rounded-full border-4 border-blue-500"/>
-          <div className="text-2xl font-bold capitalize">{selectedChar.name}</div>
-          <div className="text-left mt-2">
-            <div>速度：<span className="font-semibold">{selectedChar.speed}</span></div>
-            <div>力量：<span className="font-semibold">{selectedChar.power}</span></div>
-            <div>技巧：<span className="font-semibold">{selectedChar.skill}</span></div>
+    <div className="hero min-h-screen bg-base-200">
+      <div className="hero-content text-center">
+        <div className="max-w-md">
+          <h1 className="text-5xl font-bold">不會動的玩具<br/>才正常吧</h1>
+          <div className="card bg-base-100 shadow-xl mt-8">
+            <div className="card-body">
+              <h2 className="card-title">你好，{nickname}，請選擇角色</h2>
+              <div className="flex flex-col items-center my-4">
+                <div className="avatar online">
+                  <div className="w-48 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+                    <img src={selectedChar.src} alt={selectedChar.name} />
+                  </div>
+                </div>
+                <div className="text-2xl font-bold capitalize mt-4">{selectedChar.name}</div>
+                <div className="stats bg-transparent mt-2">
+                  <div className="stat">
+                    <div className="stat-title">速度</div>
+                    <div className="stat-value">{selectedChar.speed}</div>
+                  </div>
+                  <div className="stat">
+                    <div className="stat-title">力量</div>
+                    <div className="stat-value">{selectedChar.power}</div>
+                  </div>
+                  <div className="stat">
+                    <div className="stat-title">技巧</div>
+                    <div className="stat-value">{selectedChar.skill}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-center space-x-3 mb-6">
+                {characters.map((char) => (
+                  <div 
+                    key={char.name}
+                    className={`avatar cursor-pointer ${selectedChar.name === char.name ? 'ring ring-primary ring-offset-base-100 ring-offset-2 rounded-full' : ''}`}
+                    onClick={() => handleSelectChar(char)}
+                  >
+                    <div className="w-16 rounded-full">
+                      <img src={char.src} alt={char.name} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="card-actions justify-center">
+                <button onClick={handleConfirm} className="btn btn-primary">
+                  確定
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-
-        <div className="flex justify-center space-x-3 mb-6">
-          {characters.map((char) => (
-            <div 
-              key={char.name}
-              className={`cursor-pointer p-1 rounded-full ${selectedChar.name === char.name ? 'bg-blue-500' : ''}`}
-              onClick={() => handleSelectChar(char)}
-            >
-              <img src={char.src} alt={char.name} className="w-16 h-16 object-cover rounded-full" />
-            </div>
-          ))}
-        </div>
-
-        <button onClick={handleConfirm} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300">
-          確定
-        </button>
       </div>
     </div>
   );

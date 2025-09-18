@@ -32,35 +32,41 @@ const ChooseLevel = () => {
   };
 
   return (
-    <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
-      <div className="text-center mb-6">
-        <h1 className="text-4xl font-bold">不會動的玩具<br/>才正常吧</h1>
-      </div>
-      <div className="bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-md">
-        <h2 className="text-xl mb-4 text-center">{isHost ? '請選擇遊戲場景' : '等待房主選擇關卡...'}</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          {levels.map((l) => (
-            <div 
-              key={l.name}
-              className={`p-2 rounded-lg cursor-pointer ${level?.name === l.name ? 'bg-blue-500' : 'bg-gray-700'} ${!isHost && 'cursor-default'}`}
-              onClick={() => handleSelectLevel(l)}
-            >
-              <img src={l.image} alt={l.name} className="w-full h-24 object-cover rounded-md mb-2"/>
-              <div className="text-center">{l.name}</div>
+    <div className="hero min-h-screen bg-base-200">
+      <div className="hero-content text-center">
+        <div className="max-w-md">
+          <h1 className="text-5xl font-bold">不會動的玩具<br/>才正常吧</h1>
+          <div className="card bg-base-100 shadow-xl mt-8">
+            <div className="card-body">
+              <h2 className="card-title">{isHost ? '請選擇遊戲場景' : '等待房主選擇關卡...'}</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-4">
+                {levels.map((l) => (
+                  <div 
+                    key={l.name}
+                    className={`card bg-base-200 shadow-md cursor-pointer ${level?.name === l.name ? 'ring ring-primary' : ''} ${!isHost && 'cursor-default'}`}
+                    onClick={() => handleSelectLevel(l)}
+                  >
+                    <figure><img src={l.image} alt={l.name} className="h-24 object-cover"/></figure>
+                    <div className="card-body p-4 items-center text-center">
+                      <h2 className="card-title">{l.name}</h2>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="card-actions justify-center">
+                <div className="flex flex-col space-y-2 w-full">
+                  {isHost ? (
+                    <button onClick={handleStartGame} className="btn btn-primary">
+                      開始遊戲
+                    </button>
+                  ) : null}
+                  <button onClick={handleLeave} className="btn btn-ghost">
+                    離開房間
+                  </button>
+                </div>
+              </div>
             </div>
-          ))}
-        </div>
-
-        <div className="mt-6 flex flex-col space-y-2">
-          {isHost ? (
-            <button onClick={handleStartGame} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300">
-              開始遊戲
-            </button>
-          ) : null}
-          <button onClick={handleLeave} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300">
-            離開房間
-          </button>
+          </div>
         </div>
       </div>
     </div>

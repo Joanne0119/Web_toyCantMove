@@ -6,10 +6,12 @@ import WaitingRoom from './pages/WaitingRoom';
 import ChooseLevel from './pages/ChooseLevel';
 import ControllerTest from './pages/ControllerTest';
 import Award from './pages/Award';
+import Navbar from './components/Navbar';
 
 function App() {
   return (
     <GameProvider>
+      <Navbar />
       <Routes>
         <Route path="/" element={<EnterName />} />
         <Route path="/choose-char" element={<ChooseChar />} />
