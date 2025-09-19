@@ -21,7 +21,7 @@ const EnterName = () => {
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold">不會動的玩具<br/>才正常吧</h1>
       </div>
-      <div className="card w-full max-w-sm shadow-2xl bg-base-200">
+      <div className="card w-full max-w-sm shadow-xl bg-base-200">
         <div className="card-body">
           <div className="form-control">
             <label className="label">
@@ -33,7 +33,7 @@ const EnterName = () => {
               onChange={(e) => setName(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
               placeholder="某某某"
-              className="input input-bordered"
+              className="input input-bordered mt-3"
             />
           </div>
           <div className="form-control mt-6">

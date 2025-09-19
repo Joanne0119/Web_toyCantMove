@@ -13,17 +13,21 @@ import Navbar from './components/Navbar';
 function App() {
   return (
     <GameProvider>
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<EnterName />} />
-        <Route path="/choose-char" element={<ChooseChar />} />
-        <Route path="/waiting-room" element={<WaitingRoom />} />
-        <Route path="/choose-level" element={<ChooseLevel />} />
-        <Route path="/testing" element={<ControllerTest />} />
-        <Route path="/playing" element={<Playing />} />
-        <Route path="/award" element={<Award />} />
-        <Route path="/error" element={<Error />} />
-      </Routes>
+      <div className="flex flex-col h-screen"> {/* Full height container */}
+        <Navbar />
+        <div className="flex-1"> {/* Content area fills remaining space */}
+          <Routes>
+            <Route path="/" element={<EnterName />} />
+            <Route path="/choose-char" element={<ChooseChar />} />
+            <Route path="/waiting-room" element={<WaitingRoom />} />
+            <Route path="/choose-level" element={<ChooseLevel />} />
+            <Route path="/testing" element={<ControllerTest />} />
+            <Route path="/playing" element={<Playing />} />
+            <Route path="/award" element={<Award />} />
+            <Route path="/error" element={<Error />} />
+          </Routes>
+        </div>
+      </div>
     </GameProvider>
   );
 }

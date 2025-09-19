@@ -30,7 +30,7 @@ const Award = () => {
     <div className="hero min-h-screen bg-base-200">
       <div className="hero-content text-center">
         <div className="max-w-lg">
-          <h1 className="text-5xl font-bold mb-8">頒獎台</h1>
+          <h1 className="text-4xl font-bold mb-8">頒獎台</h1>
           <div className="card bg-base-100 shadow-xl">
             <div className="card-body">
               {/* Podium */}

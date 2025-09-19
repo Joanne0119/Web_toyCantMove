@@ -13,7 +13,7 @@ const Navbar = () => {
   const showBackButton = location.pathname !== '/';
 
   return (
-    <div className="navbar bg-base-100">
+    <div className="navbar absolute top-0 left-0 right-0 z-10">
       <div className="navbar-start">
         {showBackButton && (
           <button className="btn btn-ghost" onClick={handleBack}>
@@ -24,11 +24,8 @@ const Navbar = () => {
           </button>
         )}
       </div>
-      <div className="navbar-center">
-        <a className="btn btn-ghost normal-case text-xl">Toy Cant Move</a>
-      </div>
       <div className="navbar-end">
-        {/* You can add other navbar items here */}
+        <a className="btn btn-ghost normal-case text-xl">不會動的玩具</a>
       </div>
     </div>
   );

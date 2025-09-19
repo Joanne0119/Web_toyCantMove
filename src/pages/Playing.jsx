@@ -1,38 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useWebRTC } from '../hooks/useWebRTC';
-
-const generatePeerId = () => "game-" + Math.random().toString(36).substring(2, 11);
+import { useGame } from '../context/GameContext';
 
 const Playing = () => {
+    const { webRTC, connectionStatus } = useGame();
+    const { lastMessage, sendData: sendWebRTCData, dataChannelConnections } = webRTC;
+
     // --- Game State ---
     const [characterPosition, setCharacterPosition] = useState({ x: 50, y: 50 }); // Position in percentage
     const GAME_SPEED = 2;
-
-    // --- WebRTC State and Hooks ---
-    const [localPeerId, setLocalPeerId] = useState(generatePeerId);
-    const [targetPeerId, setTargetPeerId] = useState('');
-    const [websocketUrl, setWebsocketUrl] = useState('wss://server-for-toy-cant-move.onrender.com');
-    
-    const uiConfig = useRef({}).current; // No video elements needed for this page
-
-    const { 
-        isConnected: isWebRTCConnected,
-        dataChannelConnections,
-        lastMessage,
-        error: webRTCError,
-        connect: connectWebRTC,
-        disconnect: disconnectWebRTC,
-        sendData: sendWebRTCData,
-    } = useWebRTC(localPeerId, 'stun:stun.l.google.com:19302', uiConfig);
-
-    // --- WebRTC Handlers ---
-    const handleConnectWebRTC = useCallback(async () => {
-        await connectWebRTC(websocketUrl, false, false); // This page is a receiver/sender of data only
-    }, [connectWebRTC, websocketUrl]);
-
-    const handleDisconnectWebRTC = useCallback(() => {
-        disconnectWebRTC();
-    }, [disconnectWebRTC]);
     
     // Effect to handle incoming WebRTC messages for game control
     useEffect(() => {
@@ -85,15 +60,15 @@ const Playing = () => {
                 const vec = getMoveVector();
                 if (vec.x === 0 && vec.y === 0) return; // Don't send if not moving
 
-                if (isWebRTCConnected && dataChannelConnections.length > 0) {
+                if (connectionStatus && dataChannelConnections.length > 0) {
                     const msg = JSON.stringify({ type: "manualMove", vector: vec });
-                    sendWebRTCData(msg, targetPeerId || null);
+                    sendWebRTCData(msg, null);
                 } else {
                     console.warn("WebRTC not connected or data channel not open, cannot send manual move vector.");
                 }
             }, 100); // Send every 100ms
         }
-    }, [isWebRTCConnected, dataChannelConnections, getMoveVector, sendWebRTCData, targetPeerId]);
+    }, [connectionStatus, dataChannelConnections, getMoveVector, sendWebRTCData]);
 
     const stopSendingManualIfNoDirection = useCallback(() => {
         if (!Object.values(pressed.current).some(v => v)) {
@@ -129,7 +104,6 @@ const Playing = () => {
 
     return (
         <div className="container mx-auto p-4 flex flex-col items-center">
-            <h1 className="text-4xl font-bold mb-4">遊戲畫面</h1>
 
             {/* Game Area */}
             <div className="relative w-full max-w-2xl aspect-video bg-gray-200 rounded-lg shadow-inner overflow-hidden mb-4 border-2 border-gray-300">

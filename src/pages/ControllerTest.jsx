@@ -1,38 +1,46 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGyroscope } from '../hooks/useGyroscope';
+import { useGame } from '../context/GameContext';
 
 const ControllerTest = () => {
   const navigate = useNavigate();
+  const { webRTC, gyroscope, connectionStatus, gyroscopeStatus } = useGame();
 
-  // Gyroscope State and Hooks
+  const { connect: connectWebRTC, sendData: sendWebRTCData } = webRTC;
   const {
-    direction,
-    coordinates,
-    isCalibrated,
-    error: gyroscopeError,
     init: initGyroscope,
     calibrate: calibrateGyroscope,
-    isSupported: isGyroscopeSupported,
-  } = useGyroscope({
-    movementThreshold: 20,
-    calibrationTime: 1000,
-    smoothingFactor: 0.3,
-    deadZone: 5,
-    maxThreshold: 60,
-    enableAudio: false,
-    enableVibration: false,
-    debugMode: true,
-    autoCalibrate: false,
-  });
+  } = gyroscope;
+
+  const {
+    isSupported,
+    isCalibrated,
+    direction,
+    coordinates,
+    error: gyroscopeError,
+  } = gyroscopeStatus;
+
+  const handleInitWebRTC = useCallback(async () => {
+    const websocketUrl = 'wss://server-for-toy-cant-move.onrender.com';
+    await connectWebRTC(websocketUrl, false, false); // 只用數據通道
+  }, [connectWebRTC]);
+
+  useEffect(() => {
+    if (connectionStatus && isCalibrated) {
+      const vector = { x: coordinates.x, y: coordinates.y }; // 直接用 coordinates 作為向量
+      const msg = JSON.stringify({ type: 'move', vector }); // 匹配 Playing.jsx 的格式
+      sendWebRTCData(msg, null); // null 表示廣播到所有 peer（遊戲端）
+      console.log('Sent gyroscope move:', vector); // 除錯
+    }
+  }, [coordinates, connectionStatus, isCalibrated, sendWebRTCData]);
 
   const handleInitGyroscope = useCallback(async () => {
-    if (!isGyroscopeSupported()) {
+    if (!isSupported) {
       alert('您的設備不支援陀螺儀，或未提供完整的感應器數據。');
       return;
     }
     await initGyroscope();
-  }, [initGyroscope, isGyroscopeSupported]);
+  }, [initGyroscope, isSupported]);
 
   const handleCalibrateGyroscope = useCallback(async () => {
     await calibrateGyroscope();
@@ -46,20 +54,33 @@ const ControllerTest = () => {
     <div className="hero min-h-screen bg-base-200">
       <div className="hero-content text-center">
         <div className="max-w-md">
-          <h1 className="text-5xl font-bold">控制器測試</h1>
-          <p className="py-6">測試陀螺儀</p>
+          <h1 className="text-4xl font-bold">控制器測試</h1>
+          <p className="py-6">測試陀螺儀和連線</p>
+
+          {/* WebRTC Section */}
+          <div className="card bg-base-100 shadow-xl mt-8 mb-4">
+            <div className="card-body items-center text-center">
+              <h2 className="card-title">連線控制</h2>
+              <p>連線狀態: <span className="font-bold">{connectionStatus ? '已連線' : '未連線'}</span></p>
+              <div className="flex gap-2 mt-4">
+                <button onClick={handleInitWebRTC} className="btn btn-primary" disabled={connectionStatus}>
+                  連線
+                </button>
+              </div>
+            </div>
+          </div>
 
           {/* Gyroscope Section */}
           <div className="card bg-base-100 shadow-xl mt-8 mb-4">
             <div className="card-body items-center text-center">
               <h2 className="card-title">陀螺儀控制</h2>
               {gyroscopeError && <div className="alert alert-error">錯誤: {gyroscopeError.msg}</div>}
-              {!isGyroscopeSupported() && <div className="alert alert-warning">您的設備可能不支援陀螺儀。</div>}
+              {!isSupported && <div className="alert alert-warning">您的設備可能不支援陀螺儀。</div>}
               <div className="flex gap-2 mt-4">
-                <button onClick={handleInitGyroscope} className="btn btn-primary" disabled={!isGyroscopeSupported()}>
-                  {isGyroscopeSupported() ? '啟用感測器' : '不支援'}
+                <button onClick={handleInitGyroscope} className="btn btn-primary" disabled={!isSupported}>
+                  {isSupported ? '啟用感測器' : '不支援'}
                 </button>
-                <button onClick={handleCalibrateGyroscope} className="btn btn-secondary" disabled={!isGyroscopeSupported() || !isCalibrated}>
+                <button onClick={handleCalibrateGyroscope} className="btn btn-secondary" disabled={!isSupported || !isCalibrated}>
                   {isCalibrated ? '重新校正' : '校正'}
                 </button>
               </div>

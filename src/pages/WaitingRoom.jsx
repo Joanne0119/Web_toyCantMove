@@ -39,7 +39,7 @@ const WaitingRoom = () => {
     <div className="hero min-h-screen bg-base-200">
       <div className="hero-content text-center">
         <div className="max-w-md">
-          <h1 className="text-5xl font-bold">不會動的玩具<br/>才正常吧</h1>
+          <h1 className="text-4xl font-bold">不會動的玩具<br/>才正常吧</h1>
           <div className="card bg-base-100 shadow-xl mt-8">
             <div className="card-body">
               <h2 className="card-title">等待玩家進入...</h2>

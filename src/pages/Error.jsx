@@ -10,7 +10,7 @@ const Error = () => {
     <div className="hero min-h-screen bg-base-200">
       <div className="hero-content text-center">
         <div className="max-w-md">
-          <h1 className="text-5xl font-bold">錯誤</h1>
+          <h1 className="text-4xl font-bold">錯誤</h1>
           <p className="py-6">{errorMessage}</p>
           <button onClick={() => navigate('/')} className="btn btn-primary">
             返回首頁

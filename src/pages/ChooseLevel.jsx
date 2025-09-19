@@ -35,7 +35,7 @@ const ChooseLevel = () => {
     <div className="hero min-h-screen bg-base-200">
       <div className="hero-content text-center">
         <div className="max-w-md">
-          <h1 className="text-5xl font-bold">選擇關卡</h1>
+          <h1 className="text-4xl font-bold">選擇關卡</h1>
           <div className="card bg-base-100 shadow-xl mt-8">
             <div className="card-body">
               <h2 className="card-title">{isHost ? '請選擇遊戲場景' : '等待房主選擇關卡...'}</h2>
