@@ -15,6 +15,7 @@ const ControllerTest = () => {
   const {
     isSupported,
     isCalibrated,
+    isInitialized,
     direction,
     coordinates,
     error: gyroscopeError,
@@ -51,7 +52,8 @@ const ControllerTest = () => {
   };
 
   return (
-    <div className="hero min-h-screen bg-base-200">
+    <div className="hero min-h-screen bg-base-200" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
+      <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
       <div className="hero-content text-center">
         <div className="max-w-md">
           <h1 className="text-4xl font-bold">控制器測試</h1>
@@ -78,7 +80,7 @@ const ControllerTest = () => {
               {!isSupported && <div className="alert alert-warning">您的設備可能不支援陀螺儀。</div>}
               <div className="flex gap-2 mt-4">
                 <button onClick={handleInitGyroscope} className="btn btn-primary" disabled={!isSupported}>
-                  {isSupported ? '啟用感測器' : '不支援'}
+                  {isInitialized ? '感測器已啟用' : (isSupported ? '啟用感測器' : '不支援')}
                 </button>
                 <button onClick={handleCalibrateGyroscope} className="btn btn-secondary" disabled={!isSupported || !isCalibrated}>
                   {isCalibrated ? '重新校正' : '校正'}

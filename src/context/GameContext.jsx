@@ -36,6 +36,16 @@ export const GameProvider = ({ children }) => {
   // Gyroscope integration
   const gyroscope = useGyroscope(STABLE_GYRO_CONFIG);
 
+  const { isConnected: webRTCIsConnected } = webRTC;
+  const { 
+    isSupported: gyroIsSupported, 
+    isCalibrated: gyroIsCalibrated, 
+    isInitialized: gyroIsInitialized, 
+    direction: gyroDirection, 
+    coordinates: gyroCoordinates, 
+    error: gyroError 
+  } = gyroscope;
+
   const value = useMemo(() => ({
     nickname,
     setNickname,
@@ -53,12 +63,13 @@ export const GameProvider = ({ children }) => {
     gyroscopeStatus: {
       isSupported: gyroscope.isSupported(),
       isCalibrated: gyroscope.isCalibrated,
+      isInitialized: gyroscope.isInitialized,
       direction: gyroscope.direction,
       coordinates: gyroscope.coordinates,
       error: gyroscope.error,
     },
   }), [nickname, character, players, level, score, 
-    webRTC, gyroscope,
+    webRTC, gyroscope, webRTCIsConnected, gyroIsCalibrated, gyroIsInitialized, gyroDirection, gyroCoordinates, gyroError 
   ]);
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

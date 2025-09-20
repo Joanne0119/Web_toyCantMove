@@ -6,6 +6,7 @@ export const useGyroscope = (config) => {
   const [direction, setDirection] = useState('靜止');
   const [coordinates, setCoordinates] = useState({ x: 0, y: 0 });
   const [isCalibrated, setIsCalibrated] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -35,6 +36,9 @@ export const useGyroscope = (config) => {
     // Cleanup on unmount
     return () => {
       manager.destroy();
+      setIsInitialized(false);
+      setIsCalibrated(false);
+
     };
   }, [config]);
 
@@ -45,9 +49,11 @@ export const useGyroscope = (config) => {
         if (!success) {
           setError({ msg: 'Gyroscope initialization failed.' });
         }
+        setIsInitialized(success);
         return success;
       } catch (e) {
         setError({ msg: 'Permission to use sensors was denied.', obj: e });
+        setIsInitialized(false);
         return false;
       }
     }
@@ -65,6 +71,7 @@ export const useGyroscope = (config) => {
     direction, 
     coordinates, 
     isCalibrated, 
+    isInitialized,
     error, 
     init, 
     calibrate, 
