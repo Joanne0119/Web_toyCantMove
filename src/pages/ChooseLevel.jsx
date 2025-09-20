@@ -9,7 +9,7 @@ const levels = [
 ];
 
 const ChooseLevel = () => {
-  const { nickname, players, level, setLevel } = useGame();
+  const { nickname, players, level, setLevel, webRTC } = useGame();
   const navigate = useNavigate();
   const isHost = players.length > 0 && players[0].name === nickname;
 
@@ -28,6 +28,7 @@ const ChooseLevel = () => {
   };
 
   const handleLeave = () => {
+    webRTC.disconnect();
     navigate('/');
   };
 

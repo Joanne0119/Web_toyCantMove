@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
+import { motion, AnimatePresence } from "framer-motion";
 
 const mockPlayers = [
   { name: '黃小姿', avatar: '/images/green.png' },
@@ -75,15 +76,26 @@ const WaitingRoom = () => {
   };
 
   const handleLeave = () => {
-    navigate('/leave');
+    webRTC.disconnect();
+    navigate('/');
   };
 
   return (
-    <div className="hero min-h-screen bg-base-200">
+    <div className="hero min-h-screen bg-base-200" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center'}}>
+      <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
       <div className="hero-content text-center">
         <div className="max-w-md">
-          <h1 className="text-4xl font-bold">不會動的玩具<br/>才正常吧</h1>
-          <div className="card bg-base-100 shadow-xl mt-8">
+          <motion.div 
+            className="card bg-base-100 shadow-xl mt-8"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{
+              type: "spring",   // 用彈簧模擬的動畫
+              stiffness: 120,   // 彈性
+              damping: 15,      // 阻尼 (越小越彈)
+              duration: 0.8
+            }}
+          >
             <div className="card-body">
               {!connectionStatus ? (
                 <div>
@@ -98,9 +110,9 @@ const WaitingRoom = () => {
                   <h2 className="card-title">等待玩家進入...</h2>
                   <div className="space-y-3 mt-4">
                     {players.map((player, index) => (
-                      <div key={index} className="flex items-center bg-base-200 p-2 rounded-lg">
+                      <div key={index} className="flex items-center bg-base-200 p-2 rounded-lg ">
                         <div className="avatar mr-4">
-                          <div className="w-12 rounded-full">
+                          <div className="w-14 rounded-full">
                             <img src={player.avatar} alt={player.name} />
                           </div>
                         </div>
@@ -126,7 +138,7 @@ const WaitingRoom = () => {
               )}
 
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>

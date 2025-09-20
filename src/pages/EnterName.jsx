@@ -75,7 +75,7 @@ const EnterName = () => {
         </motion.div>
       </div>
       <motion.div 
-        className="card w-full max-w-sm shadow-xl bg-base-200 translate-y-35"
+        className="card max-w-sm shadow-xl bg-base-200 translate-y-35"
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{

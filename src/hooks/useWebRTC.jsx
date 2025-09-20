@@ -59,6 +59,7 @@ export const useWebRTC = (localPeerId, stunServerAddress, uiConfig) => {
     if (managerRef.current) {
       try {
         await managerRef.current.connect(webSocketUrl, isVideoAudioSender, isVideoAudioReceiver);
+        return true;
       } catch (e) {
         setError({ type: 'connect', message: 'Failed to connect to WebSocket', obj: e });
         return false;

@@ -98,6 +98,7 @@ const ChooseChar = () => {
               </div>
 
               <div className="card-actions justify-center">
+                {!connectionStatus ? 
                 <button
                   onClick={handleConfirm}
                   className="btn btn-primary"
@@ -105,9 +106,18 @@ const ChooseChar = () => {
                 >
                   確定
                 </button>
+                :
+                <button
+                  onClick={() => {navigate('/waiting-room');}}
+                  className="btn btn-primary"
+                  disabled={ !connectionStatus} 
+                >
+                  下一步
+                </button>
+                }
                 <button
                   onClick={disconnectWebRTC}
-                  className="btn btn-warning"
+                  className="btn btn-error"
                   disabled={!connectionStatus} // Disable if not connected
                 >
                   斷線
