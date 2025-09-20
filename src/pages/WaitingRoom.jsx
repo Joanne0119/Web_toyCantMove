@@ -15,23 +15,63 @@ const WaitingRoom = () => {
   // For now, we'll treat the first player as the host.
   const isHost = players.length > 0 && players[0].name === nickname;
 
-  useEffect(() => {
-    // Add the current player to the list
-    if (nickname && character) {
-      setPlayers([{ name: nickname, avatar: character.src }, ...mockPlayers]);
-    } else {
-      // If there's no player info, go back to the start
+  uuseEffect(() => {
+    // Safety check: If there's no player info, go back to the start
+    if (!nickname || !character) {
       navigate('/');
+      return; // Stop the effect
     }
-  }, [nickname, character, setPlayers, navigate]);
 
+    // --- Your existing logic ---
+    // Add the current player to the list
+    setPlayers([{ name: nickname, avatar: character.src }, ...mockPlayers]);
+
+    // --- The MISSING connection logic ---
+    const connectAll = async () => {
+      try {
+        // 1. Initialize Gyroscope
+        if (gyroscope.isSupported()) {
+          await gyroscope.init();
+        }
+
+        // 2. Connect WebRTC
+        const websocketUrl = 'wss://server-for-toy-cant-move.onrender.com';
+        
+        // At this point, useWebRTC has the correct peerId (e.g., "red")
+        // and is ready to connect.
+        const connectionResult = await webRTC.connect(websocketUrl, false, true);
+        
+        if (!connectionResult) {
+          throw new Error('WebRTC connection failed.');
+        }
+
+        console.log('Successfully connected as', character.name);
+
+      } catch (error) {
+        // Use the Error.jsx page to show the error
+        navigate('/error', { state: { message: error.message } });
+      }
+    };
+
+    // 3. Only attempt to connect if we aren't already connected
+    if (!connectionStatus) {
+      connectAll();
+    }
+
+  }, [
+    nickname, 
+    character, 
+    setPlayers, 
+    navigate, 
+    gyroscope, 
+    webRTC, 
+    connectionStatus
+  ]); 
   const handleNext = () => {
     navigate('/choose-level');
   };
 
   const handleLeave = () => {
-    // Clear context and go back to home
-    // (This would be more robust with a proper state reset)
     navigate('/');
   };
 
