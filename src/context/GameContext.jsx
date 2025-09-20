@@ -6,22 +6,13 @@ const GameContext = createContext();
 
 export const useGame = () => useContext(GameContext);
 
-export const GameProvider = ({ children }) => {
-  const [nickname, setNickname] = useState('');
-  const [character, setCharacter] = useState(null);
-  const [players, setPlayers] = useState([]);
-  const [level, setLevel] = useState(null);
-  const [score, setScore] = useState(0);
+const STABLE_UI_CONFIG = {
+  videoContainerId: 'remoteVideosContainer',
+  localVideoPlayerId: 'localVideoPlayer',
+};
 
-  // WebRTC integration
-  const webRTC = useWebRTC(character?.name,  'stun:stun.l.google.com:19302', {
-    videoContainerId: 'remoteVideosContainer',
-    localVideoPlayerId: 'localVideoPlayer',
-  });
-
-  // Gyroscope integration
-  const gyroscope = useGyroscope({
-    movementThreshold: 20,
+const STABLE_GYRO_CONFIG = {
+  movementThreshold: 20,
     calibrationTime: 1000,
     smoothingFactor: 0.3,
     deadZone: 5,
@@ -30,7 +21,20 @@ export const GameProvider = ({ children }) => {
     enableVibration: false,
     debugMode: true,
     autoCalibrate: false,
-  });
+}
+
+export const GameProvider = ({ children }) => {
+  const [nickname, setNickname] = useState('');
+  const [character, setCharacter] = useState(null);
+  const [players, setPlayers] = useState([]);
+  const [level, setLevel] = useState(null);
+  const [score, setScore] = useState(0);
+
+  // WebRTC integration
+  const webRTC = useWebRTC(character?.name,  'stun:stun.l.google.com:19302', STABLE_UI_CONFIG);
+
+  // Gyroscope integration
+  const gyroscope = useGyroscope(STABLE_GYRO_CONFIG);
 
   const value = useMemo(() => ({
     nickname,
