@@ -37,31 +37,17 @@ const WaitingRoom = () => {
     // --- The MISSING connection logic ---
     const connectAll = async () => {
       try {
-        // 1. Initialize Gyroscope
-        if (gyroscope.isSupported()) {
-          await gyroscope.init();
-        }
-
-        // 2. Connect WebRTC
         const websocketUrl = 'wss://server-for-toy-cant-move.onrender.com';
         
-        // At this point, useWebRTC has the correct peerId (e.g., "red")
-        // and is ready to connect.
         const connectionResult = await webRTC.connect(websocketUrl, false, true);
         
-        if (!connectionResult) {
-          throw new Error('連線失敗');
-        }
-
         console.log('Successfully connected as', character.name);
 
       } catch (error) {
-        // Use the Error.jsx page to show the error
-        navigate('/error', { state: { message: error.message } });
+        navigate('/error', { state: { message: error.message || '連線失敗' } });
       }
     };
 
-    // 3. Only attempt to connect if we aren't already connected
     if (!connectionStatus) {
       connectAll();
     }
@@ -75,6 +61,7 @@ const WaitingRoom = () => {
     webRTC, 
     connectionStatus
   ]); 
+
   const handleNext = () => {
     navigate('/choose-level');
   };
