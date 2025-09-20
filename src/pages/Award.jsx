@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
+import { motion } from "framer-motion";
 
 const mockResults = [
   { name: '黃小姿', score: 200, avatar: '/images/green.png' },
@@ -31,7 +32,17 @@ const Award = () => {
       <div className="hero-content text-center">
         <div className="max-w-lg">
           <h1 className="text-4xl font-bold mb-8">頒獎台</h1>
-          <div className="card bg-base-100 shadow-xl">
+          <motion.div 
+            className="card bg-base-100 shadow-xl"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{
+              type: "spring",   // 用彈簧模擬的動畫
+              stiffness: 120,   // 彈性
+              damping: 15,      // 阻尼 (越小越彈)
+              duration: 0.8
+            }}
+          >
             <div className="card-body">
               {/* Podium */}
               <div className="flex justify-center items-end h-48 mb-6">
@@ -97,7 +108,7 @@ const Award = () => {
                 <button onClick={handlePlayAgain} className="btn btn-primary">再玩一次</button>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>

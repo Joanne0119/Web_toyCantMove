@@ -36,7 +36,7 @@ const EnterName = () => {
           }}
         >
           <motion.div
-            animate={{ scale: [1, 1.01, 1] }}
+            animate={{ scale: [1, 1.015, 1] }}
             transition={{
               duration: 1.5,
               repeat: Infinity,
@@ -63,7 +63,7 @@ const EnterName = () => {
           }}
         >
           <motion.div
-            animate={{ scale: [1, 1.02, 1] }}
+            animate={{ scale: [1, 1.025, 1] }}
             transition={{
               duration: 3,
               repeat: Infinity,
@@ -75,7 +75,7 @@ const EnterName = () => {
         </motion.div>
       </div>
       <motion.div 
-        className="card max-w-sm shadow-xl bg-base-200 translate-y-35"
+        className="card max-w-sm shadow-xl bg-base-200 translate-y-30"
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{
@@ -89,18 +89,18 @@ const EnterName = () => {
         <div className="card-body">
           <div className="form-control">
             <label className="label">
-              <span className="label-text">請輸入您的暱稱</span>
+              <span className="label-text text-base">請輸入您的暱稱</span>
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
-              placeholder="某某某"
-              className="input input-bordered mt-3"
+              placeholder="取個名字吧！"
+              className="input input-bordered mt-3 text-base"
             />
           </div>
-          <div className="form-control mt-6 flex justify-center">
+          <div className="form-control mt-6 flex justify-center text-base">
             <button onClick={handleSubmit} className="btn btn-primary">
               確定
             </button>

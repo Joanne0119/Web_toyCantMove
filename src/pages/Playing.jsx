@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useGame } from '../context/GameContext';
+import { motion } from "framer-motion";
+import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+
 
 const Playing = () => {
     const { webRTC, connectionStatus } = useGame();
@@ -8,6 +12,8 @@ const Playing = () => {
     // --- Game State ---
     const [characterPosition, setCharacterPosition] = useState({ x: 50, y: 50 }); // Position in percentage
     const GAME_SPEED = 2;
+
+    const [isControllerOpen, setIsControllerOpen] = useState(false);
     
     // Effect to handle incoming WebRTC messages for game control
     useEffect(() => {
@@ -103,38 +109,83 @@ const Playing = () => {
     }, [startSendingManual, stopSendingManualIfNoDirection]);
 
     return (
-        <div className="container mx-auto p-4 flex flex-col items-center">
-
+        <div className="relative w-screen h-screen p-6 flex flex-col items-center justify-center" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center'}}>
+            <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
             {/* Game Area */}
-            <div className="relative w-full max-w-2xl aspect-video bg-gray-200 rounded-lg shadow-inner overflow-hidden mb-4 border-2 border-gray-300">
-                <div 
+            <motion.div 
+                className="relative w-full max-h-full aspect-square bg-base-200/60 rounded-2xl shadow-inner-xl overflow-hidden backdrop-blur-xs"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{
+                    type: "spring",   // 用彈簧模擬的動畫
+                    stiffness: 120,   // 彈性
+                    damping: 15,      // 阻尼 (越小越彈)
+                    duration: 0.8
+                }}
+            >
+                <motion.div 
                     className="absolute w-8 h-8 bg-blue-500 rounded-full shadow-lg transition-all duration-100"
                     style={{ 
                         left: `calc(${characterPosition.x}% - 16px)`, 
                         top: `calc(${characterPosition.y}% - 16px)` 
                     }}
-                ></div>
-            </div>
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{
+                        type: "spring",   // 用彈簧模擬的動畫
+                        stiffness: 120,   // 彈性
+                        damping: 15,      // 阻尼 (越小越彈)
+                        duration: 0.8
+                    }}
+                ></motion.div>
+            </motion.div>
 
             {/* Manual Controller UI */}
-            <div className="card bg-base-100 shadow-xl w-full max-w-md">
-                <div className="card-body items-center text-center">
-                    <h2 className="card-title">手動控制器</h2>
-                    <div className="grid grid-cols-3 gap-2 w-48 mt-4 select-none" style={{ touchAction: 'none' }}>
+            <motion.div 
+                className="card absolute bottom-4 bg-base-100 shadow-xl px-6 py-2 max-w-md"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{
+                    type: "spring",   // 用彈簧模擬的動畫
+                    stiffness: 120,   // 彈性
+                    damping: 15,      // 阻尼 (越小越彈)
+                    duration: 0.8,
+                    delay: 0.3
+                }}
+            >
+                <div className="card-body items-center text-center py-4">
+                    <div className="flex justify-center items-center w-full relative" onClick={() => setIsControllerOpen(!isControllerOpen)}>
+                        <h2 className="card-title">手動控制器</h2>
+                        <button 
+                            className="btn btn-ghost btn-sm btn-circle absolute right-0"
+                            aria-label={isControllerOpen ? "收合控制器" : "展開控制器"}
+                        >
+                            {isControllerOpen ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                            ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" /></svg>
+                            )}
+                        </button>
+                    </div>
+                    <div className={`
+                        grid grid-cols-3 gap-2 select-none
+                        transition-all duration-300 ease-in-out overflow-hidden 
+                        ${isControllerOpen ? 'max-h-96 mt-4' : 'max-h-0 mt-0'}
+                    `} style={{ touchAction: 'none' }}>
                         <div className="col-span-1"></div>
-                        <button className="btn btn-outline btn-circle" {...setupButtonHandlers('up')}>↑</button>
+                        <motion.button whileTap={{ scale: 0.9 }} className="btn btn-outline btn-primary btn-circle p-6 text-xl font-bold" {...setupButtonHandlers('up')}>↑</motion.button>
                         <div className="col-span-1"></div>
 
-                        <button className="btn btn-outline btn-circle" {...setupButtonHandlers('left')}>←</button>
+                        <motion.button whileTap={{ scale: 0.9 }} className="btn btn-outline btn-primary btn-circle p-6 text-xl font-bold" {...setupButtonHandlers('left')}>←</motion.button>
                         <div className="col-span-1"></div>
-                        <button className="btn btn-outline btn-circle" {...setupButtonHandlers('right')}>→</button>
+                        <motion.button whileTap={{ scale: 0.9 }} className="btn btn-outline btn-primary btn-circle p-6 text-xl font-bold" {...setupButtonHandlers('right')}>→</motion.button>
 
                         <div className="col-span-1"></div>
-                        <button className="btn btn-outline btn-circle" {...setupButtonHandlers('down')}>↓</button>
+                        <motion.button whileTap={{ scale: 0.9 }} className="btn btn-outline btn-primary btn-circle p-6 text-xl font-bold" {...setupButtonHandlers('down')}>↓</motion.button>
                         <div className="col-span-1"></div>
                     </div>
                 </div>
-            </div>
+            </motion.div>
         </div>
     )
 }

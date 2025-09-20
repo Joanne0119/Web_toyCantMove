@@ -25,7 +25,7 @@ const Navbar = () => {
         )}
       </div>
       <div className="navbar-end">
-        <a className="btn btn-ghost normal-case text-xl">不會動的玩具</a>
+        {/* <a className="btn btn-ghost normal-case text-xl">不會動的玩具</a> */}
       </div>
     </div>
   );

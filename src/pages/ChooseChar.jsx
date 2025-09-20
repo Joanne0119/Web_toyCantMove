@@ -35,7 +35,7 @@ const ChooseChar = () => {
     <div className="hero min-h-screen bg-base-200 overflow-x-hidden" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
       <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
       <div className="hero-content text-center">
-        <div className="max-w-md">
+        <div className="max-w-lg">
           <motion.div 
             className="card bg-base-100 shadow-xl mt-8"
             initial={{ scale: 0, opacity: 0 }}
@@ -48,7 +48,7 @@ const ChooseChar = () => {
             }}
           >
             <div className="card-body">
-              <h2 className="card-title">你好，{nickname}，請選擇角色</h2>
+              <h2 className="card-title">哈囉！{nickname}，請選擇角色</h2>
               <div className="flex flex-col items-center my-4">
                 <div className="avatar online">
                   <div className="w-48 h-48 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2 flex justify-center items-center overflow-hidden">
@@ -85,7 +85,8 @@ const ChooseChar = () => {
 
               <div className="flex justify-center space-x-3 mb-6">
                 {characters.map((char) => (
-                  <div
+                  <motion.div
+                    whileTap={{ scale: 0.9 }}
                     key={char.name}
                     className={`avatar cursor-pointer ${selectedChar.name === char.name ? 'ring ring-primary ring-offset-base-100 ring-offset-2 rounded-full' : ''}`}
                     onClick={() => handleSelectChar(char)}
@@ -93,35 +94,38 @@ const ChooseChar = () => {
                     <div className="w-16 rounded-full">
                       <img src={char.src} alt={char.name}/>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
 
               <div className="card-actions justify-center">
                 {!connectionStatus ? 
-                <button
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
                   onClick={handleConfirm}
-                  className="btn btn-primary"
+                  className="btn btn-primary text-base"
                   disabled={connectionStatus} // Disable if already connected
                 >
                   確定
-                </button>
+                </motion.button>
                 :
-                <button
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
                   onClick={() => {navigate('/waiting-room');}}
-                  className="btn btn-primary"
+                  className="btn btn-primary text-base"
                   disabled={ !connectionStatus} 
                 >
                   下一步
-                </button>
+                </motion.button>
                 }
-                <button
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
                   onClick={disconnectWebRTC}
-                  className="btn btn-error"
+                  className="btn btn-error text-base"
                   disabled={!connectionStatus} // Disable if not connected
                 >
                   斷線
-                </button>
+                </motion.button>
               </div>
             </div>
           </motion.div>
