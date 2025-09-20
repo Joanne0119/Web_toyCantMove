@@ -9,7 +9,15 @@ const mockPlayers = [
 ];
 
 const WaitingRoom = () => {
-  const { nickname, character, players, setPlayers } = useGame();
+  const {
+    nickname,
+    character,
+    players,
+    setPlayers,
+    webRTC,        
+    gyroscope,      
+    connectionStatus  
+  } = useGame();
   const navigate = useNavigate();
 
   // For now, we'll treat the first player as the host.
@@ -42,7 +50,7 @@ const WaitingRoom = () => {
         const connectionResult = await webRTC.connect(websocketUrl, false, true);
         
         if (!connectionResult) {
-          throw new Error('WebRTC connection failed.');
+          throw new Error('連線失敗');
         }
 
         console.log('Successfully connected as', character.name);
