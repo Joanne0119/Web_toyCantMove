@@ -75,7 +75,7 @@ const WaitingRoom = () => {
   };
 
   const handleLeave = () => {
-    navigate('/');
+    navigate('/leave');
   };
 
   return (
