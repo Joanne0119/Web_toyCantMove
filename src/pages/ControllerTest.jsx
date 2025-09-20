@@ -82,7 +82,7 @@ const ControllerTest = () => {
                 <button onClick={handleInitGyroscope} className="btn btn-primary" disabled={!isSupported}>
                   {isInitialized ? '感測器已啟用' : (isSupported ? '啟用感測器' : '不支援')}
                 </button>
-                <button onClick={handleCalibrateGyroscope} className="btn btn-secondary" disabled={!isSupported || !isCalibrated}>
+                <button onClick={handleCalibrateGyroscope} className="btn btn-secondary" disabled={!isInitialized}>
                   {isCalibrated ? '重新校正' : '校正'}
                 </button>
               </div>
