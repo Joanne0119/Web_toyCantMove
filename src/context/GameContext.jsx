@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useMemo } from 'react';
 import { useWebRTC } from '../hooks/useWebRTC';
 import { useGyroscope } from '../hooks/useGyroscope';
 
@@ -32,7 +32,7 @@ export const GameProvider = ({ children }) => {
     autoCalibrate: false,
   });
 
-  const value = {
+  const value = useMemo(() => ({
     nickname,
     setNickname,
     character,
@@ -53,7 +53,9 @@ export const GameProvider = ({ children }) => {
       coordinates: gyroscope.coordinates,
       error: gyroscope.error,
     },
-  };
+  }), [nickname, character, players, level, score, 
+    webRTC, gyroscope,
+  ]);
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
 };

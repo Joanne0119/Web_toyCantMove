@@ -90,33 +90,45 @@ const WaitingRoom = () => {
           <h1 className="text-4xl font-bold">不會動的玩具<br/>才正常吧</h1>
           <div className="card bg-base-100 shadow-xl mt-8">
             <div className="card-body">
-              <h2 className="card-title">等待玩家進入...</h2>
-              <div className="space-y-3 mt-4">
-                {players.map((player, index) => (
-                  <div key={index} className="flex items-center bg-base-200 p-2 rounded-lg">
-                    <div className="avatar mr-4">
-                      <div className="w-12 rounded-full">
-                        <img src={player.avatar} alt={player.name} />
-                      </div>
-                    </div>
-                    <span className="text-lg">{player.name}</span>
+              {!connectionStatus ? (
+                <div>
+                  <h2 className="card-title justify-center">正在連線至伺服器...</h2>
+                  <div className="flex justify-center my-4">
+                    <span className="loading loading-spinner loading-lg"></span>
                   </div>
-                ))}
-              </div>
-              <div className="card-actions justify-center mt-6">
-                <div className="flex flex-col space-y-2 w-full">
-                  {isHost ? (
-                    <button onClick={handleNext} className="btn btn-primary">
-                      下一步
-                    </button>
-                  ) : (
-                    <p className='text-center'>等待房主開始遊戲...</p>
-                  )}
-                  <button onClick={handleLeave} className="btn btn-ghost">
-                    離開房間
-                  </button>
+                  <p className="text-center">以 {character?.name} 的身份加入...</p>
                 </div>
-              </div>
+              ) : (
+                <div>
+                  <h2 className="card-title">等待玩家進入...</h2>
+                  <div className="space-y-3 mt-4">
+                    {players.map((player, index) => (
+                      <div key={index} className="flex items-center bg-base-200 p-2 rounded-lg">
+                        <div className="avatar mr-4">
+                          <div className="w-12 rounded-full">
+                            <img src={player.avatar} alt={player.name} />
+                          </div>
+                        </div>
+                        <span className="text-lg">{player.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="card-actions justify-center mt-6">
+                    <div className="flex flex-col space-y-2 w-full">
+                      {isHost ? (
+                        <button onClick={handleNext} className="btn btn-primary">
+                          下一步
+                        </button>
+                      ) : (
+                        <p className='text-center'>等待房主開始遊戲...</p>
+                      )}
+                      <button onClick={handleLeave} className="btn btn-ghost">
+                        離開房間
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -50,6 +50,7 @@ export const useWebRTC = (localPeerId, stunServerAddress, uiConfig) => {
       return () => {
         manager.closeWebRTC();
         manager.closeWebSocket();
+        managerRef.current = null;
       };
     }
   }, [localPeerId, stunServerAddress, uiConfig]);
