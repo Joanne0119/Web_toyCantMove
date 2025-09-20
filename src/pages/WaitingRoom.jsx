@@ -15,7 +15,7 @@ const WaitingRoom = () => {
   // For now, we'll treat the first player as the host.
   const isHost = players.length > 0 && players[0].name === nickname;
 
-  uuseEffect(() => {
+  useEffect(() => {
     // Safety check: If there's no player info, go back to the start
     if (!nickname || !character) {
       navigate('/');
