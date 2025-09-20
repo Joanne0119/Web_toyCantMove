@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
+import { motion, AnimatePresence } from "framer-motion";
 
 const characters = [
   { name: 'red', speed: 8, power: 10, skill: 7, src: '/images/red.png' },
@@ -49,16 +50,38 @@ const ChooseChar = () => {
   }, [connectWebRTC, initGyroscope, isGyroscopeSupported, navigate, selectedChar, setCharacter]);
 
   return (
-    <div className="hero min-h-screen bg-base-200 overflow-x-hidden">
+    <div className="hero min-h-screen bg-base-200 overflow-x-hidden" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
+      <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
       <div className="hero-content text-center">
         <div className="max-w-md">
-          <div className="card bg-base-100 shadow-xl mt-8">
+          <motion.div 
+            className="card bg-base-100 shadow-xl mt-8"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{
+              type: "spring",   // 用彈簧模擬的動畫
+              stiffness: 120,   // 彈性
+              damping: 15,      // 阻尼 (越小越彈)
+              duration: 0.8
+            }}
+          >
             <div className="card-body">
               <h2 className="card-title">你好，{nickname}，請選擇角色</h2>
               <div className="flex flex-col items-center my-4">
                 <div className="avatar online">
-                  <div className="w-48 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-                    <img src={selectedChar.src} alt={selectedChar.name} className="w-full max-w-xs object-contain"/>
+                  <div className="w-48 h-48 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2 flex justify-center items-center overflow-hidden">
+                    <AnimatePresence mode="wait">
+                      <motion.img
+                        key={selectedChar.name}
+                        src={selectedChar.src}
+                        alt={selectedChar.name}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{ duration: 0.3 }}
+                        className="w-full max-w-xs object-contain"
+                      />
+                    </AnimatePresence>
                   </div>
                 </div>
                 <div className="text-2xl font-bold capitalize mt-4">{selectedChar.name}</div>
@@ -109,7 +132,7 @@ const ChooseChar = () => {
                 </button>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>
