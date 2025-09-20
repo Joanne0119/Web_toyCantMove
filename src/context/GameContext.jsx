@@ -14,7 +14,7 @@ export const GameProvider = ({ children }) => {
   const [score, setScore] = useState(0);
 
   // WebRTC integration
-  const webRTC = useWebRTC(character?.name,  'stun:stun.l.google.com:19302', {
+  const webRTC = useWebRTC(nickname, 'stun:stun.l.google.com:19302', {
     videoContainerId: 'remoteVideosContainer',
     localVideoPlayerId: 'localVideoPlayer',
   });
@@ -47,7 +47,7 @@ export const GameProvider = ({ children }) => {
     gyroscope,
     connectionStatus: webRTC.isConnected,
     gyroscopeStatus: {
-      isSupported: gyroscope.isSupported(),
+      isSupported: gyroscope.isSupported,
       isCalibrated: gyroscope.isCalibrated,
       direction: gyroscope.direction,
       coordinates: gyroscope.coordinates,

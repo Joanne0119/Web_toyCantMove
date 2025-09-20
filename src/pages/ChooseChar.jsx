@@ -24,12 +24,30 @@ const ChooseChar = () => {
   };
 
   // Handle confirmation
-  const handleConfirm = useCallback(() => {
-    // Save the selected character
-    setCharacter(selectedChar);
-    // Navigate to the waiting room if everything is successful
-    navigate('/waiting-room');
-  }, [ navigate, selectedChar, setCharacter]);
+  const handleConfirm = useCallback(async () => {
+    try {
+      // Save the selected character
+      setCharacter(selectedChar);
+
+      // Initialize the gyroscope if supported
+      if (isGyroscopeSupported()) {
+        await initGyroscope();
+      }
+
+      // Connect WebRTC
+      const websocketUrl = 'wss://server-for-toy-cant-move.onrender.com';
+      const connectionResult = await connectWebRTC(websocketUrl, false, true);
+      if (!connectionResult) {
+        throw new Error('WebRTC 連線失敗，請檢查網路或伺服器設定。');
+      }
+
+      // Navigate to the waiting room if everything is successful
+      navigate('/waiting-room');
+    } catch (error) {
+      // Navigate to the error page with the error message
+      navigate('/error', { state: { message: error.message } });
+    }
+  }, [connectWebRTC, initGyroscope, isGyroscopeSupported, navigate, selectedChar, setCharacter]);
 
   return (
     <div className="hero min-h-screen bg-base-200 overflow-x-hidden" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>

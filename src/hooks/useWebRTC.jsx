@@ -10,48 +10,46 @@ export const useWebRTC = (localPeerId, stunServerAddress, uiConfig) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (localPeerId) {
-      if (!managerRef.current) {
-        managerRef.current = new WebRTCManager(localPeerId, stunServerAddress, uiConfig);
-      }
-
-      const manager = managerRef.current;
-
-      manager.onWebSocketConnection = (state) => {
-        setIsConnected(state === 'open');
-        if (state === 'error' || state === 'closed') {
-          setError({ type: 'websocket', message: `WebSocket connection ${state}` });
-        }
-      };
-
-      manager.onWebRTCConnection = (peerId) => {
-        setWebRTCConnections((prev) => {
-          if (!prev.includes(peerId)) {
-            return [...prev, peerId];
-          }
-          return prev;
-        });
-      };
-
-      manager.onDataChannelConnection = (peerId) => {
-        setDataChannelConnections((prev) => {
-          if (!prev.includes(peerId)) {
-            return [...prev, peerId];
-          }
-          return prev;
-        });
-      };
-
-      manager.onDataChannelMessageReceived = (message, peerId) => {
-        setLastMessage({ message, peerId, timestamp: Date.now() });
-      };
-
-      // Cleanup on unmount
-      return () => {
-        manager.closeWebRTC();
-        manager.closeWebSocket();
-      };
+    if (!managerRef.current) {
+      managerRef.current = new WebRTCManager(localPeerId, stunServerAddress, uiConfig);
     }
+
+    const manager = managerRef.current;
+
+    manager.onWebSocketConnection = (state) => {
+      setIsConnected(state === 'open');
+      if (state === 'error' || state === 'closed') {
+        setError({ type: 'websocket', message: `WebSocket connection ${state}` });
+      }
+    };
+
+    manager.onWebRTCConnection = (peerId) => {
+      setWebRTCConnections((prev) => {
+        if (!prev.includes(peerId)) {
+          return [...prev, peerId];
+        }
+        return prev;
+      });
+    };
+
+    manager.onDataChannelConnection = (peerId) => {
+      setDataChannelConnections((prev) => {
+        if (!prev.includes(peerId)) {
+          return [...prev, peerId];
+        }
+        return prev;
+      });
+    };
+
+    manager.onDataChannelMessageReceived = (message, peerId) => {
+      setLastMessage({ message, peerId, timestamp: Date.now() });
+    };
+
+    // Cleanup on unmount
+    return () => {
+      manager.closeWebRTC();
+      manager.closeWebSocket();
+    };
   }, [localPeerId, stunServerAddress, uiConfig]);
 
   const connect = useCallback(async (webSocketUrl, isVideoAudioSender, isVideoAudioReceiver) => {
