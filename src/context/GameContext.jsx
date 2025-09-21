@@ -30,9 +30,16 @@ export const GameProvider = ({ children }) => {
   const [level, setLevel] = useState(null);
   const [score, setScore] = useState(0);
 
-  // WebRTC integration
-  const webRTC = useWebRTC(character?.name,  'stun:stun.l.google.com:19302', STABLE_UI_CONFIG);
+  const [peerId] = useState('web-' + Math.random().toString(36).substring(2, 9));
 
+
+  // WebRTC integration
+  const webRTC = useWebRTC(
+    peerId,
+    'stun:stun.l.google.com:19302',
+    STABLE_UI_CONFIG
+  );
+  
   // Gyroscope integration
   const gyroscope = useGyroscope(STABLE_GYRO_CONFIG);
 

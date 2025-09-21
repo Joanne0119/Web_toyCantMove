@@ -19,6 +19,8 @@ const WaitingRoom = () => {
     gyroscope,
     connectionStatus
   } = useGame();
+
+  const { dataChannelConnections, sendData } = webRTC;
   
   const navigate = useNavigate();
   const isHost = players.length > 0 && players[0].name === nickname;
