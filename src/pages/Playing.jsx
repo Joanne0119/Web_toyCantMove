@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useGame } from '../context/GameContext';
+import { useGame } from '../context/GameContext'; 
 import { motion } from "framer-motion";
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 
 
 const Playing = () => {
-    const { webRTC, connectionStatus } = useGame();
+    const { webRTC, connectionStatus, gyroscopeStatus } = useGame();
     const { lastMessage, sendData: sendWebRTCData, dataChannelConnections } = webRTC;
+    const { isCalibrated, coordinates } = gyroscopeStatus;
 
     // --- Game State ---
     const [characterPosition, setCharacterPosition] = useState({ x: 50, y: 50 }); // Position in percentage
@@ -37,6 +38,23 @@ const Playing = () => {
         }
     }, [lastMessage]);
 
+    useEffect(() => {
+      if (connectionStatus && isCalibrated) {
+        const vector = { x: coordinates.x, y: coordinates.y };
+        
+        setCharacterPosition(prevPos => {
+          const newX = prevPos.x + (vector.x * GAME_SPEED);
+          const newY = prevPos.y - (vector.y * GAME_SPEED);
+          return {
+            x: Math.max(0, Math.min(100, newX)),
+            y: Math.max(0, Math.min(100, newY)),
+          };
+        });
+
+        const msg = JSON.stringify({ type: 'move', vector });
+        sendWebRTCData(msg, null); 
+      }
+    }, [coordinates, connectionStatus, isCalibrated, sendWebRTCData, GAME_SPEED]); // 依賴陀螺儀座標
 
     // --- Button Controls (Manual Sender) ---
     const pressed = useRef({ up: false, down: false, left: false, right: false });
@@ -109,7 +127,7 @@ const Playing = () => {
     }, [startSendingManual, stopSendingManualIfNoDirection]);
 
     return (
-        <div className="relative w-screen h-screen p-6 flex flex-col items-center justify-center" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center'}}>
+        <div className="relative w-screen h-screen px-6 flex flex-col items-center justify-center" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center'}}>
             <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
             {/* Game Area */}
             <motion.div 

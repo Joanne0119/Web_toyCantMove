@@ -739,19 +739,35 @@ class WebRTCManager {
   // See `initiateOffersToAllPeers`.
 
   sendViaDataChannel(message, targetPeerId = null) {
-    if (targetPeerId) {
-      const dc = this.senderDataChannels.get(targetPeerId);
+    
+    const trySend = (dc, peerId) => {
       if (dc && dc.readyState === "open") {
         dc.send(message);
-      } else {
+        return true; 
+      }
+      return false; 
+    };
+
+    if (targetPeerId) {
+
+      const senderDC = this.senderDataChannels.get(targetPeerId);
+      const receiverDC = this.receiverDataChannels.get(targetPeerId);
+
+      if (!trySend(senderDC, targetPeerId) && !trySend(receiverDC, targetPeerId)) {
         console.warn(`Data channel to ${targetPeerId} not open or doesn't exist.`);
       }
     } else {
-      // Send to all open sender data channels
-      this.senderDataChannels.forEach((dc, peerId) => {
-        if (dc.readyState === "open") {
-          dc.send(message);
-        } else {
+
+      const allPeerIds = new Set([
+        ...this.senderDataChannels.keys(),
+        ...this.receiverDataChannels.keys()
+      ]);
+
+      allPeerIds.forEach(peerId => {
+        const senderDC = this.senderDataChannels.get(peerId);
+        const receiverDC = this.receiverDataChannels.get(peerId);
+        
+        if (!trySend(senderDC, peerId) && !trySend(receiverDC, peerId)) {
           console.warn(`Data channel to ${peerId} not open, skipping message.`);
         }
       });
