@@ -10,6 +10,13 @@ const characters = [
   { name: 'green', speed: 8, power: 10, skill: 7, src: '/images/green.png' },
 ];
 
+const ringColorMap = {
+  red: 'ring-red-600/50',
+  blue: 'ring-blue-600/50',
+  yellow: 'ring-yellow-600/50',
+  green: 'ring-green-600/50',
+};
+
 const ChooseChar = () => {
   const { nickname, setCharacter, webRTC, gyroscope, connectionStatus } = useGame();
   const [selectedChar, setSelectedChar] = useState(characters[0]);
@@ -51,7 +58,7 @@ const ChooseChar = () => {
               <h2 className="card-title">哈囉！{nickname}，請選擇角色</h2>
               <div className="flex flex-col items-center my-4">
                 <div className="avatar online">
-                  <div className="w-48 h-48 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2 flex justify-center items-center overflow-hidden">
+                  <div className={`w-48 h-48 rounded-full ${ringColorMap[selectedChar.name]} ring-4 ring-offset-base-100 ring-offset-2 flex justify-center items-center overflow-hidden`}>
                     <AnimatePresence mode="wait">
                       <motion.img
                         key={selectedChar.name}
@@ -88,7 +95,7 @@ const ChooseChar = () => {
                   <motion.div
                     whileTap={{ scale: 0.9 }}
                     key={char.name}
-                    className={`avatar cursor-pointer ${selectedChar.name === char.name ? 'ring ring-primary ring-offset-base-100 ring-offset-2 rounded-full' : ''}`}
+                    className={`avatar cursor-pointer ${selectedChar.name === char.name ? `ring ${ringColorMap[char.name]} ring-offset-base-100 ring-offset-2 rounded-full` : ''}`}
                     onClick={() => handleSelectChar(char)}
                   >
                     <div className="w-16 rounded-full">

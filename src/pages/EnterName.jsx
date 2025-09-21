@@ -36,7 +36,7 @@ const EnterName = () => {
           }}
         >
           <motion.div
-            animate={{ scale: [1, 1.015, 1] }}
+            animate={{ scale: [1, 1.02, 1] }}
             transition={{
               duration: 1.5,
               repeat: Infinity,
@@ -58,12 +58,12 @@ const EnterName = () => {
           transition={{
             type: "spring",   // 用彈簧模擬的動畫
             stiffness: 120,   // 彈性
-            damping: 15,      // 阻尼 (越小越彈)
-            duration: 0.8
+            damping: 10,      // 阻尼 (越小越彈)
+            duration: 1.0
           }}
         >
           <motion.div
-            animate={{ scale: [1, 1.025, 1] }}
+            animate={{ scale: [1, 1.03, 1] }}
             transition={{
               duration: 3,
               repeat: Infinity,

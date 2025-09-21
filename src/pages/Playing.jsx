@@ -1,18 +1,27 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useGame } from '../context/GameContext'; 
-import { motion } from "framer-motion";
+import { motion, useSpring, useTransform  } from "framer-motion";
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 
 
 const Playing = () => {
-    const { webRTC, connectionStatus, gyroscopeStatus } = useGame();
+    const { webRTC, connectionStatus, gyroscope, gyroscopeStatus } = useGame();
     const { lastMessage, sendData: sendWebRTCData, dataChannelConnections } = webRTC;
-    const { isCalibrated, coordinates } = gyroscopeStatus;
+    const { isCalibrated, coordinates, isInitialized } = gyroscopeStatus;
+    const { calibrate: calibrateGyroscope } = gyroscope; 
+
 
     // --- Game State ---
-    const [characterPosition, setCharacterPosition] = useState({ x: 50, y: 50 }); // Position in percentage
     const GAME_SPEED = 2;
+
+    const springConfig = { stiffness: 300, damping: 30 }; 
+    const smoothX = useSpring(50, springConfig);
+    const smoothY = useSpring(50, springConfig);
+
+    const transformedX = useTransform(smoothX, (v) => `calc(${v}% - 16px)`);
+    const transformedY = useTransform(smoothY, (v) => `calc(${v}% - 16px)`);
+
 
     const [isControllerOpen, setIsControllerOpen] = useState(false);
     
@@ -22,39 +31,36 @@ const Playing = () => {
             try {
                 const data = JSON.parse(lastMessage.message);
                 if ((data.type === "move" || data.type === "manualMove") && data.vector) {
-                    setCharacterPosition(prevPos => {
-                        const newX = prevPos.x + (data.vector.x * GAME_SPEED);
-                        const newY = prevPos.y - (data.vector.y * GAME_SPEED); // Y is often inverted in screen coordinates
+                    const newX = smoothX.get() + (data.vector.x * GAME_SPEED);
+                    const newY = smoothY.get() - (data.vector.y * GAME_SPEED);
 
-                        return {
-                            x: Math.max(0, Math.min(100, newX)),
-                            y: Math.max(0, Math.min(100, newY)),
-                        };
-                    });
+                    smoothX.set(Math.max(0, Math.min(100, newX)));
+                    smoothY.set(Math.max(0, Math.min(100, newY)));
                 }
             } catch (e) {
                 console.error("Failed to parse incoming message:", e);
             }
         }
-    }, [lastMessage]);
+    }, [lastMessage, GAME_SPEED, smoothX, smoothY]); 
+
 
     useEffect(() => {
-      if (connectionStatus && isCalibrated) {
+      const isManuallyControlled = Object.values(pressed.current).some(v => v);
+      
+      if (connectionStatus && isCalibrated && !isManuallyControlled) { 
         const vector = { x: coordinates.x, y: coordinates.y };
         
-        setCharacterPosition(prevPos => {
-          const newX = prevPos.x + (vector.x * GAME_SPEED);
-          const newY = prevPos.y - (vector.y * GAME_SPEED);
-          return {
-            x: Math.max(0, Math.min(100, newX)),
-            y: Math.max(0, Math.min(100, newY)),
-          };
-        });
+        const newX = smoothX.get() + (vector.x * GAME_SPEED);
+        const newY = smoothY.get() - (vector.y * GAME_SPEED);
+        
+        smoothX.set(Math.max(0, Math.min(100, newX)));
+        smoothY.set(Math.max(0, Math.min(100, newY)));
 
         const msg = JSON.stringify({ type: 'move', vector });
         sendWebRTCData(msg, null); 
       }
-    }, [coordinates, connectionStatus, isCalibrated, sendWebRTCData, GAME_SPEED]); // 依賴陀螺儀座標
+    }, [coordinates, connectionStatus, isCalibrated, sendWebRTCData, GAME_SPEED, smoothX, smoothY]); // ✅ 加上依賴項
+
 
     // --- Button Controls (Manual Sender) ---
     const pressed = useRef({ up: false, down: false, left: false, right: false });
@@ -129,38 +135,57 @@ const Playing = () => {
     return (
         <div className="relative w-screen h-screen px-6 flex flex-col items-center justify-center" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center'}}>
             <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
+            <motion.button
+                whileTap={{ scale: 0.9 }}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{
+                    type: "spring",  
+                    stiffness: 120,   
+                    damping: 15,      
+                    duration: 0.8
+                }}
+                className={`btn btn-sm btn-primary text-base z-10 mb-4 ${isInitialized ? 'visible' : 'invisible'}`}
+                onClick={calibrateGyroscope}
+                disabled={!isInitialized} // 只有在啟用感測器後才能校正
+            >
+                重新校正
+            </motion.button>
+
             {/* Game Area */}
             <motion.div 
                 className="relative w-full max-h-full aspect-square bg-base-200/60 rounded-2xl shadow-inner-xl overflow-hidden backdrop-blur-xs"
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{
-                    type: "spring",   // 用彈簧模擬的動畫
-                    stiffness: 120,   // 彈性
-                    damping: 15,      // 阻尼 (越小越彈)
-                    duration: 0.8
+                    type: "spring",   
+                    stiffness: 120,   
+                    damping: 15,      
+                    duration: 0.8,
+                    delay: 0.2
                 }}
             >
                 <motion.div 
-                    className="absolute w-8 h-8 bg-blue-500 rounded-full shadow-lg transition-all duration-100"
+                    className="absolute w-8 h-8 bg-blue-500 rounded-full shadow-lg" // <-- 移除了 transition-all
                     style={{ 
-                        left: `calc(${characterPosition.x}% - 16px)`, 
-                        top: `calc(${characterPosition.y}% - 16px)` 
+                        left: transformedX, 
+                        top: transformedY
                     }}
                     initial={{ scale: 0, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{
-                        type: "spring",   // 用彈簧模擬的動畫
-                        stiffness: 120,   // 彈性
-                        damping: 15,      // 阻尼 (越小越彈)
+                        type: "spring",
+                        stiffness: 120,
+                        damping: 15,
                         duration: 0.8
                     }}
                 ></motion.div>
+                
             </motion.div>
 
             {/* Manual Controller UI */}
             <motion.div 
-                className="card absolute bottom-4 bg-base-100 shadow-xl px-6 py-2 max-w-md"
+                className="card absolute bottom-4 bg-base-100 shadow-xl px-6 py-2 max-w-md z-20"
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{

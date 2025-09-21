@@ -28,14 +28,20 @@ const WaitingRoom = () => {
   const hasAttemptedConnection = useRef(false);
 
   useEffect(() => {
-    if (!nickname || !character) {
-      navigate('/');
-      return; 
+    if (character && dataChannelConnections && dataChannelConnections.length > 0) {
+      
+      const identityMessage = {
+        type: "identify",
+        characterName: character.name, 
+        nickname: nickname
+      };
+      
+      sendData(JSON.stringify(identityMessage), null);
+
+      console.log('Data Channel is open. Sent identity to Unity:', identityMessage);
     }
-    
-    setPlayers([{ name: nickname, avatar: character.src }, ...mockPlayers]);
-  
-  }, [nickname, character, setPlayers, navigate]); 
+  }, [dataChannelConnections, character, nickname, sendData]);
+
   
   useEffect(() => {
     const connectAll = async () => {
