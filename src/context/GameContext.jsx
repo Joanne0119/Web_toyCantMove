@@ -29,7 +29,7 @@ export const GameProvider = ({ children }) => {
   const [players, setPlayers] = useState([]);
   const [level, setLevel] = useState(null);
   const [score, setScore] = useState(0);
-
+  const [hostId, setHostId] = useState(null); 
   const [peerId] = useState('web-' + Math.random().toString(36).substring(2, 9));
 
 
@@ -101,6 +101,11 @@ export const GameProvider = ({ children }) => {
             )
           );
         }
+
+        if (msg.type === "host_update") {
+          console.log("New host is:", msg.hostId); 
+          setHostId(msg.hostId);
+        }
       } catch (e) {
         console.error(e);
       }
@@ -108,6 +113,8 @@ export const GameProvider = ({ children }) => {
   }, [lastMessage]); 
 
   const value = useMemo(() => ({
+    peerId: peerId,     
+    hostId: hostId, 
     nickname,
     setNickname,
     character,
@@ -129,7 +136,7 @@ export const GameProvider = ({ children }) => {
       coordinates: gyroscope.coordinates,
       error: gyroscope.error,
     },
-  }), [nickname, character, players, level, score, 
+  }), [peerId, hostId, nickname, character, players, level, score,
     webRTC, gyroscope, webRTCIsConnected, gyroIsCalibrated, gyroIsInitialized, gyroDirection, gyroCoordinates, gyroError 
   ]);
 

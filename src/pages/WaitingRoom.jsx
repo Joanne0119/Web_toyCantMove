@@ -16,6 +16,7 @@ const WaitingRoom = () => {
     players,
     setPlayers,
     peerId,
+    hostId,
     webRTC,
     gyroscope,
     connectionStatus
@@ -24,7 +25,8 @@ const WaitingRoom = () => {
   const { dataChannelConnections, sendData } = webRTC;
   
   const navigate = useNavigate();
-  const isHost = players.length > 0 && players[0].id === peerId; // (假設 peerId 是從 useGame() 拿到的)
+
+  const isHost = peerId === hostId;
   // 更好的方法：
   // const { webRTC } = useGame();
   // const isHost = players.length > 0 && players[0].id === webRTC.manager.localPeerId;
