@@ -52,6 +52,7 @@ class WebRTCManager {
     this.onDataChannelMessageReceived = null; // (message: string, peerId: string) => {}
     this.onVideoStreamEstablished = null; // (peerId: string, stream: MediaStream) => {}
     this.onAudioStreamEstablished = null; // (peerId: string, stream: MediaStream) => {}
+    this.onPeerListChange = null;
 
     this.isWebSocketConnected = false;
     this.isWebSocketConnectionInProgress = false;
@@ -135,6 +136,7 @@ class WebRTCManager {
 
     const pc = new RTCPeerConnection(config);
     this.peerConnections.set(peerId, pc);
+    this.onPeerListChange?.(Array.from(this.peerConnections.keys()));
     this._setupPeerConnectionEventHandlers(peerId, pc);
 
     // If we are the sender, add local tracks now if they exist
@@ -656,6 +658,7 @@ class WebRTCManager {
       pc.getSenders().forEach((s) => s.track?.stop());
       pc.close();
       this.peerConnections.delete(peerId);
+      this.onPeerListChange?.(Array.from(this.peerConnections.keys()));
     }
 
     this.senderDataChannels.delete(peerId); // RTCDataChannel.close() is called by pc.close()

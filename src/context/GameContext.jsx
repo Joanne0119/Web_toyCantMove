@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useMemo } from 'react';
+import React, { createContext, useState, useContext, useMemo, useEffect } from 'react';
 import { useWebRTC } from '../hooks/useWebRTC';
 import { useGyroscope } from '../hooks/useGyroscope';
 
@@ -39,11 +39,12 @@ export const GameProvider = ({ children }) => {
     'stun:stun.l.google.com:19302',
     STABLE_UI_CONFIG
   );
-  
+
   // Gyroscope integration
   const gyroscope = useGyroscope(STABLE_GYRO_CONFIG);
 
-  const { isConnected: webRTCIsConnected } = webRTC;
+  const { isConnected: webRTCIsConnected, peers: peerIds, lastMessage } = webRTC;
+  
   const { 
     isSupported: gyroIsSupported, 
     isCalibrated: gyroIsCalibrated, 
@@ -52,6 +53,59 @@ export const GameProvider = ({ children }) => {
     coordinates: gyroCoordinates, 
     error: gyroError 
   } = gyroscope;
+
+  useEffect(() => {
+    if (character && nickname) {
+      setPlayers(prev => [
+        ...prev.filter(p => p.id !== peerId), 
+        {
+          id: peerId,
+          name: nickname,
+          avatar: character.src
+        }
+      ]);
+    }
+  }, [character, nickname, peerId]);
+
+  useEffect(() => {
+    setPlayers(currentPlayers => {
+      const updatedPlayers = currentPlayers.filter(p =>
+        p.id === peerId || 
+        peerIds.includes(p.id) 
+      );
+
+      peerIds.forEach(id => {
+        if (!updatedPlayers.some(p => p.id === id)) {
+          updatedPlayers.push({
+            id: id,
+            name: "玩家載入中...",
+            avatar: "/images/gray.png"
+          });
+        }
+      });
+      return updatedPlayers;
+    });
+  }, [peerIds, peerId]);
+
+  useEffect(() => {
+    if (lastMessage) {
+      try {
+        const msg = JSON.parse(lastMessage.message);
+        
+        if (msg.type === "identify") {
+          setPlayers(currentPlayers =>
+            currentPlayers.map(p =>
+              p.id === lastMessage.peerId 
+                ? { ...p, name: msg.nickname, avatar: `/images/${msg.characterName}.png` } 
+                : p
+            )
+          );
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, [lastMessage]); 
 
   const value = useMemo(() => ({
     nickname,

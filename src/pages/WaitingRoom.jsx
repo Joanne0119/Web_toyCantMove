@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import { motion, AnimatePresence } from "framer-motion";
 
-const mockPlayers = [
-  { name: '黃小姿', avatar: '/images/green.png' },
-  { name: '爆香怪人', avatar: '/images/red.png' },
-  { name: '柳橙恩', avatar: '/images/yellow.png' },
-];
+// const mockPlayers = [
+//   { name: '黃小姿', avatar: '/images/green.png' },
+//   { name: '爆香怪人', avatar: '/images/red.png' },
+//   { name: '柳橙恩', avatar: '/images/yellow.png' },
+// ];
 
 const WaitingRoom = () => {
   const {
@@ -15,6 +15,7 @@ const WaitingRoom = () => {
     character,
     players,
     setPlayers,
+    peerId,
     webRTC,
     gyroscope,
     connectionStatus
@@ -23,8 +24,11 @@ const WaitingRoom = () => {
   const { dataChannelConnections, sendData } = webRTC;
   
   const navigate = useNavigate();
-  const isHost = players.length > 0 && players[0].name === nickname;
-  
+  const isHost = players.length > 0 && players[0].id === peerId; // (假設 peerId 是從 useGame() 拿到的)
+  // 更好的方法：
+  // const { webRTC } = useGame();
+  // const isHost = players.length > 0 && players[0].id === webRTC.manager.localPeerId;
+
   const hasAttemptedConnection = useRef(false);
 
   useEffect(() => {

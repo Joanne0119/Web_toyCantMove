@@ -8,6 +8,7 @@ export const useWebRTC = (localPeerId, stunServerAddress, uiConfig) => {
   const [dataChannelConnections, setDataChannelConnections] = useState([]); // List of peer IDs with open data channels
   const [lastMessage, setLastMessage] = useState(null);
   const [error, setError] = useState(null);
+  const [peers, setPeers] = useState([]);
 
   useEffect(() => {
     if (localPeerId) {
@@ -44,6 +45,10 @@ export const useWebRTC = (localPeerId, stunServerAddress, uiConfig) => {
 
       manager.onDataChannelMessageReceived = (message, peerId) => {
         setLastMessage({ message, peerId, timestamp: Date.now() });
+      };
+
+      manager.onPeerListChange = (peerIds) => {
+        setPeers(peerIds);
       };
 
       // Cleanup on unmount
@@ -109,6 +114,7 @@ export const useWebRTC = (localPeerId, stunServerAddress, uiConfig) => {
     sendData,
     setLocalStream,
     initiateOffersToAllPeers,
+    peers,
     manager: managerRef.current // Expose manager instance for advanced use if needed
   };
 };
