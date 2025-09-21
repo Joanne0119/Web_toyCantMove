@@ -38,14 +38,9 @@ const WaitingRoom = () => {
   useEffect(() => {
     const connectAll = async () => {
       try {
-        // if (gyroscope.isSupported()) {
-        //   await gyroscope.init();
-        // }
-
         const websocketUrl = 'wss://server-for-toy-cant-move.onrender.com';
         
-        console.log('Attempting to connect...'); // 除錯日誌
-        const connectionResult = await webRTC.connect(websocketUrl, false, true);
+        const connectionResult = await webRTC.connect(websocketUrl, true, false);
         
         if (!connectionResult) {
           throw new Error('連線失敗 (connectionResult is false)');
