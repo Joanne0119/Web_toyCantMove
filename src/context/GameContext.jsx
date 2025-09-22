@@ -82,15 +82,26 @@ export const GameProvider = ({ children }) => {
     if (lastMessage) {
       try {
         const msg = JSON.parse(lastMessage.message);
-        
+        const peerId = lastMessage.peerId; 
+
         if (msg.type === "identify") {
-          setPlayers(currentPlayers =>
-            currentPlayers.map(p =>
-              p.id === lastMessage.peerId 
-                ? { ...p, name: msg.nickname, avatar: `/images/${msg.characterName}.png` } 
-                : p
-            )
-          );
+          const newPlayerInfo = {
+            id: peerId,
+            name: msg.nickname,
+            avatar: `/images/${msg.characterName}.png`
+          };
+
+          setPlayers(currentPlayers => {
+            const playerExists = currentPlayers.some(p => p.id === peerId);
+            
+            if (playerExists) {
+              return currentPlayers.map(p =>
+                p.id === peerId ? newPlayerInfo : p
+              );
+            } else {
+              return [...currentPlayers, newPlayerInfo];
+            }
+          });
         }
 
         if (msg.type === "host_update") {
