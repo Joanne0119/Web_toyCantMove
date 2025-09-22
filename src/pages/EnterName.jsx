@@ -21,7 +21,24 @@ const EnterName = () => {
     <div className="min-h-screen flex flex-col items-center justify-center" data-theme="dark" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center'}}>
       <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
       <div className="text-center mb-8">
-        {/* <h1 className="text-4xl font-bold">不會動的玩具<br/>才正常吧</h1> */}
+        <motion.div
+          className="absolute top-0 left-0 w-full h-full 
+             bg-no-repeat bg-contain
+             bg-[url('/images/gameTitle-mobile.png')] 
+            lg:bg-[url('/images/gameTitle.png')]"
+          style={{ backgroundPosition: 'left 47% top 30%' }}
+          // style={{ backgroundImage: "url('/images/gameTitle.png')", backgroundSize: "contain", backgroundRepeat: "no-repeat", backgroundPosition: "center", backgroundPosition: 'left 47% top 30%' }}
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{
+            type: "spring",   // 用彈簧模擬的動畫
+            stiffness: 120,   // 彈性
+            damping: 15,      // 阻尼 (越小越彈)
+            duration: 0.8,
+            delay: 0.5
+          }}
+        />
+
         <motion.div 
           className="absolute top-0 left-0 w-full h-full" 
           style={{ backgroundImage: "url('/images/legos.png')", backgroundSize: "cover", backgroundPosition: "right 43% bottom 50%"}}
@@ -75,7 +92,7 @@ const EnterName = () => {
         </motion.div>
       </div>
       <motion.div 
-        className="card max-w-sm shadow-xl bg-base-200 translate-y-30"
+        className="card max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl shadow-xl bg-base-200 translate-y-30"
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{

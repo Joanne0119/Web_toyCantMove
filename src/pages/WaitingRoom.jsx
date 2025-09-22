@@ -97,7 +97,7 @@ const WaitingRoom = () => {
     <div className="hero min-h-screen bg-base-200" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center'}}>
       <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
       <div className="hero-content text-center">
-        <div className="max-w-md">
+        <div className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl">
           <motion.div 
             className="card bg-base-100 shadow-xl mt-8"
             initial={{ scale: 0, opacity: 0 }}
