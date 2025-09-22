@@ -73,16 +73,6 @@ export const GameProvider = ({ children }) => {
         p.id === peerId || 
         peerIds.includes(p.id) 
       );
-
-      peerIds.forEach(id => {
-        if (!updatedPlayers.some(p => p.id === id)) {
-          updatedPlayers.push({
-            id: id,
-            name: "玩家載入中...",
-            avatar: "/images/gray.png"
-          });
-        }
-      });
       return updatedPlayers;
     });
   }, [peerIds, peerId]);

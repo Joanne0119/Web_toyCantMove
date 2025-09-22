@@ -10,9 +10,9 @@ const levels = [
 ];
 
 const ChooseLevel = () => {
-  const { nickname, players, level, setLevel, webRTC } = useGame();
+  const { nickname, players, level, setLevel, webRTC, peerId, hostId } = useGame();
   const navigate = useNavigate();
-  const isHost = players.length > 0 && players[0].name === nickname;
+  const isHost = peerId === hostId;
 
   const handleSelectLevel = (selectedLevel) => {
     if (isHost) {
@@ -22,6 +22,12 @@ const ChooseLevel = () => {
 
   const handleStartGame = () => {
     if (level) {
+      const startGameMessage = {
+        type: "start_game",
+        levelName: level.name 
+      };
+      webRTC.sendData(JSON.stringify(startGameMessage), null); 
+      
       navigate('/testing');
     } else {
       alert('Please select a level');
