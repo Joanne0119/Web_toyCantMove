@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,9 +10,15 @@ const levels = [
 ];
 
 const ChooseLevel = () => {
-  const { nickname, players, level, setLevel, webRTC, peerId, hostId } = useGame();
+  const { nickname, players, level, setLevel, webRTC, peerId, hostId, gameScene } = useGame();
   const navigate = useNavigate();
   const isHost = peerId === hostId;
+
+  useEffect(() => {
+    if (gameScene === 'Playing' && isHost) {
+      navigate('/testing'); 
+    }
+  }, [gameScene, isHost, navigate]);
 
   const handleSelectLevel = (selectedLevel) => {
     if (isHost) {
@@ -28,7 +34,6 @@ const ChooseLevel = () => {
       };
       webRTC.sendData(JSON.stringify(startGameMessage), null); 
       
-      navigate('/testing');
     } else {
       alert('Please select a level');
     }

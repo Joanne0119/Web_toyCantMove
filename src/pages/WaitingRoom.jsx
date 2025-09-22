@@ -17,6 +17,7 @@ const WaitingRoom = () => {
     setPlayers,
     peerId,
     hostId,
+    gameScene,
     webRTC,
     gyroscope,
     connectionStatus
@@ -27,11 +28,14 @@ const WaitingRoom = () => {
   const navigate = useNavigate();
 
   const isHost = peerId === hostId;
-  // 更好的方法：
-  // const { webRTC } = useGame();
-  // const isHost = players.length > 0 && players[0].id === webRTC.manager.localPeerId;
-
+  
   const hasAttemptedConnection = useRef(false);
+
+  useEffect(() => {
+    if (gameScene === 'Playing' && !isHost) { 
+      navigate('/testing');
+    }
+  }, [gameScene, isHost, navigate]);
 
   useEffect(() => {
     if (character && dataChannelConnections && dataChannelConnections.length > 0) {
