@@ -4,10 +4,10 @@ import { useGame } from '../context/GameContext';
 import { motion, AnimatePresence } from "framer-motion";
 
 const characters = [
-  { name: 'red', speed: 8, power: 10, skill: 7, src: '/images/red.png' },
-  { name: 'blue', speed: 10, power: 6, skill: 9, src: '/images/blue.png' },
-  { name: 'yellow', speed: 7, power: 9, skill: 8, src: '/images/yellow.png' },
-  { name: 'green', speed: 8, power: 10, skill: 7, src: '/images/green.png' },
+  { name: 'red', speed: 8, power: 10, skill: 7, src: '/images/red.png', pinSrc: '/images/redPin.png' },
+  { name: 'blue', speed: 10, power: 6, skill: 9, src: '/images/blue.png', pinSrc: '/images/bluePin.png' },
+  { name: 'yellow', speed: 7, power: 9, skill: 8, src: '/images/yellow.png', pinSrc: '/images/yellowPin.png' },
+  { name: 'green', speed: 8, power: 10, skill: 7, src: '/images/green.png', pinSrc: '/images/greenPin.png' },
 ];
 
 const ringColorMap = {

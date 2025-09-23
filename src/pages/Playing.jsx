@@ -6,7 +6,7 @@ import { useLocation } from 'react-router-dom';
 
 
 const Playing = () => {
-    const { webRTC, connectionStatus, gyroscope, gyroscopeStatus } = useGame();
+    const { character, webRTC, connectionStatus, gyroscope, gyroscopeStatus } = useGame();
     const { lastMessage, sendData: sendWebRTCData, dataChannelConnections } = webRTC;
     const { isCalibrated, coordinates, isInitialized } = gyroscopeStatus;
     const { calibrate: calibrateGyroscope } = gyroscope; 
@@ -166,10 +166,13 @@ const Playing = () => {
                 }}
             >
                 <motion.div 
-                    className="absolute w-8 h-8 bg-blue-500 rounded-full shadow-lg" // <-- 移除了 transition-all
+                    className="absolute w-8 h-8 rounded-full shadow-lg" 
                     style={{ 
                         left: transformedX, 
-                        top: transformedY
+                        top: transformedY,
+                        backgroundImage: `url(${character ? character.pinSrc : '/images/red.png'})`, 
+                        backgroundSize: 'cover', 
+                        backgroundPosition: 'center'
                     }}
                     initial={{ scale: 0, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
@@ -186,7 +189,6 @@ const Playing = () => {
             {/* Manual Controller UI */}
             <motion.div 
                 className="card absolute bottom-4 bg-base-100 shadow-xl px-6 py-2 max-w-md z-20"
-                initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{
                     type: "spring",   // 用彈簧模擬的動畫

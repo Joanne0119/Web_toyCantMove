@@ -58,7 +58,7 @@ const ControllerTest = () => {
       <div className="hero-content text-center">
         <div className="max-w-md">
           <motion.h1 
-            className="text-4xl font-bold"
+            className="text-4xl font-bold text-white"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{
