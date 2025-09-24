@@ -30,16 +30,13 @@ const WaitingRoom = () => {
   const isHost = peerId === hostId;
   
   const hasAttemptedConnection = useRef(false);
+  const hasSentIdentify = useRef(false);
 
   useEffect(() => {
-    if (gameScene === 'Playing' && !isHost) { 
-      navigate('/testing');
-    }
-  }, [gameScene, isHost, navigate]);
-
-  useEffect(() => {
-    if (character && dataChannelConnections && dataChannelConnections.length > 0) {
+    if (character && dataChannelConnections && dataChannelConnections.length > 0 && !hasSentIdentify.current) {
       
+      hasSentIdentify.current = true;
+
       const identityMessage = {
         type: "identify",
         characterName: character.name, 
@@ -51,6 +48,12 @@ const WaitingRoom = () => {
       console.log('Data Channel is open. Sent identity to Unity:', identityMessage);
     }
   }, [dataChannelConnections, character, nickname, sendData]);
+
+  useEffect(() => {
+    if (gameScene === 'Playing' && !isHost) { 
+      navigate('/testing');
+    }
+  }, [gameScene, isHost, navigate]);
 
   
   useEffect(() => {
