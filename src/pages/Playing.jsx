@@ -22,6 +22,28 @@ const Playing = () => {
     const transformedX = useTransform(smoothX, (v) => `calc(${v}% - 16px)`);
     const transformedY = useTransform(smoothY, (v) => `calc(${v}% - 16px)`);
 
+    const rotation = useSpring(0, { stiffness: 300, damping: 30 });
+
+    useEffect(() => {
+        const updateRotation = () => {
+            const vx = smoothX.getVelocity();
+            const vy = smoothY.getVelocity();
+    
+            if (Math.abs(vx) > 1 || Math.abs(vy) > 1) {
+                const newAngle = Math.atan2(vy, vx) * (180 / Math.PI) + 90;
+                rotation.set(newAngle);
+            }
+        };
+    
+        const unsubscribeX = smoothX.onChange(updateRotation);
+        const unsubscribeY = smoothY.onChange(updateRotation);
+    
+        return () => {
+            unsubscribeX();
+            unsubscribeY();
+        };
+    }, [smoothX, smoothY, rotation]);
+
 
     const [isControllerOpen, setIsControllerOpen] = useState(false);
     
@@ -166,14 +188,15 @@ const Playing = () => {
                 }}
             >
                 <motion.div 
-                    className="absolute w-8 h-8 rounded-full shadow-lg" 
+                    className="absolute w-10 h-16" 
                     style={{ 
                         left: transformedX, 
                         top: transformedY,
-                        backgroundImage: `url(${character ? character.pinSrc : '/images/red.png'})`, 
+                        backgroundImage: `url(${character ? character.pinSrc : '/images/redPin.png'})`, 
                         backgroundSize: 'cover', 
                         backgroundPosition: 'center'
                     }}
+                    rotate={rotation}
                     initial={{ scale: 0, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{
