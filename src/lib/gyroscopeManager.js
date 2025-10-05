@@ -491,11 +491,11 @@ class GyroscopeManager {
             return { x: 0, y: 0 }; // 如果尚未校正，回傳中心點
         }
 
-        const { alpha, beta } = this.calculateRelativeMovement();
+        const { beta, gamma } = this.calculateRelativeMovement();
         const maxAngle = this.config.maxThreshold;
 
-        let x = -alpha / maxAngle;
-        let y = beta / maxAngle;
+        let x = gamma / maxAngle; // gamma 控制左右
+        let y = beta / maxAngle; // beta 控制前後
 
         x = Math.max(-1, Math.min(1, x));
         y = Math.max(-1, Math.min(1, y));
@@ -532,8 +532,8 @@ class GyroscopeManager {
 
     // === 方向判斷系統 ===
     updateMovementDirection() {
-        const { alpha, beta } = this.calculateRelativeMovement();
-        const direction = this.determineDirection(alpha, beta);
+        const { beta, gamma } = this.calculateRelativeMovement();
+        const direction = this.determineDirection(beta, gamma);
 
         const coords = this.getDirectionAsCoordinates();
         if (this.callbacks.onCoordinateChange) {
@@ -562,11 +562,12 @@ class GyroscopeManager {
             this.state.smoothed.alpha - this.state.calibration.alpha
         );
         const deltaBeta = this.state.smoothed.beta - this.state.calibration.beta;
+        const deltaGamma = this.state.smoothed.gamma - this.state.calibration.gamma;
         
-        return { alpha: deltaAlpha, beta: deltaBeta };
+        return { alpha: deltaAlpha, beta: deltaBeta, gamma: deltaGamma };
     }
 
-    determineDirection(alpha, beta) {
+    determineDirection(beta, gamma) {
         // const absAlpha = Math.abs(alpha);
         // const absBeta = Math.abs(beta);
         const threshold = this.config.movementThreshold;
@@ -578,8 +579,8 @@ class GyroscopeManager {
 
         const isUp = beta > threshold;
         const isDown = beta < -threshold;
-        const isLeft = alpha > threshold; // alpha > 0 為往左
-        const isRight = alpha < -threshold; // alpha < 0 為往右
+        const isLeft = gamma < -threshold; // gamma < 0 為往左
+        const isRight = gamma > threshold; // gamma > 0 為往右
 
         // 優先判斷對角線方向
         if (isUp && isRight) return '往右上';
