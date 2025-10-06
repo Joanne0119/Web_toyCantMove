@@ -573,7 +573,7 @@ class GyroscopeManager {
         const threshold = this.config.movementThreshold;
         
         // 死區處理
-        if (Math.abs(alpha) < this.config.deadZone && Math.abs(beta) < this.config.deadZone) {
+        if (Math.abs(gamma) < this.config.deadZone && Math.abs(beta) < this.config.deadZone) {
             return '靜止';
         }
 
