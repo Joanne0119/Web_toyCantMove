@@ -99,8 +99,8 @@ const Tutorial = () => {
         // --- 啟用前的畫面 ---
         <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center z-10 card bg-base-100 shadow-xl mt-8">
             <div className="card-body">
-                <h1 className="text-4xl font-bold text-white mb-4">控制器教學</h1>
-                <p className="text-white text-lg mb-8">首先，啟用並校正你的感測器。</p>
+                <h1 className="text-4xl font-bold text-base mb-4">控制器教學</h1>
+                <p className="text-base text-lg mb-8">首先，啟用並校正你的感測器。</p>
                 <motion.button 
                     whileTap={{ scale: 0.95 }}
                     onClick={handleSetupSensors}
@@ -111,71 +111,73 @@ const Tutorial = () => {
             </div>
         </motion.div>
       ) : (
-        <div className="card-body">
+        <div>
         {/* 主要提示文字 */}
-        
-        <motion.div
-            key={instructionText}
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="text-center mb-8"
-        >
-            <h1 className="text-4xl font-bold text-white mb-4">
-            {instructionText}
-            </h1>
-            <p className="text-white text-lg">
-            等待所有玩家完成...
-            </p>
-        </motion.div>
+        <div className="card bg-base-100 shadow-xl mt-8 mb-8 z-10">
+        <div className="card-body items-center text-center">
+            <motion.div
+                key={instructionText}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="text-center mb-8"
+            >
+                <h1 className="text-4xl font-bold text-base mb-4">
+                {instructionText}
+                </h1>
+                <p className="text-base text-lg">
+                等待所有玩家完成...
+                </p>
+            </motion.div>
 
-        {/* 示意動畫區域 */}
-        <motion.div
-            className="w-64 h-64 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center mb-8"
-            animate={{
-            rotateZ: 
-                currentStep === 'forward' ? -15 :
-                currentStep === 'backward' ? 15 :
-                currentStep === 'left' ? 15 :
-                currentStep === 'right' ? -15 : 0
-            }}
-            transition={{ duration: 0.5 }}
-        >
-            <div className="w-32 h-48 bg-white rounded-2xl shadow-2xl flex items-center justify-center">
-            <span className="text-6xl">📱</span>
-            </div>
-        </motion.div>
-
-        {/* 步驟指示器 */}
-        <div className="flex gap-4 mb-8">
-            {['forward', 'left', 'right', 'backward'].map((step, index) => (
-            <div key={step} className="flex flex-col items-center">
-                <div className={`
-                w-12 h-12 rounded-full flex items-center justify-center
-                ${currentStep === step ? 'ring-4 ring-white' : ''}
-                ${completedSteps[step] ? 'bg-green-500' : 'bg-white/30'}
-                `}>
-                {completedSteps[step] ? (
-                    <span className="text-2xl">✓</span>
-                ) : (
-                    <span className="text-white font-bold">{index + 1}</span>
-                )}
+            {/* 示意動畫區域 */}
+            <motion.div
+                className="w-64 h-64 bg-base/20 backdrop-blur-sm rounded-3xl flex items-center justify-center mb-8"
+                animate={{
+                rotateZ: 
+                    currentStep === 'forward' ? -15 :
+                    currentStep === 'backward' ? 15 :
+                    currentStep === 'left' ? 15 :
+                    currentStep === 'right' ? -15 : 0
+                }}
+                transition={{ duration: 0.5 }}
+            >
+                <div className="w-32 h-48 bg-base rounded-2xl shadow-2xl flex items-center justify-center">
+                <span className="text-6xl">📱</span>
                 </div>
-                <span className="text-white text-xs mt-2">
-                {step === 'forward' ? '向前' :
-                step === 'left' ? '向左' :
-                step === 'right' ? '向右' : '向後'}
-                </span>
-            </div>
-            ))}
-        </div>        
+            </motion.div>
 
-        {/* 當前傾斜數據顯示（除錯用） */}
-        <div className="card bg-white/10 backdrop-blur-sm text-white p-4">
-            <p>當前座標: ({coordinates.x.toFixed(2)}, {coordinates.y.toFixed(2)})</p>
-            <p>校正狀態: {isCalibrated ? '✓ 已校正' : '✗ 未校正'}</p>
-            <p>連線狀態: {connectionStatus ? '✓ 已連線' : '✗ 未連線'}</p>
+            {/* 步驟指示器 */}
+            <div className="flex gap-4 mb-8">
+                {['forward', 'left', 'right', 'backward'].map((step, index) => (
+                <div key={step} className="flex flex-col items-center">
+                    <div className={`
+                    w-12 h-12 rounded-full flex items-center justify-center
+                    ${currentStep === step ? 'ring-4 ring-gray-100' : ''}
+                    ${completedSteps[step] ? 'bg-green-500' : 'bg-base/30'}
+                    `}>
+                    {completedSteps[step] ? (
+                        <span className="text-2xl">✓</span>
+                    ) : (
+                        <span className="text-base font-bold">{index + 1}</span>
+                    )}
+                    </div>
+                    <span className="text-base text-xs mt-2">
+                    {step === 'forward' ? '向前' :
+                    step === 'left' ? '向左' :
+                    step === 'right' ? '向右' : '向後'}
+                    </span>
+                </div>
+                ))}
+            </div>        
+            </div>
+            {/* 當前傾斜數據顯示（除錯用） */}
+            <div className="text-base p-4 items-center text-center mb-4">
+                <p>當前座標: ({coordinates.x.toFixed(2)}, {coordinates.y.toFixed(2)})</p>
+                <p>校正狀態: {isCalibrated ? '✅ 已校正' : '❌ 未校正'}</p>
+                <p>連線狀態: {connectionStatus ? '✅ 已連線' : '❌ 未連線'}</p>
+            </div>
         </div>
-      </div>
+        </div>
       )}
     </div>
   );
