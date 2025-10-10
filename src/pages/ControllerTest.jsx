@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 
 const ControllerTest = () => {
   const navigate = useNavigate();
-  const { webRTC, gyroscope, connectionStatus, gyroscopeStatus } = useGame();
+  const { webRTC, gyroscope, connectionStatus, gyroscopeStatus, gameScene } = useGame();
 
   const { connect: connectWebRTC, sendData: sendWebRTCData } = webRTC;
   const {
@@ -28,6 +28,14 @@ const ControllerTest = () => {
   }, [connectWebRTC]);
 
   useEffect(() => {
+    if (gameScene === 'Tutorial') {
+      navigate('/tutorial');
+    } else if (gameScene === 'Playing') {
+      navigate('/playing');
+    }
+  }, [gameScene, navigate]);
+
+  useEffect(() => {
     if (connectionStatus && isCalibrated) {
       const vector = { x: coordinates.x, y: coordinates.y }; // 直接用 coordinates 作為向量
       const msg = JSON.stringify({ type: 'move', vector }); // 匹配 Playing.jsx 的格式
@@ -42,6 +50,11 @@ const ControllerTest = () => {
       return;
     }
     await initGyroscope();
+
+    const calibratedMessage = { type: "calibrated" };
+    sendWebRTCData(JSON.stringify(calibratedMessage), null);
+    console.log("Sent 'calibrated' message to Unity.");
+
   }, [initGyroscope, isSupported]);
 
   const handleCalibrateGyroscope = useCallback(async () => {
@@ -49,7 +62,8 @@ const ControllerTest = () => {
   }, [calibrateGyroscope]);
 
   const handleStartGame = () => {
-    navigate('/playing');
+    const startMsg = JSON.stringify({ type: 'start_game' });
+    sendWebRTCData(startMsg, null);
   };
 
   return (

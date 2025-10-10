@@ -111,7 +111,7 @@ export const GameProvider = ({ children }) => {
 
         if (msg.type === "navigate_to_game") {
           console.log("Received navigate command from Unity, changing scene.");
-          setGameScene('Playing');
+          setGameScene('Tutorial');
         }
       } catch (e) {
         console.error(e);

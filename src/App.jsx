@@ -5,6 +5,7 @@ import ChooseChar from './pages/ChooseChar';
 import WaitingRoom from './pages/WaitingRoom';
 import ChooseLevel from './pages/ChooseLevel';
 import ControllerTest from './pages/ControllerTest';
+import Tutorial from './pages/Tutorial';
 import Playing from './pages/Playing';
 import Award from './pages/Award';
 import Error from './pages/Error';
@@ -22,6 +23,7 @@ function App() {
             <Route path="/waiting-room" element={<WaitingRoom />} />
             <Route path="/choose-level" element={<ChooseLevel />} />
             <Route path="/testing" element={<ControllerTest />} />
+            <Route path="/tutorial" element={<Tutorial />} />
             <Route path="/playing" element={<Playing />} />
             <Route path="/award" element={<Award />} />
             <Route path="/error" element={<Error />} />
