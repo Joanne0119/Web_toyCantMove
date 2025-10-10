@@ -18,7 +18,7 @@ const ringColorMap = {
 };
 
 const ChooseChar = () => {
-  const { nickname, setCharacter, webRTC, gyroscope, connectionStatus } = useGame();
+  const { nickname, setCharacter, webRTC, gyroscope, connectionStatus, gameScene } = useGame();
   const [selectedChar, setSelectedChar] = useState(characters[0]);
   const navigate = useNavigate();
 
@@ -37,6 +37,14 @@ const ChooseChar = () => {
     // Navigate to the waiting room if everything is successful
     navigate('/waiting-room');
   }, [ navigate, selectedChar, setCharacter]);
+
+  useEffect(() => {
+    if (gameScene === 'Tutorial') {
+      navigate('/testing'); 
+    } else if (gameScene === 'Playing') {
+      navigate('/playing');
+    }
+  }, [gameScene, navigate]);
 
   return (
     <div className="hero min-h-screen bg-base-200 overflow-x-hidden" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>

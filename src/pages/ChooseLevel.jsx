@@ -15,10 +15,12 @@ const ChooseLevel = () => {
   const isHost = peerId === hostId;
 
   useEffect(() => {
-    if (gameScene === 'Playing' && isHost) {
-      navigate('/testing'); 
-    }
-  }, [gameScene, isHost, navigate]);
+  if (gameScene === 'Tutorial') {
+    navigate('/testing'); 
+  } else if (gameScene === 'Playing') {
+    navigate('/playing');
+  }
+}, [gameScene, navigate]);
 
   const handleSelectLevel = (selectedLevel) => {
     if (isHost) {
