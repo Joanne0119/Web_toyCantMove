@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import { motion } from 'framer-motion';
@@ -7,8 +7,9 @@ const Tutorial = () => {
   const navigate = useNavigate();
   const { webRTC, gyroscope, connectionStatus, gyroscopeStatus } = useGame();
   const { init: initGyroscope, calibrate: calibrateGyroscope } = gyroscope;
-  const { lastMessage } = webRTC;
-  const { coordinates, isCalibrated, isInitialized, isSupported } = gyroscopeStatus;
+  const { isSupported } = gyroscope;
+  const { lastMessage, sendData: sendWebRTCData } = webRTC;
+  const { coordinates, isCalibrated, isInitialized } = gyroscopeStatus;
 
   // Tutorial 狀態
   const [currentStep, setCurrentStep] = useState('forward'); // forward, left, right, backward
@@ -92,23 +93,27 @@ const Tutorial = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-500 to-purple-600 flex flex-col items-center justify-center p-4">
+    <div className="hero min-h-screen bg-base-200 overflow-x-hidden" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
+      <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
       {!isInitialized ? (
         // --- 啟用前的畫面 ---
-        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center">
-            <h1 className="text-4xl font-bold text-white mb-4">控制器教學</h1>
-            <p className="text-white text-lg mb-8">首先，我們需要啟用並校正你的感測器。</p>
-            <motion.button 
-                whileTap={{ scale: 0.95 }}
-                onClick={handleSetupSensors}
-                className="btn btn-primary btn-lg"
-            >
-                啟用與校正
-            </motion.button>
+        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center z-10 card bg-base-100 shadow-xl mt-8">
+            <div className="card-body">
+                <h1 className="text-4xl font-bold text-white mb-4">控制器教學</h1>
+                <p className="text-white text-lg mb-8">首先，啟用並校正你的感測器。</p>
+                <motion.button 
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleSetupSensors}
+                    className="btn btn-primary btn-lg"
+                >
+                    啟用與校正
+                </motion.button>
+            </div>
         </motion.div>
       ) : (
-        <>
+        <div className="card-body">
         {/* 主要提示文字 */}
+        
         <motion.div
             key={instructionText}
             initial={{ scale: 0.8, opacity: 0 }}
@@ -170,7 +175,7 @@ const Tutorial = () => {
             <p>校正狀態: {isCalibrated ? '✓ 已校正' : '✗ 未校正'}</p>
             <p>連線狀態: {connectionStatus ? '✓ 已連線' : '✗ 未連線'}</p>
         </div>
-      </>
+      </div>
       )}
     </div>
   );
