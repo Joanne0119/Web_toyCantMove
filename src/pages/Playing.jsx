@@ -13,7 +13,7 @@ const Playing = () => {
 
 
     // --- Game State ---
-    const GAME_SPEED = 2;
+    const GAME_SPEED = 5;
 
     const springConfig = { stiffness: 300, damping: 30 }; 
     const smoothX = useSpring(50, springConfig);
