@@ -70,7 +70,7 @@ const Playing = () => {
       const isManuallyControlled = Object.values(pressed.current).some(v => v);
       
       if (connectionStatus && isCalibrated && !isManuallyControlled) { 
-        const vector = { x: coordinates.x, y: coordinates.y };
+        const vector = { x: coordinates.x, y: -coordinates.y };
         
         const newX = smoothX.get() + (vector.x * GAME_SPEED);
         const newY = smoothY.get() - (vector.y * GAME_SPEED);

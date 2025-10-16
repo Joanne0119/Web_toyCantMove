@@ -68,7 +68,10 @@ const Tutorial = () => {
         
         // 如果收到「進入遊戲」的指令
         if (msg.type === 'navigate_to_game') {
-          navigate('/playing');
+          navigate('/tutorial');
+        }
+        if (msg.type === 'navigate_to_playing') {
+          navigate('/playing'); 
         }
       } catch (e) {
         console.error('Parse tutorial message error:', e);
@@ -79,7 +82,7 @@ const Tutorial = () => {
   // 持續發送傾斜數據給 Unity
   useEffect(() => {
     if (connectionStatus && isCalibrated && isInitialized) {
-      const vector = { x: coordinates.x, y: coordinates.y };
+      const vector = { x: coordinates.x, y: -coordinates.y };
       const msg = JSON.stringify({ type: 'move', vector });
       webRTC.sendData(msg, null);
     }
