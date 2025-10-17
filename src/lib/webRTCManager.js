@@ -396,15 +396,16 @@ class WebRTCManager {
 
           // Let's assume for now that if an ACK arrives for a new peer, and we are a sender,
           // we might need to create an offer to them if `onnegotiationneeded` doesn't fire appropriately.
-          if (this.isLocalPeerVideoAudioSender && this.peerConnections.has(SenderPeerId)) {
-            // Check if an offer is already in progress or if connection is established
-            const pc = this.peerConnections.get(SenderPeerId);
-            if (pc && pc.signalingState === "stable") {
-              // Only if no negotiation is ongoing
-              console.log(`Considering offer to ${SenderPeerId} after NEWPEERACK`);
-              await this._createAndSendOffer(SenderPeerId);
-            }
-          }
+          
+          // if (this.isLocalPeerVideoAudioSender && this.peerConnections.has(SenderPeerId)) {
+          //   // Check if an offer is already in progress or if connection is established
+          //   const pc = this.peerConnections.get(SenderPeerId);
+          //   if (pc && pc.signalingState === "stable") {
+          //     // Only if no negotiation is ongoing
+          //     console.log(`Considering offer to ${SenderPeerId} after NEWPEERACK`);
+          //     await this._createAndSendOffer(SenderPeerId);
+          //   }
+          // }
         }
 
         break;
