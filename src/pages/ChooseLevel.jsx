@@ -5,8 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const levels = [
   { name: "玩具紙箱", image: "/images/toyboxLevel.png" },
-  { name: "書桌探險", image: "/images/level2.png" },
-  { name: "陰暗床底", image: "/images/level3.png" }
+  { name: "書桌探險", image: "/images/tableLevel.png" },
+  { name: "凌亂床鋪", image: "/images/bedLevel.png" }
 ];
 
 const ChooseLevel = () => {
