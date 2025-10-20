@@ -135,11 +135,20 @@ const Playing = () => {
         }
     }, []);
 
-    const setupButtonHandlers = useCallback((id) => {
+   const setupButtonHandlers = useCallback((id) => {
         return {
             onPointerDown: (e) => {
                 e.preventDefault();
                 pressed.current[id] = true;
+
+                // 立即移動一次
+                const vec = vectorMap[id];
+                const newX = smoothX.get() + (vec[0] * GAME_SPEED);
+                const newY = smoothY.get() - (vec[1] * GAME_SPEED);
+                smoothX.set(Math.max(0, Math.min(100, newX)));
+                smoothY.set(Math.max(0, Math.min(100, newY)));
+
+                // 開始持續移動
                 startSendingManual();
             },
             onPointerUp: (e) => {
@@ -158,7 +167,7 @@ const Playing = () => {
                 stopSendingManualIfNoDirection();
             },
         };
-    }, [startSendingManual, stopSendingManualIfNoDirection]);
+    }, [startSendingManual, stopSendingManualIfNoDirection, smoothX, smoothY, GAME_SPEED]);
 
     return (
         <div className="relative w-screen h-screen px-6 flex flex-col items-center justify-center" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center'}}>
@@ -175,7 +184,7 @@ const Playing = () => {
                 }}
                 className={`btn btn-sm btn-primary text-base z-10 mb-4 ${isInitialized ? 'visible' : 'invisible'}`}
                 onClick={calibrateGyroscope}
-                disabled={!isInitialized} // 只有在啟用感測器後才能校正
+                disabled={!isInitialized} 
             >
                 重新校正
             </motion.button>
