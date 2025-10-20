@@ -73,23 +73,30 @@ const Playing = () => {
         }
     }, [lastMessage, GAME_SPEED, smoothX, smoothY]); 
 
-
     useEffect(() => {
-      const isManuallyControlled = Object.values(pressed.current).some(v => v);
-      
-      if (connectionStatus && isCalibrated && !isManuallyControlled) { 
-        const vector = { x: coordinates.x, y: -coordinates.y };
-        
-        const newX = smoothX.get() + (vector.x * GAME_SPEED);
-        const newY = smoothY.get() - (vector.y * GAME_SPEED);
-        
-        smoothX.set(Math.max(0, Math.min(100, newX)));
-        smoothY.set(Math.max(0, Math.min(100, newY)));
-
-        const msg = JSON.stringify({ type: 'move', vector });
-        sendWebRTCData(msg, null); 
-      }
-    }, [coordinates, connectionStatus, isCalibrated, sendWebRTCData, GAME_SPEED, smoothX, smoothY]); // ✅ 加上依賴項
+    // 只有當手動控制器關閉時，才處理感測器數據
+        if (!isControllerOpen) {
+            const isManuallyControlled = Object.values(pressed.current).some(v => v);
+            if (connectionStatus && isCalibrated && !isManuallyControlled) {
+            const vector = { x: coordinates.x, y: -coordinates.y };
+            const newX = smoothX.get() + (vector.x * GAME_SPEED);
+            const newY = smoothY.get() - (vector.y * GAME_SPEED);
+            smoothX.set(Math.max(0, Math.min(100, newX)));
+            smoothY.set(Math.max(0, Math.min(100, newY)));
+            const msg = JSON.stringify({ type: 'move', vector });
+            sendWebRTCData(msg, null);
+            }
+        }
+    }, [
+        coordinates,
+        connectionStatus,
+        isCalibrated,
+        sendWebRTCData,
+        GAME_SPEED,
+        smoothX,
+        smoothY,
+        isControllerOpen, 
+    ]);
 
 
     // --- Button Controls (Manual Sender) ---
