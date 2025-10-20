@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import { motion, AnimatePresence } from "framer-motion";
+import { useScreenWakeLock } from '../hooks/useScreenWakeLock'; 
 
 const characters = [
   { name: 'red', speed: 8, power: 10, skill: 7, src: '/images/red.png', pinSrc: '/images/redPin.png' },
@@ -25,18 +26,34 @@ const ChooseChar = () => {
   const { isConnected: isWebRTCConnected, connect: connectWebRTC, disconnect: disconnectWebRTC } = webRTC;
   const { isSupported: isGyroscopeSupported, init: initGyroscope } = gyroscope;
 
+  const { requestWakeLock } = useScreenWakeLock((err) => {
+    console.warn("Wake Lock Error:", err);
+  });
+
   // Handle character selection
   const handleSelectChar = (char) => {
     setSelectedChar(char);
   };
 
   // Handle confirmation
-  const handleConfirm = useCallback(() => {
-    // Save the selected character
-    setCharacter(selectedChar);
-    // Navigate to the waiting room if everything is successful
-    navigate('/waiting-room');
-  }, [ navigate, selectedChar, setCharacter]);
+  const handleConfirm = useCallback(async () => {
+    try {
+      await requestWakeLock();
+      console.log('Wake Lock enabled');
+
+      setCharacter(selectedChar);
+
+      const connectionResult = await connectWebRTC();
+      if (!connectionResult) {
+        alert('連線失敗，請檢查網路或伺服器設定。');
+        return;
+      }
+
+      navigate('/waiting-room');
+    } catch (err) {
+      console.error('Failed to enable Wake Lock or connect:', err);
+    }
+  }, [requestWakeLock, setCharacter, selectedChar, connectWebRTC, navigate]);
 
   return (
     <div className="hero min-h-screen bg-base-200 overflow-x-hidden" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>

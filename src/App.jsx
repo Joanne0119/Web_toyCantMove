@@ -11,44 +11,9 @@ import Playing from './pages/Playing';
 import Award from './pages/Award';
 import Error from './pages/Error';
 import Navbar from './components/Navbar';
-import { useScreenWakeLock } from './hooks/useScreenWakeLock';
 
 
 function App() {
-  const { requestWakeLock, releaseWakeLock } = useScreenWakeLock((err) => {
-    console.warn("Wake Lock Error:", err);
-  });
-
-  useEffect(() => {
-    const enableWakeLockOnInteraction = async () => {
-      try {
-        await requestWakeLock();
-        console.log('Wake Lock enabled');
-      } catch (err) {
-        console.error('Failed to enable Wake Lock:', err);
-      }
-    };
-
-    // 監聽用戶的首次交互事件
-    const handleUserInteraction = () => {
-      enableWakeLockOnInteraction();
-      // 移除事件監聽器，避免重複觸發
-      window.removeEventListener('click', handleUserInteraction);
-      window.removeEventListener('touchstart', handleUserInteraction);
-    };
-
-    window.addEventListener('click', handleUserInteraction);
-    window.addEventListener('touchstart', handleUserInteraction);
-
-    // 清理事件監聽器
-    return () => {
-      window.removeEventListener('click', handleUserInteraction);
-      window.removeEventListener('touchstart', handleUserInteraction);
-      releaseWakeLock();
-    };
-  }, [requestWakeLock, releaseWakeLock]);
-
-
   return (
     <GameProvider>
       <div className="flex flex-col h-screen"> {/* Full height container */}
