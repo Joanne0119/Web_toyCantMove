@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { GameProvider } from './context/GameContext';
 import EnterName from './pages/EnterName';
