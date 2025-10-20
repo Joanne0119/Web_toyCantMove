@@ -3,7 +3,6 @@ import { useGame } from '../context/GameContext';
 import { motion, useSpring, useTransform  } from "framer-motion";
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
-import { useScreenWakeLock } from '../hooks/useScreenWakeLock';
 
 
 const Playing = () => {
@@ -11,10 +10,6 @@ const Playing = () => {
     const { lastMessage, sendData: sendWebRTCData, dataChannelConnections } = webRTC;
     const { isCalibrated, coordinates, isInitialized } = gyroscopeStatus;
     const { calibrate: calibrateGyroscope } = gyroscope; 
-
-    const { requestWakeLock } = useScreenWakeLock((err) => {
-      console.warn("Wake Lock Error:", err);
-    });
 
     // --- Game State ---
     const GAME_SPEED = 5;
@@ -27,10 +22,6 @@ const Playing = () => {
     const transformedY = useTransform(smoothY, (v) => `calc(${v}% - 16px)`);
 
     const rotation = useSpring(0, { stiffness: 300, damping: 30 });
-
-    useEffect(() => {
-        requestWakeLock(); 
-    }, [requestWakeLock]); 
 
     useEffect(() => {
         const updateRotation = () => {

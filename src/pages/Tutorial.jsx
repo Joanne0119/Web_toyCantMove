@@ -2,7 +2,6 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import { motion } from 'framer-motion';
-import { useScreenWakeLock } from '../hooks/useScreenWakeLock';
 
 const Tutorial = () => {
   const navigate = useNavigate();
@@ -11,10 +10,6 @@ const Tutorial = () => {
   const { isSupported } = gyroscope;
   const { lastMessage, sendData: sendWebRTCData } = webRTC;
   const { coordinates, isCalibrated, isInitialized } = gyroscopeStatus;
-
-  const { requestWakeLock } = useScreenWakeLock((err) => {
-    console.warn("Wake Lock Error:", err); 
-  });
 
   // Tutorial 狀態
   const [currentStep, setCurrentStep] = useState('forward'); // forward, left, right, backward
@@ -36,8 +31,6 @@ const Tutorial = () => {
   };
 
   const handleSetupSensors = useCallback(async () => {
-    
-    await requestWakeLock();
 
     if (!isSupported()) {
       alert('您的設備不支援陀螺儀。');
