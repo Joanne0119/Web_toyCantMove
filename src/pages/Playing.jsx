@@ -145,6 +145,13 @@ const Playing = () => {
     const setupButtonHandlers = useCallback((id) => {
         let holdTimeout = null;
 
+        const sendStopMessage = () => {
+            if (connectionStatus && dataChannelConnections.length > 0) {
+                const msg = JSON.stringify({ type: "manualMove", vector: { x: 0, y: 0 } });
+                sendWebRTCData(msg, null);
+            }
+        };
+
         return {
             onPointerDown: (e) => {
                 e.preventDefault();
@@ -169,22 +176,32 @@ const Playing = () => {
                 e.preventDefault();
                 pressed.current[id] = false;
 
+                sendStopMessage(); 
+
                 clearTimeout(holdTimeout);
                 stopSendingManualIfNoDirection();
             },
             onPointerLeave: (e) => {
                 e.preventDefault();
-                pressed.current[id] = false;
+                if (pressed.current[id]) { 
+                    pressed.current[id] = false;
 
-                clearTimeout(holdTimeout);
-                stopSendingManualIfNoDirection();
+                    sendStopMessage();
+
+                    clearTimeout(holdTimeout);
+                    stopSendingManualIfNoDirection();
+                }
             },
             onPointerCancel: (e) => {
                 e.preventDefault();
-                pressed.current[id] = false;
+                if (pressed.current[id]) {
+                    pressed.current[id] = false;
 
-                clearTimeout(holdTimeout);
-                stopSendingManualIfNoDirection();
+                    sendStopMessage();
+                    
+                    clearTimeout(holdTimeout);
+                    stopSendingManualIfNoDirection();
+                }
             },
         };
     }, [startSendingManual, stopSendingManualIfNoDirection, smoothX, smoothY, GAME_SPEED, connectionStatus, dataChannelConnections, sendWebRTCData]);
