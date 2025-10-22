@@ -20,7 +20,8 @@ const WaitingRoom = () => {
     gameScene,
     webRTC,
     gyroscope,
-    connectionStatus
+    connectionStatus,
+    screenWakeLock
   } = useGame();
 
   const { dataChannelConnections, sendData } = webRTC;
@@ -31,6 +32,13 @@ const WaitingRoom = () => {
   
   const hasAttemptedConnection = useRef(false);
   const hasSentIdentify = useRef(false);
+
+  // screen wake lock
+  useEffect(() => {
+    if (screenWakeLock) {
+      screenWakeLock.request();
+    }
+  }, [screenWakeLock]); 
 
   useEffect(() => {
     if (character && dataChannelConnections && dataChannelConnections.length > 0 && !hasSentIdentify.current) {

@@ -2,7 +2,6 @@ import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import { motion, AnimatePresence } from "framer-motion";
-import { useScreenWakeLock } from '../hooks/useScreenWakeLock'; 
 
 const characters = [
   { name: 'red', speed: 8, power: 10, skill: 7, src: '/images/red.png', pinSrc: '/images/redPin.png' },
@@ -19,16 +18,12 @@ const ringColorMap = {
 };
 
 const ChooseChar = () => {
-  const { nickname, setCharacter, webRTC, gyroscope, connectionStatus } = useGame();
+  const { nickname, setCharacter, webRTC, gyroscope, connectionStatus, screenWakeLock } = useGame();
   const [selectedChar, setSelectedChar] = useState(characters[0]);
   const navigate = useNavigate();
 
   const { isConnected: isWebRTCConnected, connect: connectWebRTC, disconnect: disconnectWebRTC } = webRTC;
   const { isSupported: isGyroscopeSupported, init: initGyroscope } = gyroscope;
-
-  const { requestWakeLock } = useScreenWakeLock((err) => {
-    console.warn("Wake Lock Error:", err);
-  });
 
   // Handle character selection
   const handleSelectChar = (char) => {
@@ -38,7 +33,7 @@ const ChooseChar = () => {
   // Handle confirmation
   const handleConfirm = useCallback(async () => {
     try {
-      await requestWakeLock();
+      await screenWakeLock.request();
       console.log('Wake Lock enabled');
 
       setCharacter(selectedChar);
@@ -47,7 +42,7 @@ const ChooseChar = () => {
     } catch (err) {
       console.error('Failed to enable Wake Lock or connect:', err);
     }
-  }, [requestWakeLock, setCharacter, selectedChar, navigate]);
+  }, [screenWakeLock.request,, setCharacter, selectedChar, navigate]);
 
   return (
     <div className="hero min-h-screen bg-base-200 overflow-x-hidden" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>

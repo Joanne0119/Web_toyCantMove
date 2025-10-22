@@ -6,7 +6,7 @@ import { useLocation } from 'react-router-dom';
 
 
 const Playing = () => {
-    const { character, webRTC, connectionStatus, gyroscope, gyroscopeStatus } = useGame();
+    const { character, webRTC, connectionStatus, gyroscope, gyroscopeStatus, screenWakeLock } = useGame();
     const { lastMessage, sendData: sendWebRTCData, dataChannelConnections } = webRTC;
     const { isCalibrated, coordinates, isInitialized } = gyroscopeStatus;
     const { calibrate: calibrateGyroscope } = gyroscope; 
@@ -22,6 +22,13 @@ const Playing = () => {
     const transformedY = useTransform(smoothY, (v) => `calc(${v}% - 16px)`);
 
     const rotation = useSpring(0, { stiffness: 300, damping: 30 });
+
+    // screen wake lock
+    useEffect(() => {
+    if (screenWakeLock) {
+        screenWakeLock.request();
+    }
+    }, [screenWakeLock]); 
 
     useEffect(() => {
         const updateRotation = () => {

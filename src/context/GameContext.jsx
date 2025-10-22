@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useMemo, useEffect } from 'react';
 import { useWebRTC } from '../hooks/useWebRTC';
 import { useGyroscope } from '../hooks/useGyroscope';
+import { useScreenWakeLock } from '../hooks/useScreenWakeLock';
 
 const GameContext = createContext();
 
@@ -43,6 +44,10 @@ export const GameProvider = ({ children }) => {
 
   // Gyroscope integration
   const gyroscope = useGyroscope(STABLE_GYRO_CONFIG);
+
+  const screenWakeLock = useScreenWakeLock((err) => {
+    console.warn("Global Wake Lock Error:", err);
+  });
 
   const { isConnected: webRTCIsConnected, peers: peerIds, lastMessage } = webRTC;
   
@@ -140,6 +145,12 @@ export const GameProvider = ({ children }) => {
     setScore,
     webRTC,
     gyroscope,
+    screenWakeLock: {
+      isSupported: screenWakeLock.isSupported,
+      isActive: screenWakeLock.isActive,
+      request: screenWakeLock.requestWakeLock,
+      release: screenWakeLock.releaseWakeLock,
+    },
     connectionStatus: webRTC.isConnected,
     gyroscopeStatus: {
       isSupported: gyroscope.isSupported(),
@@ -150,7 +161,8 @@ export const GameProvider = ({ children }) => {
       error: gyroscope.error,
     },
   }), [peerId, hostId, gameScene, nickname, character, players, level, score,
-    webRTC, gyroscope, webRTCIsConnected, gyroIsCalibrated, gyroIsInitialized, gyroDirection, gyroCoordinates, gyroError 
+    webRTC, gyroscope, webRTCIsConnected, gyroIsCalibrated, gyroIsInitialized, gyroDirection, gyroCoordinates, gyroError, screenWakeLock.isSupported,
+    screenWakeLock.isActive, screenWakeLock.requestWakeLock, screenWakeLock.releaseWakeLock
   ]);
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

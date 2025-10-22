@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 
 const Tutorial = () => {
   const navigate = useNavigate();
-  const { webRTC, gyroscope, connectionStatus, gyroscopeStatus } = useGame();
+  const { webRTC, gyroscope, connectionStatus, gyroscopeStatus, screenWakeLock } = useGame();
   const { init: initGyroscope, calibrate: calibrateGyroscope } = gyroscope;
   const { isSupported } = gyroscope;
   const { lastMessage, sendData: sendWebRTCData } = webRTC;
@@ -54,6 +54,12 @@ const Tutorial = () => {
   }, [initGyroscope, calibrateGyroscope, isSupported, sendWebRTCData]);
 
 
+  // screen wake lock
+    useEffect(() => {
+        if (screenWakeLock) {
+        screenWakeLock.request();
+        }
+    }, [screenWakeLock]); 
 
   // 監聽 Unity 發來的訊息
   useEffect(() => {

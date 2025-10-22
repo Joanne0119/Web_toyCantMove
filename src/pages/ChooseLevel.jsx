@@ -10,10 +10,17 @@ const levels = [
 ];
 
 const ChooseLevel = () => {
-  const { nickname, players, level, setLevel, webRTC, peerId, hostId, gameScene } = useGame();
+  const { nickname, players, level, setLevel, webRTC, peerId, hostId, gameScene, screenWakeLock } = useGame();
   const navigate = useNavigate();
   const isHost = peerId === hostId;
 
+  // screen wake lock
+  useEffect(() => {
+    if (screenWakeLock) {
+      screenWakeLock.request();
+    }
+  }, [screenWakeLock]); 
+  
   useEffect(() => {
     if (gameScene === 'Tutorial' && isHost) {
       navigate('/tutorial'); 
