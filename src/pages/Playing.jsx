@@ -142,8 +142,8 @@ const Playing = () => {
         }
     }, []);
 
-   const setupButtonHandlers = useCallback((id) => {
-        let holdTimeout = null; 
+    const setupButtonHandlers = useCallback((id) => {
+        let holdTimeout = null;
 
         return {
             onPointerDown: (e) => {
@@ -156,6 +156,11 @@ const Playing = () => {
                 smoothX.set(Math.max(0, Math.min(100, newX)));
                 smoothY.set(Math.max(0, Math.min(100, newY)));
 
+                if (connectionStatus && dataChannelConnections.length > 0) {
+                    const msg = JSON.stringify({ type: "manualMove", vector: { x: vec[0], y: vec[1] } });
+                    sendWebRTCData(msg, null);
+                }
+
                 holdTimeout = setTimeout(() => {
                     startSendingManual();
                 }, 300);
@@ -164,14 +169,14 @@ const Playing = () => {
                 e.preventDefault();
                 pressed.current[id] = false;
 
-                clearTimeout(holdTimeout); 
+                clearTimeout(holdTimeout);
                 stopSendingManualIfNoDirection();
             },
             onPointerLeave: (e) => {
                 e.preventDefault();
                 pressed.current[id] = false;
 
-                clearTimeout(holdTimeout); 
+                clearTimeout(holdTimeout);
                 stopSendingManualIfNoDirection();
             },
             onPointerCancel: (e) => {
@@ -182,7 +187,7 @@ const Playing = () => {
                 stopSendingManualIfNoDirection();
             },
         };
-    }, [startSendingManual, stopSendingManualIfNoDirection, smoothX, smoothY, GAME_SPEED]);
+    }, [startSendingManual, stopSendingManualIfNoDirection, smoothX, smoothY, GAME_SPEED, connectionStatus, dataChannelConnections, sendWebRTCData]);
 
     return (
         <div className="relative w-screen h-screen px-6 flex flex-col items-center justify-center" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center'}}>
