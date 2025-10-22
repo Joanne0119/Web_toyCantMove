@@ -43,17 +43,11 @@ const ChooseChar = () => {
 
       setCharacter(selectedChar);
 
-      const connectionResult = await connectWebRTC();
-      if (!connectionResult) {
-        alert('連線失敗，請檢查網路或伺服器設定。');
-        return;
-      }
-
       navigate('/waiting-room');
     } catch (err) {
       console.error('Failed to enable Wake Lock or connect:', err);
     }
-  }, [requestWakeLock, setCharacter, selectedChar, connectWebRTC, navigate]);
+  }, [requestWakeLock, setCharacter, selectedChar, navigate]);
 
   return (
     <div className="hero min-h-screen bg-base-200 overflow-x-hidden" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
