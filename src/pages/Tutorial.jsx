@@ -103,7 +103,7 @@ const Tutorial = () => {
   };
 
   return (
-    <div className="hero min-h-screen bg-base-200 overflow-x-hidden" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
+    <div className="hero min-h-screen bg-base-200 overflow-x-hidden select-none" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
       <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
       {!isInitialized ? (
         // --- 啟用前的畫面 ---

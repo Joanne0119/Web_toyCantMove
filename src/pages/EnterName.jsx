@@ -105,7 +105,7 @@ const EnterName = () => {
       >
         <div className="card-body">
           <div className="form-control">
-            <label className="label">
+            <label className="label select-none">
               <span className="label-text text-base">請輸入您的暱稱</span>
             </label>
             <input
