@@ -4,9 +4,9 @@ import { useGame } from '../context/GameContext';
 import { motion, AnimatePresence } from "framer-motion";
 
 const levels = [
-  { name: "玩具紙箱", image: "/images/toyboxLevel.png" },
-  { name: "書桌探險", image: "/images/tableLevel.png" },
-  { name: "凌亂床鋪", image: "/images/bedLevel.png" }
+  { name: "玩具紙箱", image: "/images/toyboxLevel.png", disable: false },
+  { name: "書桌探險", image: "/images/tableLevel.png", disable: true },
+  { name: "凌亂床鋪", image: "/images/bedLevel.png", disable: true }
 ];
 
 const ChooseLevel = () => {
@@ -28,7 +28,7 @@ const ChooseLevel = () => {
   }, [gameScene, isHost, navigate]);
 
   const handleSelectLevel = (selectedLevel) => {
-    if (isHost) {
+    if (isHost && !selectedLevel.disable) {
       setLevel(selectedLevel);
     }
   };
@@ -72,15 +72,23 @@ const ChooseLevel = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-4">
                 {levels.map((l) => (
                   <motion.div 
-                    whileTap={{ scale: isHost ? 0.95 : 1 }}
+                    whileTap={isHost && !l.disable ? { scale: 0.95 } : false}
                     key={l.name}
-                    className={`card bg-base-200 shadow-md cursor-pointer ${level?.name === l.name ? 'ring ring-primary' : ''} ${!isHost && 'cursor-default'}`}
+                    className={`card bg-base-200 shadow-md cursor-pointer relative ${level?.name === l.name ? 'ring ring-primary' : ''} ${l.disabled ? 'opacity-50 cursor-not-allowed' : ''} ${!isHost && 'cursor-default'}`}
                     onClick={() => handleSelectLevel(l)}
+                    style={{
+                      pointerEvents: l.disable ? 'none' : 'auto' 
+                    }}
                   >
-                    <figure><img src={l.image} alt={l.name} className="w-60 object-cover"/></figure>
+                    <figure><img src={l.image} alt={l.name} className="w-60 object-cover" style={{ filter: l.disable ? 'grayscale(90%)' : 'none' }}/></figure>
                     <div className="card-body p-4 items-center text-center">
                       <h2 className="card-title">{l.name}</h2>
                     </div>
+                    {l.disable && (
+                      <div className="absolute top-0 left-0 w-full h-full bg-black/50 flex items-center justify-center">
+                        <img src="/images/ComingSoon.png" alt="comming soon" className="h-18" style={{ rotate: '-20deg', filter: ' grayscale(100%) brightness(200%)' }}/>
+                      </div>
+                    )}
                   </motion.div>
                 ))}
               </div>
