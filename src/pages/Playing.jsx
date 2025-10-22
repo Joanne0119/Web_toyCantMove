@@ -143,34 +143,42 @@ const Playing = () => {
     }, []);
 
    const setupButtonHandlers = useCallback((id) => {
+        let holdTimeout = null; 
+
         return {
             onPointerDown: (e) => {
                 e.preventDefault();
                 pressed.current[id] = true;
 
-                // 立即移動一次
                 const vec = vectorMap[id];
                 const newX = smoothX.get() + (vec[0] * GAME_SPEED);
                 const newY = smoothY.get() - (vec[1] * GAME_SPEED);
                 smoothX.set(Math.max(0, Math.min(100, newX)));
                 smoothY.set(Math.max(0, Math.min(100, newY)));
 
-                // 開始持續移動
-                startSendingManual();
+                holdTimeout = setTimeout(() => {
+                    startSendingManual();
+                }, 300);
             },
             onPointerUp: (e) => {
                 e.preventDefault();
                 pressed.current[id] = false;
+
+                clearTimeout(holdTimeout); 
                 stopSendingManualIfNoDirection();
             },
             onPointerLeave: (e) => {
                 e.preventDefault();
                 pressed.current[id] = false;
+
+                clearTimeout(holdTimeout); 
                 stopSendingManualIfNoDirection();
             },
             onPointerCancel: (e) => {
                 e.preventDefault();
                 pressed.current[id] = false;
+
+                clearTimeout(holdTimeout);
                 stopSendingManualIfNoDirection();
             },
         };
