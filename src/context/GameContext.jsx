@@ -63,15 +63,19 @@ export const GameProvider = ({ children }) => {
 
   useEffect(() => {
     if (character && nickname) {
-      setPlayers(prev => [
-        ...prev.filter(p => p.id !== peerId), 
-        {
+      setPlayers(prev => {
+        const existingPlayer = prev.find(p => p.id === peerId);
+        const newPlayer = {
           id: peerId,
           name: nickname,
           avatar: character.name,
-          color: character.color
-        }
-      ]);
+          color: existingPlayer ? existingPlayer.color : character.color
+        };
+        return [
+          ...prev.filter(p => p.id !== peerId), 
+          newPlayer
+        ];
+      });
     }
   }, [character, nickname, peerId]);
 
@@ -89,21 +93,21 @@ export const GameProvider = ({ children }) => {
     if (lastMessage) {
       try {
         const msg = JSON.parse(lastMessage.message);
-        const peerId = lastMessage.peerId; 
+        const senderPeerId = lastMessage.peerId; 
 
         if (msg.type === "identify") {
           const newPlayerInfo = {
-            id: peerId,
+            id: senderPeerId, 
             name: msg.nickname,
             avatar: msg.characterName
           };
 
           setPlayers(currentPlayers => {
-            const playerExists = currentPlayers.some(p => p.id === peerId);
+            const playerExists = currentPlayers.some(p => p.id === senderPeerId);
             
             if (playerExists) {
               return currentPlayers.map(p =>
-                p.id === peerId ? newPlayerInfo : p
+                p.id === senderPeerId ? newPlayerInfo : p 
               );
             } else {
               return [...currentPlayers, newPlayerInfo];
@@ -125,14 +129,12 @@ export const GameProvider = ({ children }) => {
             });
 
             setCharacter(prevChar => {
-              if (prevChar) {
-                return { ...prevChar, color };
-              }
-              return prevChar;
+              return { ...(prevChar || {}), color };
             });
 
             return updatedPlayers;
           });
+        
 
         }
 
