@@ -117,8 +117,8 @@ export const GameProvider = ({ children }) => {
           console.log("players before update:", players);
           setPlayers(currentPlayers => {
             const updatedPlayers = currentPlayers.map(player => {
-              if (player.id === peerId) {
-                return { ...player, color };
+              if (player.id === peerId) { 
+                return { ...player, color }; 
               }
               console.log("Player after update attempt:", player);
               return player; 
@@ -154,7 +154,7 @@ export const GameProvider = ({ children }) => {
         console.error(e);
       }
     }
-  }, [lastMessage]); 
+  }, [lastMessage, players, peerId]); 
 
   const value = useMemo(() => ({
     peerId: peerId,     
