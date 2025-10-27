@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, useMemo, useEffect } from '
 import { useWebRTC } from '../hooks/useWebRTC';
 import { useGyroscope } from '../hooks/useGyroscope';
 import { useScreenWakeLock } from '../hooks/useScreenWakeLock';
+import { color, m } from 'framer-motion';
 
 const GameContext = createContext();
 
@@ -67,7 +68,8 @@ export const GameProvider = ({ children }) => {
         {
           id: peerId,
           name: nickname,
-          avatar: character.src
+          avatar: character.name,
+          color: character.color
         }
       ]);
     }
@@ -93,7 +95,7 @@ export const GameProvider = ({ children }) => {
           const newPlayerInfo = {
             id: peerId,
             name: msg.nickname,
-            avatar: `/images/${msg.characterName}.png`
+            avatar: msg.characterName
           };
 
           setPlayers(currentPlayers => {
@@ -107,6 +109,31 @@ export const GameProvider = ({ children }) => {
               return [...currentPlayers, newPlayerInfo];
             }
           });
+        }
+
+        if (msg.type === "initial") {
+          const { color } = msg;
+          console.log("Received color:", color);
+          console.log("players before update:", players);
+          setPlayers(currentPlayers => {
+            const updatedPlayers = currentPlayers.map(player => {
+              if (player.id === peerId) {
+                return { ...player, color };
+              }
+              console.log("Player after update attempt:", player);
+              return player; 
+            });
+
+            setCharacter(prevChar => {
+              if (prevChar) {
+                return { ...prevChar, color };
+              }
+              return prevChar;
+            });
+
+            return updatedPlayers;
+          });
+
         }
 
         if (msg.type === "host_update") {

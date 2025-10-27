@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { use, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import { motion, AnimatePresence } from "framer-motion";
@@ -63,7 +63,6 @@ const WaitingRoom = () => {
     }
   }, [gameScene, isHost, navigate]);
 
-  
   useEffect(() => {
     const connectAll = async () => {
       try {
@@ -137,7 +136,9 @@ const WaitingRoom = () => {
                       <div key={index} className="flex items-center bg-base-200 p-2 rounded-lg ">
                         <div className="avatar mr-4">
                           <div className="w-14 rounded-full">
-                            <img src={player.avatar} alt={player.name} />
+                            <img src={player.color ? `/images/${player.color + '_' + player.avatar}.png` : '/images/gray_' + player.avatar + '.png'} alt={player.name} />
+                            {console.log('Player avatar URL:', player.color ? `/images/${player.color + '_' + player.avatar}.png` : '/images/gray_' + player.avatar + '.png')}
+                            {console.log('Player data:', player, player.color, player.avatar)}
                           </div>
                         </div>
                         <span className="text-lg">{player.name}</span>
