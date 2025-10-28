@@ -151,7 +151,7 @@ const Tutorial = () => {
                 }}
                 transition={{ duration: 0.5 }}
             >
-                <div className="w-32 h-48 bg-base rounded-2xl shadow-2xl flex items-center justify-center">
+                <div className="w-24 h-32 bg-base rounded-2xl shadow-2xl flex items-center justify-center">
                 <span className="text-6xl">📱</span>
                 </div>
             </motion.div>

@@ -61,7 +61,7 @@ const ChooseChar = () => {
       <div className="hero-content text-center">
         <div className="max-w-lg">
           <motion.div 
-            className="card bg-base-100 shadow-xl mt-8"
+            className="card bg-base-100 shadow-xl"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{
@@ -73,9 +73,9 @@ const ChooseChar = () => {
           >
             <div className="card-body">
               <h2 className="card-title">哈囉！{nickname}，請選擇角色</h2>
-              <div className="flex flex-col items-center my-4">
+              <div className="flex flex-col items-center mt-4">
                 <div className="avatar online">
-                  <div className={`w-48 h-48 rounded-full ${ringColorMap[selectedChar.name]} ring-4 ring-offset-base-100 ring-offset-2 flex justify-center items-center overflow-hidden`}>
+                  <div className={`w-42 h-42 rounded-full ${ringColorMap[selectedChar.name]} ring-4 ring-offset-base-100 ring-offset-2 flex justify-center items-center overflow-hidden`}>
                     <AnimatePresence mode="wait">
                       <motion.img
                         key={selectedChar.name}
@@ -90,7 +90,7 @@ const ChooseChar = () => {
                     </AnimatePresence>
                   </div>
                 </div>
-                <div className="text-2xl font-bold capitalize mt-4">{selectedChar.name}</div>
+                <div className="text-xl font-bold capitalize mt-4">{selectedChar.name}</div>
                 <div className="stats bg-transparent mt-2">
                   <div className="stat">
                     <div className="stat-title">速度</div>
@@ -108,7 +108,7 @@ const ChooseChar = () => {
               </div>
 
               <div className="flex justify-center w-full">
-                <div className="w-86 flex flex-nowrap overflow-x-auto space-x-3 mb-6 p-4">
+                <div className="w-64 flex flex-nowrap overflow-x-auto space-x-2 mb-4 p-4">
                   {characters.map((char) => (
                     <motion.div
                       whileTap={char.disable ? false : { scale: 0.9 }} 
