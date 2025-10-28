@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const levels = [
   { name: "玩具紙箱", image: "/images/toyboxLevel.png", disable: false },
-  { name: "書桌探險", image: "/images/tableLevel.png", disable: true },
+  // { name: "書桌探險", image: "/images/tableLevel.png", disable: true },
   { name: "凌亂床鋪", image: "/images/bedLevel.png", disable: true }
 ];
 
@@ -69,7 +69,7 @@ const ChooseLevel = () => {
           >
             <div className="card-body">
               <h2 className="card-title">{isHost ? '請選擇遊戲場景' : '等待房主選擇關卡...'}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
                 {levels.map((l) => (
                   <motion.div 
                     whileTap={isHost && !l.disable ? { scale: 0.95 } : false}
