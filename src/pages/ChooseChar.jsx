@@ -6,7 +6,9 @@ import { motion, AnimatePresence } from "framer-motion";
 const characters = [
   { name: 'wind-up', speed: 8, power: 10, skill: 7, src: '/images/gray_wind-up.png', disable: false},
   { name: 'hat', speed: 10, power: 6, skill: 9, src: '/images/gray_hat.png', disable: true },
-  { name: 'mouse', speed: 10, power: 6, skill: 9, src: '/images/gray_mouse.png', disable: true },
+  { name: 'mouse', speed: 6, power: 5, skill: 10, src: '/images/gray_mouse.png', disable: true },
+  { name: 'dog', speed: 9, power: 12, skill: 6, src: '/images/gray_dog.png', disable: true },
+  { name: 'deer', speed: 7, power: 11, skill: 10, src: '/images/gray_deer.png', disable: true },
   // { name: 'red', speed: 8, power: 10, skill: 7, src: '/images/red.png', pinSrc: '/images/redPin.png' },
   // { name: 'blue', speed: 10, power: 6, skill: 9, src: '/images/blue.png', pinSrc: '/images/bluePin.png' },
   // { name: 'yellow', speed: 7, power: 9, skill: 8, src: '/images/yellow.png', pinSrc: '/images/yellowPin.png' },
@@ -17,6 +19,8 @@ const ringColorMap = {
   wind_up: 'ring-gray-600/50',
   hat: 'ring-hat-600/50',
   mouse: 'ring-mouse-600/50',
+  dog: 'ring-dog-600/50',
+  deer: 'ring-deer-600/50',
   // red: 'ring-red-600/50',
   // blue: 'ring-blue-600/50',
   // yellow: 'ring-yellow-600/50',
@@ -103,22 +107,21 @@ const ChooseChar = () => {
                 </div>
               </div>
 
-              <div className="flex justify-center space-x-3 mb-6">
-                {characters.map((char) => (
-                  <motion.div
-                    whileTap={char.disable ? false : { scale: 0.9 }} 
-                    key={char.name}
-                    className={`avatar cursor-pointer ${selectedChar.name === char.name ? `ring ${ringColorMap[char.name]} ring-offset-base-100 ring-offset-2 rounded-full` : ''}`}
-                    onClick={() => handleSelectChar(char)}
-                    style={{
-                      filter: char.disable ? 'grayscale(100%)' : 'none', 
-                    }}
-                  >
-                    <div className="w-16 rounded-full">
-                      <img src={char.src} alt={char.name}/>
-                    </div>
-                  </motion.div>
-                ))}
+              <div className="flex justify-center w-full">
+                <div className="w-86 flex flex-nowrap overflow-x-auto space-x-3 mb-6 p-4">
+                  {characters.map((char) => (
+                    <motion.div
+                      whileTap={char.disable ? false : { scale: 0.9 }} 
+                      key={char.name}
+                      className={`avatar cursor-pointer flex-shrink-0 ${selectedChar.name === char.name ? `ring ${ringColorMap[char.name]} ring-offset-base-100 ring-offset-2 rounded-full` : ''}`}
+                      onClick={() => handleSelectChar(char)}
+                    >
+                      <div className="w-16 rounded-full">
+                        <img src={char.src} alt={char.name}/>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
 
               <div className="card-actions justify-center">
