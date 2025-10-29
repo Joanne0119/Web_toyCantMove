@@ -69,7 +69,7 @@ const EnterName = () => {
         </motion.div>
         <motion.div
           className="absolute top-0 left-0 w-full h-full"
-          style={{ backgroundImage: "url('/images/character.png')", backgroundSize: "cover", backgroundPosition: "right 46% bottom 50%" }}
+          style={{ backgroundImage: "url('/images/character.png')", backgroundSize: "cover", backgroundPosition: "right 53% bottom 50%" }}
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{
@@ -87,7 +87,7 @@ const EnterName = () => {
               ease: "easeInOut"
             }}
             className="w-full h-full"
-            style={{ backgroundImage: "url('/images/character.png')", backgroundSize: "cover", backgroundPosition: "right 46% bottom 50%" }}
+            style={{ backgroundImage: "url('/images/character.png')", backgroundSize: "cover", backgroundPosition: "right 53% bottom 50%" }}
           />
         </motion.div>
       </div>
