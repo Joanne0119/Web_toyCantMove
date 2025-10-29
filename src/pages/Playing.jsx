@@ -87,7 +87,7 @@ const Playing = () => {
                 const magnitude = Math.sqrt(vector.x ** 2 + vector.y ** 2);
 
                 // 停止時忽略
-                if (magnitude < 0.05) return;
+                if (magnitude < 0.08) return;
 
                 // 方向變化太小時忽略
                 // const dx = vector.x - lastVectorRef.current.x;
@@ -96,12 +96,12 @@ const Playing = () => {
                 // if (delta < 0.02) return; 
                 // lastVectorRef.current = vector;
 
-                // 100ms 一次
+                // 時間限制
                 const now = Date.now();
-                if (now - lastSentTimeRef.current < 250) return;
+                if (now - lastSentTimeRef.current < 50) return;
                 lastSentTimeRef.current = now;
 
-                // -更新 UI
+                // 更新 UI
                 const newX = smoothX.get() + (vector.x * GAME_SPEED);
                 const newY = smoothY.get() - (vector.y * GAME_SPEED);
                 smoothX.set(Math.max(0, Math.min(100, newX)));
