@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useGame } from '../context/GameContext'; 
-import { motion, useSpring, useTransform  } from "framer-motion";
+import { useGame } from '../context/GameContext';
+import { motion, useSpring, useTransform } from "framer-motion";
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 
@@ -9,12 +9,12 @@ const Playing = () => {
     const { character, webRTC, connectionStatus, gyroscope, gyroscopeStatus, screenWakeLock } = useGame();
     const { lastMessage, sendData: sendWebRTCData, dataChannelConnections } = webRTC;
     const { isCalibrated, coordinates, isInitialized } = gyroscopeStatus;
-    const { calibrate: calibrateGyroscope } = gyroscope; 
+    const { calibrate: calibrateGyroscope } = gyroscope;
 
     // --- Game State ---
     const GAME_SPEED = 5;
 
-    const springConfig = { stiffness: 300, damping: 30 }; 
+    const springConfig = { stiffness: 300, damping: 30 };
     const smoothX = useSpring(50, springConfig);
     const smoothY = useSpring(50, springConfig);
 
@@ -25,25 +25,25 @@ const Playing = () => {
 
     // screen wake lock
     useEffect(() => {
-    if (screenWakeLock) {
-        screenWakeLock.request();
-    }
-    }, [screenWakeLock]); 
+        if (screenWakeLock) {
+            screenWakeLock.request();
+        }
+    }, [screenWakeLock]);
 
     useEffect(() => {
         const updateRotation = () => {
             const vx = smoothX.getVelocity();
             const vy = smoothY.getVelocity();
-    
+
             if (Math.abs(vx) > 1 || Math.abs(vy) > 1) {
                 const newAngle = Math.atan2(vy, vx) * (180 / Math.PI) + 90;
                 rotation.set(newAngle);
             }
         };
-    
+
         const unsubscribeX = smoothX.onChange(updateRotation);
         const unsubscribeY = smoothY.onChange(updateRotation);
-    
+
         return () => {
             unsubscribeX();
             unsubscribeY();
@@ -52,7 +52,7 @@ const Playing = () => {
 
 
     const [isControllerOpen, setIsControllerOpen] = useState(false);
-    
+
     // Effect to handle incoming WebRTC messages for game control
     useEffect(() => {
         if (lastMessage) {
@@ -69,20 +69,47 @@ const Playing = () => {
                 console.error("Failed to parse incoming message:", e);
             }
         }
-    }, [lastMessage, GAME_SPEED, smoothX, smoothY]); 
+    }, [lastMessage, GAME_SPEED, smoothX, smoothY]);
+
+    // 上次發送時間
+    const lastSentTimeRef = useRef(0);
+    // 上次方向
+    const lastVectorRef = useRef({ x: 0, y: 0 });
 
     useEffect(() => {
-    // 只有當手動控制器關閉時，才處理感測器數據
+
         if (!isControllerOpen) {
             const isManuallyControlled = Object.values(pressed.current).some(v => v);
+
             if (connectionStatus && isCalibrated && !isManuallyControlled) {
-            const vector = { x: coordinates.x, y: -coordinates.y };
-            const newX = smoothX.get() + (vector.x * GAME_SPEED);
-            const newY = smoothY.get() - (vector.y * GAME_SPEED);
-            smoothX.set(Math.max(0, Math.min(100, newX)));
-            smoothY.set(Math.max(0, Math.min(100, newY)));
-            const msg = JSON.stringify({ type: 'move', vector });
-            sendWebRTCData(msg, null);
+
+                const vector = { x: coordinates.x, y: -coordinates.y };
+                const magnitude = Math.sqrt(vector.x ** 2 + vector.y ** 2);
+
+                // 停止時忽略
+                if (magnitude < 0.05) return;
+
+                // 方向變化太小時忽略
+                // const dx = vector.x - lastVectorRef.current.x;
+                // const dy = vector.y - lastVectorRef.current.y;
+                // const delta = Math.sqrt(dx * dx + dy * dy);
+                // if (delta < 0.02) return; 
+                // lastVectorRef.current = vector;
+
+                // 100ms 一次
+                const now = Date.now();
+                if (now - lastSentTimeRef.current < 100) return;
+                lastSentTimeRef.current = now;
+
+                // -更新 UI
+                const newX = smoothX.get() + (vector.x * GAME_SPEED);
+                const newY = smoothY.get() - (vector.y * GAME_SPEED);
+                smoothX.set(Math.max(0, Math.min(100, newX)));
+                smoothY.set(Math.max(0, Math.min(100, newY)));
+
+                // Send Data
+                const msg = JSON.stringify({ type: 'move', vector });
+                sendWebRTCData(msg, null);
             }
         }
     }, [
@@ -93,7 +120,7 @@ const Playing = () => {
         GAME_SPEED,
         smoothX,
         smoothY,
-        isControllerOpen, 
+        isControllerOpen,
     ]);
 
 
@@ -176,14 +203,14 @@ const Playing = () => {
                 e.preventDefault();
                 pressed.current[id] = false;
 
-                sendStopMessage(); 
+                sendStopMessage();
 
                 clearTimeout(holdTimeout);
                 stopSendingManualIfNoDirection();
             },
             onPointerLeave: (e) => {
                 e.preventDefault();
-                if (pressed.current[id]) { 
+                if (pressed.current[id]) {
                     pressed.current[id] = false;
 
                     sendStopMessage();
@@ -198,7 +225,7 @@ const Playing = () => {
                     pressed.current[id] = false;
 
                     sendStopMessage();
-                    
+
                     clearTimeout(holdTimeout);
                     stopSendingManualIfNoDirection();
                 }
@@ -207,45 +234,45 @@ const Playing = () => {
     }, [startSendingManual, stopSendingManualIfNoDirection, smoothX, smoothY, GAME_SPEED, connectionStatus, dataChannelConnections, sendWebRTCData]);
 
     return (
-        <div className="relative w-screen h-screen px-6 flex flex-col items-center justify-center " style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center'}}>
+        <div className="relative w-screen h-screen px-6 flex flex-col items-center justify-center " style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
             <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
             <motion.button
                 whileTap={{ scale: 0.9 }}
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{
-                    type: "spring",  
-                    stiffness: 120,   
-                    damping: 15,      
+                    type: "spring",
+                    stiffness: 120,
+                    damping: 15,
                     duration: 0.8
                 }}
                 className={`btn btn-sm btn-primary text-base z-10 mb-4 ${isInitialized ? 'visible' : 'invisible'}`}
                 onClick={calibrateGyroscope}
-                disabled={!isInitialized} 
+                disabled={!isInitialized}
             >
                 重新校正
             </motion.button>
 
             {/* Game Area */}
-            <motion.div 
+            <motion.div
                 className="relative w-full max-h-full aspect-square bg-base-200/60 rounded-2xl shadow-inner-xl overflow-hidden backdrop-blur-xs"
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{
-                    type: "spring",   
-                    stiffness: 120,   
-                    damping: 15,      
+                    type: "spring",
+                    stiffness: 120,
+                    damping: 15,
                     duration: 0.8,
                     delay: 0.2
                 }}
             >
-                <motion.div 
-                    className="absolute w-10 h-16" 
-                    style={{ 
-                        left: transformedX, 
+                <motion.div
+                    className="absolute w-10 h-16"
+                    style={{
+                        left: transformedX,
                         top: transformedY,
-                        backgroundImage: `url(${character ? '/images/' + character.color + '_' + character.name + 'Pin.png' : '/images/gray_wind-upPin.png'})`, 
-                        backgroundSize: 'cover', 
+                        backgroundImage: `url(${character ? '/images/' + character.color + '_' + character.name + 'Pin.png' : '/images/gray_wind-upPin.png'})`,
+                        backgroundSize: 'cover',
                         backgroundPosition: 'center'
                     }}
                     rotate={rotation}
@@ -258,11 +285,11 @@ const Playing = () => {
                         duration: 0.8
                     }}
                 ></motion.div>
-                
+
             </motion.div>
 
             {/* Manual Controller UI */}
-            <motion.div 
+            <motion.div
                 className="card absolute bottom-4 bg-base-100 shadow-xl px-6 py-2 max-w-md z-20"
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{
@@ -276,7 +303,7 @@ const Playing = () => {
                 <div className="card-body items-center text-center py-4">
                     <div className="flex justify-center items-center w-full relative" onClick={() => setIsControllerOpen(!isControllerOpen)}>
                         <h2 className="card-title">手動控制器</h2>
-                        <button 
+                        <button
                             className="btn btn-ghost btn-sm btn-circle absolute right-0"
                             aria-label={isControllerOpen ? "收合控制器" : "展開控制器"}
                         >
