@@ -98,7 +98,7 @@ const Playing = () => {
 
                 // 100ms 一次
                 const now = Date.now();
-                if (now - lastSentTimeRef.current < 100) return;
+                if (now - lastSentTimeRef.current < 250) return;
                 lastSentTimeRef.current = now;
 
                 // -更新 UI
