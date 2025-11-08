@@ -2,14 +2,23 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import { motion } from "framer-motion";
+import { useFullscreen } from '../hooks/useFullscreen';
 
 const EnterName = () => {
   const [name, setName] = useState('');
   const { setNickname } = useGame();
   const navigate = useNavigate();
+  const [isFullscreen, toggleFullscreen] = useFullscreen(null);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (name.trim()) {
+      if (!isFullscreen) {
+        try {
+          await toggleFullscreen(); 
+        } catch (err) {
+          console.warn("Error toggling fullscreen: due to iOS device restrictions", err.message);
+        }
+      }
       setNickname(name.trim());
       navigate('/choose-char');
     } else {

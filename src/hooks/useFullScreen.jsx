@@ -1,4 +1,16 @@
-import { useState, useLayoutEffect } from 'react';
+import { useState, useLayoutEffect, useEffect } from 'react';
+
+export const isFullscreenSupported = () => {
+  if (typeof document === 'undefined') {
+    return false; // 在 server-side rendering 環境下，回傳 false
+  }
+  return !!(
+    document.documentElement.requestFullscreen ||
+    document.documentElement.webkitRequestFullscreen ||
+    document.documentElement.mozRequestFullScreen ||
+    document.documentElement.msRequestFullscreen
+  );
+};
 
 // 輔助函數：取得不同瀏覽器的 fullscreenElement
 function getFullscreenElement() {
@@ -39,7 +51,13 @@ function exitFullscreen() {
  * @param {React.RefObject<HTMLElement>} ref - 你想要全螢幕的元素的 ref
  */
 export function useFullscreen(ref) {
+    const [isSupported, setIsSupported] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(!!getFullscreenElement());
+
+  useEffect(() => {
+    // 在 useEffect 中檢查，確保這段程式碼只在 client-side 執行
+    setIsSupported(isFullscreenSupported());
+  }, []);
 
   // 監聽全螢幕變化事件 (例如按 Esc 鍵)
   useLayoutEffect(() => {
@@ -63,6 +81,9 @@ export function useFullscreen(ref) {
 
   // 切換全螢幕的函數
   const toggleFullscreen = async () => {
+    if (!isSupported) {
+        return;
+    }
     // 1. 如果 ref 存在，就用 ref.current；否則，就用 document.documentElement
     const element = ref?.current || document.documentElement;
 
@@ -88,5 +109,5 @@ export function useFullscreen(ref) {
     }
 };
 
-  return [isFullscreen, toggleFullscreen];
+  return [isFullscreen, toggleFullscreen, isSupported];
 }
