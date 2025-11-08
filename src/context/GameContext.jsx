@@ -26,14 +26,18 @@ const STABLE_GYRO_CONFIG = {
 }
 
 export const GameProvider = ({ children }) => {
-  const [nickname, setNickname] = useState('');
-  const [character, setCharacter] = useState(null);
-  const [players, setPlayers] = useState([]);
   const [level, setLevel] = useState(null);
   const [score, setScore] = useState(0);
   const [hostId, setHostId] = useState(null); 
   const [gameScene, setGameScene] = useState('Lobby');
   const [peerId] = useState('web-' + Math.random().toString(36).substring(2, 9));
+  const [localPlayer, setLocalPlayer] = useState({
+    id: peerId,
+    name: '',
+    avatar: null, // 'wind-up', 'dog' 等
+    color: null   // 'red', 'blue' 等
+  });
+  const [otherPlayers, setOtherPlayers] = useState([]);
 
 
   // WebRTC integration
@@ -62,32 +66,13 @@ export const GameProvider = ({ children }) => {
   } = gyroscope;
 
   useEffect(() => {
-    if (character && nickname) {
-      setPlayers(prev => {
-        const existingPlayer = prev.find(p => p.id === peerId);
-        const newPlayer = {
-          id: peerId,
-          name: nickname,
-          avatar: character.name,
-          color: existingPlayer ? existingPlayer.color : character.color
-        };
-        return [
-          ...prev.filter(p => p.id !== peerId), 
-          newPlayer
-        ];
-      });
-    }
-  }, [character, nickname, peerId]);
-
-  useEffect(() => {
-    setPlayers(currentPlayers => {
-      const updatedPlayers = currentPlayers.filter(p =>
-        p.id === peerId || 
+    setOtherPlayers(currentOtherPlayers => { 
+      const updatedPlayers = currentOtherPlayers.filter(p =>
         peerIds.includes(p.id) 
       );
       return updatedPlayers;
     });
-  }, [peerIds, peerId]);
+  }, [peerIds]);
 
   useEffect(() => {
     if (lastMessage) {
@@ -102,15 +87,15 @@ export const GameProvider = ({ children }) => {
             avatar: msg.characterName
           };
 
-          setPlayers(currentPlayers => {
-            const playerExists = currentPlayers.some(p => p.id === senderPeerId);
+          setOtherPlayers(currentOtherPlayers => { 
+            const playerExists = currentOtherPlayers.some(p => p.id === senderPeerId);
             
             if (playerExists) {
-              return currentPlayers.map(p =>
+              return currentOtherPlayers.map(p =>
                 p.id === senderPeerId ? newPlayerInfo : p 
               );
             } else {
-              return [...currentPlayers, newPlayerInfo];
+              return [...currentOtherPlayers, newPlayerInfo];
             }
           });
         }
@@ -118,20 +103,10 @@ export const GameProvider = ({ children }) => {
         if (msg.type === "initial") {
           const { color } = msg;
           console.log("Received color:", color);
-          console.log("players before update:", players);
-          setPlayers(currentPlayers => {
-            const updatedPlayers = currentPlayers.map(player => {
-              if (player.id === peerId) { 
-                return { ...player, color }; 
-              }
-              console.log("Player after update attempt:", player);
-              return player; 
-            });
-            
-            return updatedPlayers;
-          });
-        
-
+          setLocalPlayer(prevPlayer => ({
+            ...prevPlayer,
+            color: color
+          }));
         }
 
         if (msg.type === "host_update") {
@@ -158,12 +133,9 @@ export const GameProvider = ({ children }) => {
     peerId: peerId,     
     hostId: hostId, 
     gameScene: gameScene,
-    nickname,
-    setNickname,
-    character,
-    setCharacter,
-    players,
-    setPlayers,
+    localPlayer,
+    setLocalPlayer,
+    otherPlayers,
     level,
     setLevel,
     score,
@@ -185,7 +157,7 @@ export const GameProvider = ({ children }) => {
       coordinates: gyroscope.coordinates,
       error: gyroscope.error,
     },
-  }), [peerId, hostId, gameScene, nickname, character, players, level, score,
+  }), [peerId, hostId, gameScene, localPlayer, otherPlayers, level, score,
     webRTC, gyroscope, webRTCIsConnected, gyroIsCalibrated, gyroIsInitialized, gyroDirection, gyroCoordinates, gyroError, screenWakeLock.isSupported,
     screenWakeLock.isActive, screenWakeLock.requestWakeLock, screenWakeLock.releaseWakeLock
   ]);

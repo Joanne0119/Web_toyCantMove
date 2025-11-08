@@ -6,7 +6,7 @@ import { useLocation } from 'react-router-dom';
 
 
 const Playing = () => {
-    const { character, webRTC, connectionStatus, gyroscope, gyroscopeStatus, screenWakeLock } = useGame();
+    const { localPlayer, webRTC, connectionStatus, gyroscope, gyroscopeStatus, screenWakeLock } = useGame();
     const { lastMessage, sendData: sendWebRTCData, dataChannelConnections } = webRTC;
     const { isCalibrated, coordinates, isInitialized } = gyroscopeStatus;
     const { calibrate: calibrateGyroscope } = gyroscope;
@@ -271,7 +271,7 @@ const Playing = () => {
                     style={{
                         left: transformedX,
                         top: transformedY,
-                        backgroundImage: `url(${character ? '/images/' + character.color + '_' + character.name + 'Pin.png' : '/images/gray_wind-upPin.png'})`,
+                        backgroundImage: `url(${localPlayer.avatar ? `/images/${localPlayer.color || 'gray'}_${localPlayer.avatar}Pin.png` : '/images/gray_wind-upPin.png'})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center'
                     }}

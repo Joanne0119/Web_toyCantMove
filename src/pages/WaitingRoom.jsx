@@ -11,9 +11,8 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const WaitingRoom = () => {
   const {
-    nickname,
-    character,
-    players,
+    localPlayer,
+    otherPlayers,
     setPlayers,
     peerId,
     hostId,
@@ -41,21 +40,21 @@ const WaitingRoom = () => {
   }, [screenWakeLock]); 
 
   useEffect(() => {
-    if (character && dataChannelConnections && dataChannelConnections.length > 0 && !hasSentIdentify.current) {
+    if (localPlayer.avatar && dataChannelConnections && dataChannelConnections.length > 0 && !hasSentIdentify.current) {
       
       hasSentIdentify.current = true;
 
       const identityMessage = {
         type: "identify",
-        characterName: character.name, 
-        nickname: nickname
+        characterName: localPlayer.avatar, 
+        nickname: localPlayer.name
       };
       
       sendData(JSON.stringify(identityMessage), null);
 
       console.log('Data Channel is open. Sent identity to Unity:', identityMessage);
     }
-  }, [dataChannelConnections, character, nickname, sendData]);
+  }, [dataChannelConnections, localPlayer, sendData]); 
 
   useEffect(() => {
     if (gameScene === 'Tutorial' && !isHost) { 
@@ -74,14 +73,14 @@ const WaitingRoom = () => {
           throw new Error('連線失敗 (connectionResult is false)');
         }
 
-        console.log('Successfully connected as', character.name);
+        console.log('Successfully connected as', localPlayer.name); 
 
       } catch (error) {
         navigate('/error', { state: { message: error.message } });
       }
     };
 
-    if (!character || !webRTC) {
+    if (!localPlayer.avatar || !webRTC) {
       return;
     }
     if (!connectionStatus && !hasAttemptedConnection.current) {
@@ -91,7 +90,7 @@ const WaitingRoom = () => {
       connectAll();
     }
     
-  }, [character, webRTC, connectionStatus, navigate, gyroscope]); 
+  }, [localPlayer.avatar, webRTC, connectionStatus, navigate, gyroscope]);
 
 
   const handleNext = () => {
@@ -102,6 +101,8 @@ const WaitingRoom = () => {
     webRTC.disconnect();
     navigate('/');
   };
+
+  const allPlayers = [localPlayer, ...otherPlayers].filter(p => p && p.name);
 
   return (
     <div className="hero min-h-screen bg-base-200 select-none" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center'}}>
@@ -126,22 +127,23 @@ const WaitingRoom = () => {
                   <div className="flex justify-center my-4">
                     <span className="loading loading-spinner loading-lg"></span>
                   </div>
-                  <p className="text-center">以 {character?.name || '...'} 的身份加入...</p>
+                  <p className="text-center">以 {localPlayer.name || '...'} 的身份加入...</p>
                 </div>
               ) : (
                 <div>
                   <h2 className="card-title">等待玩家進入...</h2>
                   <div className="space-y-3 mt-4">
-                    {players.map((player, index) => (
-                      <div key={player.id || index} className="flex items-center bg-base-200 p-2 rounded-lg ">
+                    {allPlayers.map((player) => (
+                      <div key={player.id} className="flex items-center bg-base-200 p-2 rounded-lg ">
                         <div className="avatar mr-4">
                           <div className="w-14 rounded-full">
-                            <img src={player.color ? `/images/${player.color + '_' + player.avatar}.png` : '/images/gray_' + player.avatar + '.png'} alt={player.name} />
-                            {console.log('Player avatar URL:', player.color ? `/images/${player.color + '_' + player.avatar}.png` : '/images/gray_' + player.avatar + '.png')}
-                            {console.log('Player data:', player, player.color, player.avatar)}
+                            <img 
+                              src={player.color ? `/images/${player.color}_${player.avatar}.png` : `/images/gray_${player.avatar}.png`} 
+                              alt={player.name} 
+                            />
                           </div>
                         </div>
-                        <span className="text-lg">{player.name}</span>
+                        <span className="text-lg">{player.name} </span>
                       </div>
                     ))}
                   </div>

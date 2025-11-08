@@ -6,7 +6,7 @@ import { useFullscreen } from '../hooks/useFullScreen';
 
 const EnterName = () => {
   const [name, setName] = useState('');
-  const { setNickname } = useGame();
+  const { setLocalPlayer } = useGame();
   const navigate = useNavigate();
   const [isFullscreen, toggleFullscreen] = useFullscreen(null);
 
@@ -19,7 +19,10 @@ const EnterName = () => {
           console.warn("Error toggling fullscreen: due to iOS device restrictions", err.message);
         }
       }
-      setNickname(name.trim());
+      setLocalPlayer(prev => ({ 
+        ...prev,
+        name: name.trim()
+      }));
       navigate('/choose-char');
     } else {
       alert('Please enter a nickname');

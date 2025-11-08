@@ -28,7 +28,7 @@ const ringColorMap = {
 };
 
 const ChooseChar = () => {
-  const { nickname, setCharacter, webRTC, gyroscope, connectionStatus, screenWakeLock } = useGame();
+  const { localPlayer, setLocalPlayer, webRTC, gyroscope, connectionStatus, screenWakeLock } = useGame();
   const [selectedChar, setSelectedChar] = useState(characters[0]);
   const navigate = useNavigate();
 
@@ -47,13 +47,17 @@ const ChooseChar = () => {
       await screenWakeLock.request();
       console.log('Wake Lock enabled');
 
-      setCharacter(selectedChar);
+      setLocalPlayer(prev => ({ 
+        ...prev,
+        avatar: selectedChar.name,
+        characterData: selectedChar 
+      }));
 
       navigate('/waiting-room');
     } catch (err) {
       console.error('Failed to enable Wake Lock or connect:', err);
     }
-  }, [screenWakeLock.request,, setCharacter, selectedChar, navigate]);
+  }, [screenWakeLock.request, setLocalPlayer, selectedChar, navigate]);
 
   return (
     <div className="hero min-h-screen bg-base-200 overflow-x-hidden select-none" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
@@ -72,7 +76,7 @@ const ChooseChar = () => {
             }}
           >
             <div className="card-body">
-              <h2 className="card-title">哈囉！{nickname}，請選擇角色</h2>
+              <h2 className="card-title">哈囉！{localPlayer.name || '...'}，請選擇角色</h2>
               <div className="flex flex-col items-center mt-4">
                 <div className="avatar online">
                   <div className={`w-42 h-42 rounded-full ${ringColorMap[selectedChar.name]} ring-4 ring-offset-base-100 ring-offset-2 flex justify-center items-center overflow-hidden`}>
