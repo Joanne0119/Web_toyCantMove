@@ -127,11 +127,7 @@ export const GameProvider = ({ children }) => {
               console.log("Player after update attempt:", player);
               return player; 
             });
-
-            setCharacter(prevChar => {
-              return { ...(prevChar || {}), color };
-            });
-
+            
             return updatedPlayers;
           });
         
@@ -156,7 +152,7 @@ export const GameProvider = ({ children }) => {
         console.error(e);
       }
     }
-  }, [lastMessage, players, peerId]); 
+  }, [lastMessage, peerId]); 
 
   const value = useMemo(() => ({
     peerId: peerId,     

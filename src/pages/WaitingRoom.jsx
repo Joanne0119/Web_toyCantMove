@@ -133,7 +133,7 @@ const WaitingRoom = () => {
                   <h2 className="card-title">等待玩家進入...</h2>
                   <div className="space-y-3 mt-4">
                     {players.map((player, index) => (
-                      <div key={index} className="flex items-center bg-base-200 p-2 rounded-lg ">
+                      <div key={player.id || index} className="flex items-center bg-base-200 p-2 rounded-lg ">
                         <div className="avatar mr-4">
                           <div className="w-14 rounded-full">
                             <img src={player.color ? `/images/${player.color + '_' + player.avatar}.png` : '/images/gray_' + player.avatar + '.png'} alt={player.name} />
