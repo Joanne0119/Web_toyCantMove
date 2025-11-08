@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import { motion } from "framer-motion";
-import { useFullscreen } from '../hooks/useFullscreen';
+import { useFullscreen } from '../hooks/useFullScreen';
 
 const EnterName = () => {
   const [name, setName] = useState('');
