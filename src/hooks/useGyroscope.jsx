@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { GyroscopeManager } from '../lib/gyroscopeManager.js';
 
 export const useGyroscope = (config) => {
@@ -67,14 +67,25 @@ export const useGyroscope = (config) => {
     }
   }, []);
 
-  return { 
-    direction, 
-    coordinates, 
-    isCalibrated, 
-    isInitialized,
-    error, 
-    init, 
-    calibrate, 
-    isSupported: () => managerRef.current ? managerRef.current.isPlatformSupported() : false
-  };
+  const isSupported = useCallback(() => {
+      return managerRef.current ? managerRef.current.isPlatformSupported() : false
+  }, []);
+
+  const memoizedValue = useMemo(() => {
+    return { 
+      direction, 
+      coordinates, 
+      isCalibrated, 
+      isInitialized,
+      error, 
+      init, 
+      calibrate, 
+      isSupported 
+    };
+  }, [ 
+    direction, coordinates, isCalibrated, isInitialized,
+    error, init, calibrate, isSupported
+  ]);
+
+  return memoizedValue;
 };

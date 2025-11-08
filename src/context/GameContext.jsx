@@ -129,6 +129,28 @@ export const GameProvider = ({ children }) => {
     }
   }, [lastMessage, peerId]); 
 
+  const gyroscopeStatus = useMemo(() => ({
+    isSupported: gyroscope.isSupported(),
+    isCalibrated: gyroscope.isCalibrated,
+    isInitialized: gyroscope.isInitialized,
+    direction: gyroscope.direction,
+    coordinates: gyroscope.coordinates,
+    error: gyroscope.error,
+  }), [
+    gyroscope.isSupported, gyroscope.isCalibrated, gyroscope.isInitialized,
+    gyroscope.direction, gyroscope.coordinates, gyroscope.error
+  ]);
+
+  const screenWakeLockValue = useMemo(() => ({
+    isSupported: screenWakeLock.isSupported,
+    isActive: screenWakeLock.isActive,
+    request: screenWakeLock.requestWakeLock,
+    release: screenWakeLock.releaseWakeLock,
+  }), [
+    screenWakeLock.isSupported, screenWakeLock.isActive,
+    screenWakeLock.requestWakeLock, screenWakeLock.releaseWakeLock
+  ]);
+
   const value = useMemo(() => ({
     peerId: peerId,     
     hostId: hostId, 
@@ -140,26 +162,14 @@ export const GameProvider = ({ children }) => {
     setLevel,
     score,
     setScore,
-    webRTC,
+    webRTC, 
     gyroscope,
-    screenWakeLock: {
-      isSupported: screenWakeLock.isSupported,
-      isActive: screenWakeLock.isActive,
-      request: screenWakeLock.requestWakeLock,
-      release: screenWakeLock.releaseWakeLock,
-    },
+    screenWakeLock: screenWakeLockValue,
     connectionStatus: webRTC.isConnected,
-    gyroscopeStatus: {
-      isSupported: gyroscope.isSupported(),
-      isCalibrated: gyroscope.isCalibrated,
-      isInitialized: gyroscope.isInitialized,
-      direction: gyroscope.direction,
-      coordinates: gyroscope.coordinates,
-      error: gyroscope.error,
-    },
-  }), [peerId, hostId, gameScene, localPlayer, otherPlayers, level, score,
-    webRTC, gyroscope, webRTCIsConnected, gyroIsCalibrated, gyroIsInitialized, gyroDirection, gyroCoordinates, gyroError, screenWakeLock.isSupported,
-    screenWakeLock.isActive, screenWakeLock.requestWakeLock, screenWakeLock.releaseWakeLock
+    gyroscopeStatus: gyroscopeStatus, 
+  }), [
+    peerId, hostId, gameScene, localPlayer, otherPlayers, level, score,
+    webRTC, gyroscope, screenWakeLockValue, gyroscopeStatus
   ]);
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
