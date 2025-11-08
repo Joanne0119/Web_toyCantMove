@@ -1,9 +1,14 @@
 import { useState, useLayoutEffect, useEffect } from 'react';
 
 export const isFullscreenSupported = () => {
-  if (typeof document === 'undefined') {
-    return false; // 在 server-side rendering 環境下，回傳 false
+  if (typeof document === 'undefined' || typeof navigator === 'undefined') {
+    return false; 
   }
+
+  if (/iPhone/i.test(navigator.userAgent)) {
+    return false;
+  }
+
   return !!(
     document.documentElement.requestFullscreen ||
     document.documentElement.webkitRequestFullscreen ||
