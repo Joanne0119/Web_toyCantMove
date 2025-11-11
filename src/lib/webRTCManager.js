@@ -53,11 +53,18 @@ class WebRTCManager {
     this.onVideoStreamEstablished = null; // (peerId: string, stream: MediaStream) => {}
     this.onAudioStreamEstablished = null; // (peerId: string, stream: MediaStream) => {}
     this.onPeerListChange = null;
+    this.onRemotePeerId = null; // (peerId: string) => {}
 
     this.isWebSocketConnected = false;
     this.isWebSocketConnectionInProgress = false;
 
     this.ws = null;
+    this.webSocketUrl = null;
+    this.reconnectAttempts = 0;
+    this.maxReconnectAttempts = 5;
+    this.reconnectInterval = 2000; // 2 seconds
+    this.shouldReconnect = false;
+
     this.isLocalPeerVideoAudioSender = false;
     this.isLocalPeerVideoAudioReceiver = false;
 
@@ -82,6 +89,10 @@ class WebRTCManager {
       return;
     }
 
+    this.webSocketUrl = webSocketUrl;
+    this.shouldReconnect = true;
+    this.reconnectAttempts = 0;
+
     this.isWebSocketConnectionInProgress = true;
     this.isLocalPeerVideoAudioSender = isVideoAudioSender;
     this.isLocalPeerVideoAudioReceiver = isVideoAudioReceiver;
@@ -94,6 +105,7 @@ class WebRTCManager {
         console.log("WebSocket connection opened!");
         this.isWebSocketConnected = true;
         this.isWebSocketConnectionInProgress = false;
+        this.reconnectAttempts = 0; // Reset on successful connection
         this.onWebSocketConnection?.("open");
         this.sendWebSocketMessage(SignalingMessageType.NEWPEER, this.localPeerId, "ALL", `New peer ${this.localPeerId}`);
         resolve();
@@ -106,7 +118,6 @@ class WebRTCManager {
       this.ws.onerror = (error) => {
         console.error("WebSocket Error:", error);
         this.isWebSocketConnectionInProgress = false;
-        // No onWebSocketConnection for 'error' in original, but good practice
         this.onWebSocketConnection?.("error");
         reject(error);
       };
@@ -116,12 +127,44 @@ class WebRTCManager {
         this.isWebSocketConnected = false;
         this.isWebSocketConnectionInProgress = false;
         this.onWebSocketConnection?.("closed");
-        // Potentially attempt to reconnect or clean up WebRTC connections
-        this.cleanupAllPeers();
+        this.handleDisconnection();
         reject(new Error(`WebSocket closed: ${event.code} ${event.reason}`));
       };
     });
   }
+
+  handleDisconnection() {
+    this.cleanupAllPeers();
+    if (this.shouldReconnect && this.reconnectAttempts < this.maxReconnectAttempts) {
+      this.reconnectAttempts++;
+      console.log(`WebSocket disconnected. Attempting to reconnect... (Attempt ${this.reconnectAttempts})`);
+      setTimeout(() => this.reconnect(), this.reconnectInterval);
+    } else {
+      console.log("WebSocket disconnected. Not attempting to reconnect.");
+    }
+  }
+
+  async reconnect() {
+    if (this.webSocketUrl) {
+      try {
+        await this.connect(this.webSocketUrl, this.isLocalPeerVideoAudioSender, this.isLocalPeerVideoAudioReceiver);
+        const remotePeerId = localStorage.getItem('remotePeerId');
+        if (remotePeerId) {
+          this.initiateOffer(remotePeerId);
+        }
+      } catch (error) {
+        console.error("Reconnect failed:", error);
+      }
+    }
+  }
+  
+  async initiateOffer(peerId) {
+    if (!this.peerConnections.has(peerId)) {
+      this._setupPeerConnection(peerId);
+    }
+    await this._createAndSendOffer(peerId);
+  }
+
 
   _setupPeerConnection(peerId) {
     if (this.peerConnections.has(peerId)) {
@@ -195,6 +238,7 @@ class WebRTCManager {
           `ReceiverDataChannel on ${this.localPeerId} for ${peerId} established.`
         );
         this.onDataChannelConnection?.(peerId); // Inform app that data channel is ready from receiver side
+        this.onRemotePeerId?.(peerId);
       };
       receiveChannel.onmessage = (ev) => {
         console.log(`${this.localPeerId} received on ${peerId} receiverDataChannel: ${ev.data}`);
@@ -730,6 +774,7 @@ class WebRTCManager {
   }
 
   closeWebSocket() {
+    this.shouldReconnect = false;
     if (this.ws) {
       this.ws.close();
       // this.ws = null; // ws.onclose will handle setting isWebSocketConnected to false
