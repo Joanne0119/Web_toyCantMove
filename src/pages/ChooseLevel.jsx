@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import { motion, AnimatePresence } from "framer-motion";
+import LazyImage from '@/components/LazyImage';
 
 const levels = [
   { name: "玩具紙箱", image: "/images/toyboxLevel.png", disable: false },
@@ -80,7 +81,7 @@ const ChooseLevel = () => {
                       pointerEvents: l.disable ? 'none' : 'auto' 
                     }}
                   >
-                    <figure><img src={l.image} alt={l.name} className="w-60 object-cover" style={{ filter: l.disable ? 'grayscale(90%)' : 'none' }}/></figure>
+                    <figure><LazyImage src={l.image} alt={l.name} className="w-60 object-cover" style={{ filter: l.disable ? 'grayscale(90%)' : 'none' }}/></figure>
                     <div className="card-body p-4 items-center text-center">
                       <h2 className="card-title">{l.name}</h2>
                     </div>

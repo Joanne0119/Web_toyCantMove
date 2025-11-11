@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import { motion, AnimatePresence } from "framer-motion";
+import LazyImage from '@/components/LazyImage';
 
 const characters = [
   { name: 'wind-up', speed: 8, power: 10, skill: 7, src: '/images/gray_wind-up.png', disable: false},
@@ -81,16 +82,20 @@ const ChooseChar = () => {
                 <div className="avatar online">
                   <div className={`w-42 h-42 rounded-full ${ringColorMap[selectedChar.name]} ring-4 ring-offset-base-100 ring-offset-2 flex justify-center items-center overflow-hidden`}>
                     <AnimatePresence mode="wait">
-                      <motion.img
+                      <motion.div
                         key={selectedChar.name}
-                        src={selectedChar.src}
-                        alt={selectedChar.name}
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.8 }}
                         transition={{ duration: 0.3 }}
                         className="w-full max-w-xs object-contain"
-                      />
+                      >
+                        <LazyImage
+                          src={selectedChar.src}
+                          alt={selectedChar.name}
+                          className="w-full max-w-xs object-contain"
+                        />
+                      </motion.div>
                     </AnimatePresence>
                   </div>
                 </div>
@@ -121,7 +126,7 @@ const ChooseChar = () => {
                       onClick={() => handleSelectChar(char)}
                     >
                       <div className="w-16 rounded-full">
-                        <img src={char.src} alt={char.name}/>
+                        <LazyImage src={char.src} alt={char.name}/>
                       </div>
                     </motion.div>
                   ))}

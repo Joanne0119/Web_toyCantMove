@@ -2,6 +2,7 @@ import React, { use, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import { motion, AnimatePresence } from "framer-motion";
+import LazyImage from '@/components/LazyImage';
 
 // const mockPlayers = [
 //   { name: '黃小姿', avatar: '/images/green.png' },
@@ -137,7 +138,7 @@ const WaitingRoom = () => {
                       <div key={player.id} className="flex items-center bg-base-200 p-2 rounded-lg ">
                         <div className="avatar mr-4">
                           <div className="w-14 rounded-full">
-                            <img 
+                            <LazyImage 
                               src={player.color ? `/images/${player.color}_${player.avatar}.png` : `/images/gray_${player.avatar}.png`} 
                               alt={player.name} 
                             />

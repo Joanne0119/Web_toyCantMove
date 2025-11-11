@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useGame } from '../context/GameContext';
-import { motion, useSpring, useTransform } from "framer-motion";
+import { motion, useSpring, useTransform, useMotionValue } from "framer-motion";
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 
@@ -12,7 +12,7 @@ const Playing = () => {
     const { calibrate: calibrateGyroscope } = gyroscope;
 
     // --- Game State ---
-    const GAME_SPEED = 5;
+    const GAME_SPEED = 4;
 
     const springConfig = { stiffness: 300, damping: 30 };
     const smoothX = useSpring(50, springConfig);
@@ -79,9 +79,8 @@ const Playing = () => {
     useEffect(() => {
 
         if (!isControllerOpen) {
-            const isManuallyControlled = Object.values(pressed.current).some(v => v);
 
-            if (connectionStatus && isCalibrated && !isManuallyControlled) {
+            if (connectionStatus && isCalibrated) {
 
                 const vector = { x: coordinates.x, y: -coordinates.y };
                 const magnitude = Math.sqrt(vector.x ** 2 + vector.y ** 2);
@@ -123,115 +122,134 @@ const Playing = () => {
         isControllerOpen,
     ]);
 
-
-    // --- Button Controls (Manual Sender) ---
-    const pressed = useRef({ up: false, down: false, left: false, right: false });
+    // Manual Controller Handlers
+    const joystickBaseRef = useRef(null);
+    const knobX = useMotionValue(0);
+    const knobY = useMotionValue(0);
+    const isDraggingRef = useRef(false);
     const sendIntervalRef = useRef(null);
+    const currentVectorRef = useRef({ x: 0, y: 0 });
 
-    const vectorMap = {
-        up: [0, 1],
-        down: [0, -1],
-        left: [-1, 0],
-        right: [1, 0]
-    };
-
-    const getMoveVector = useCallback(() => {
-        let x = 0, y = 0;
-        for (const dir in pressed.current) {
-            if (pressed.current[dir]) {
-                x += vectorMap[dir][0];
-                y += vectorMap[dir][1];
-            }
+    const sendManualMove = useCallback((vector) => {
+        if (connectionStatus && dataChannelConnections.length > 0) {
+            const msg = JSON.stringify({ type: "manualMove", vector });
+            sendWebRTCData(msg, null);
         }
-        return { x, y };
-    }, []);
+    }, [connectionStatus, dataChannelConnections, sendWebRTCData]);
 
-    const startSendingManual = useCallback(() => {
-        if (!sendIntervalRef.current) {
-            sendIntervalRef.current = setInterval(() => {
-                const vec = getMoveVector();
-                if (vec.x === 0 && vec.y === 0) return; // Don't send if not moving
+    const startSendingLoop = useCallback(() => {
+        if (sendIntervalRef.current) return;
+        
+        sendIntervalRef.current = setInterval(() => {
+            const vector = currentVectorRef.current;
+            sendManualMove(vector);
 
-                if (connectionStatus && dataChannelConnections.length > 0) {
-                    const msg = JSON.stringify({ type: "manualMove", vector: vec });
-                    sendWebRTCData(msg, null);
-                } else {
-                    console.warn("WebRTC not connected or data channel not open, cannot send manual move vector.");
-                }
-            }, 100); // Send every 100ms
-        }
-    }, [connectionStatus, dataChannelConnections, getMoveVector, sendWebRTCData]);
+            const newX = smoothX.get() + (vector.x * GAME_SPEED);
+            const newY = smoothY.get() - (vector.y * GAME_SPEED);
+            smoothX.set(Math.max(0, Math.min(100, newX)));
+            smoothY.set(Math.max(0, Math.min(100, newY)));
 
-    const stopSendingManualIfNoDirection = useCallback(() => {
-        if (!Object.values(pressed.current).some(v => v)) {
+        }, 100); // 每 100ms 發送一次
+    }, [sendManualMove, smoothX, smoothY, GAME_SPEED]);
+
+    const stopSendingLoop = useCallback(() => {
+        if (sendIntervalRef.current) {
             clearInterval(sendIntervalRef.current);
             sendIntervalRef.current = null;
         }
-    }, []);
+        sendManualMove({ x: 0, y: 0 });
+        currentVectorRef.current = { x: 0, y: 0 };
+    }, [sendManualMove]);
 
-    const setupButtonHandlers = useCallback((id) => {
-        let holdTimeout = null;
+    const updateJoystick = useCallback((clientX, clientY) => {
+        if (!joystickBaseRef.current) return;
 
-        const sendStopMessage = () => {
-            if (connectionStatus && dataChannelConnections.length > 0) {
-                const msg = JSON.stringify({ type: "manualMove", vector: { x: 0, y: 0 } });
-                sendWebRTCData(msg, null);
+        const baseRect = joystickBaseRef.current.getBoundingClientRect();
+        const baseRadius = baseRect.width / 2;
+        const knobRadius = baseRadius / 2; 
+        
+        // 滾球中心點能移動的最大距離
+        const maxDistance = baseRadius - knobRadius;
+
+        const centerX = baseRect.left + baseRadius;
+        const centerY = baseRect.top + baseRadius;
+
+        // 計算點擊位置相對於中心的 delta
+        let dx = clientX - centerX;
+        let dy = clientY - centerY;
+
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx);
+
+        let clampedX = dx;
+        let clampedY = dy;
+
+        // 如果拖曳距離超過最大範圍，就限制它
+        if (distance > maxDistance) {
+            clampedX = Math.cos(angle) * maxDistance;
+            clampedY = Math.sin(angle) * maxDistance;
+        }
+        
+        // 更新 UI
+        knobX.set(clampedX);
+        knobY.set(clampedY);
+
+        // 計算並儲存標準化 (normalized) 向量 (-1 到 +1)
+        // 上為正
+        currentVectorRef.current = {
+            x: clampedX / maxDistance,
+            y: -(clampedY / maxDistance) 
+        };
+
+    }, [knobX, knobY]);
+
+    // 處理 Pointer 事件
+    const handlePointerDown = useCallback((e) => {
+        e.preventDefault();
+        isDraggingRef.current = true;
+        updateJoystick(e.clientX, e.clientY);
+        startSendingLoop();
+    }, [updateJoystick, startSendingLoop]);
+
+    const handlePointerMove = useCallback((e) => {
+        if (!isDraggingRef.current) return;
+        e.preventDefault();
+        updateJoystick(e.clientX, e.clientY);
+    }, [updateJoystick]);
+
+    const handlePointerUp = useCallback((e) => {
+        if (!isDraggingRef.current) return;
+        e.preventDefault();
+        isDraggingRef.current = false;
+        
+        // 滾球歸位
+        knobX.set(0);
+        knobY.set(0);
+        
+        stopSendingLoop();
+    }, [knobX, knobY, stopSendingLoop]);
+
+    // 綁定全域事件監聽 (確保手指滑出搖桿範圍仍有效)
+    useEffect(() => {
+        // 只有在控制器展開時才綁定 move 和 up 事件
+        if (isControllerOpen) {
+            window.addEventListener('pointermove', handlePointerMove);
+            window.addEventListener('pointerup', handlePointerUp);
+            window.addEventListener('pointercancel', handlePointerUp);
+        }
+
+        return () => {
+            window.removeEventListener('pointermove', handlePointerMove);
+            window.removeEventListener('pointerup', handlePointerUp);
+            window.removeEventListener('pointercancel', handlePointerUp);
+            
+            // 如果組件卸載或控制器關閉時還在拖曳，確保停止
+            if (isDraggingRef.current) {
+                stopSendingLoop();
+                isDraggingRef.current = false;
             }
         };
-
-        return {
-            onPointerDown: (e) => {
-                e.preventDefault();
-                pressed.current[id] = true;
-
-                const vec = vectorMap[id];
-                const newX = smoothX.get() + (vec[0] * GAME_SPEED);
-                const newY = smoothY.get() - (vec[1] * GAME_SPEED);
-                smoothX.set(Math.max(0, Math.min(100, newX)));
-                smoothY.set(Math.max(0, Math.min(100, newY)));
-
-                if (connectionStatus && dataChannelConnections.length > 0) {
-                    const msg = JSON.stringify({ type: "manualMove", vector: { x: vec[0], y: vec[1] } });
-                    sendWebRTCData(msg, null);
-                }
-
-                holdTimeout = setTimeout(() => {
-                    startSendingManual();
-                }, 300);
-            },
-            onPointerUp: (e) => {
-                e.preventDefault();
-                pressed.current[id] = false;
-
-                sendStopMessage();
-
-                clearTimeout(holdTimeout);
-                stopSendingManualIfNoDirection();
-            },
-            onPointerLeave: (e) => {
-                e.preventDefault();
-                if (pressed.current[id]) {
-                    pressed.current[id] = false;
-
-                    sendStopMessage();
-
-                    clearTimeout(holdTimeout);
-                    stopSendingManualIfNoDirection();
-                }
-            },
-            onPointerCancel: (e) => {
-                e.preventDefault();
-                if (pressed.current[id]) {
-                    pressed.current[id] = false;
-
-                    sendStopMessage();
-
-                    clearTimeout(holdTimeout);
-                    stopSendingManualIfNoDirection();
-                }
-            },
-        };
-    }, [startSendingManual, stopSendingManualIfNoDirection, smoothX, smoothY, GAME_SPEED, connectionStatus, dataChannelConnections, sendWebRTCData]);
+    }, [isControllerOpen, handlePointerMove, handlePointerUp, stopSendingLoop]);
 
     return (
         <div className="relative w-screen h-screen px-6 flex flex-col items-center justify-center " style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
@@ -315,21 +333,39 @@ const Playing = () => {
                         </button>
                     </div>
                     <div className={`
-                        grid grid-cols-3 gap-2 select-none
+                        flex justify-center items-center w-full select-none
                         transition-all duration-300 ease-in-out overflow-hidden 
                         ${isControllerOpen ? 'max-h-96 mt-4' : 'max-h-0 mt-0'}
-                    `} style={{ touchAction: 'none' }}>
-                        <div className="col-span-1"></div>
-                        <motion.button whileTap={{ scale: 0.9 }} className="btn btn-outline btn-primary btn-circle p-6 text-xl font-bold" {...setupButtonHandlers('up')}>↑</motion.button>
-                        <div className="col-span-1"></div>
+                    `}>
+                        <div 
+                            ref={joystickBaseRef}
+                            className="relative w-40 h-40 bg-primary/20 rounded-full flex items-center justify-center text-primary-content" 
+                            style={{ touchAction: 'none' }}
+                            onPointerDown={handlePointerDown}
+                        >
+                            <svg className="w-4 h-4 absolute top-3 left-1/2 -translate-x-1/2" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <polygon points="5,1 9,9 1,9" />
+                            </svg>
+                            <svg className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 rotate-90" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <polygon points="5,1 9,9 1,9" />
+                            </svg>
+                            <svg className="w-4 h-4 absolute bottom-3 left-1/2 -translate-x-1/2 rotate-180" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <polygon points="5,1 9,9 1,9" />
+                            </svg>
+                            <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 -rotate-90" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <polygon points="5,1 9,9 1,9" />
+                            </svg>
 
-                        <motion.button whileTap={{ scale: 0.9 }} className="btn btn-outline btn-primary btn-circle p-6 text-xl font-bold" {...setupButtonHandlers('left')}>←</motion.button>
-                        <div className="col-span-1"></div>
-                        <motion.button whileTap={{ scale: 0.9 }} className="btn btn-outline btn-primary btn-circle p-6 text-xl font-bold" {...setupButtonHandlers('right')}>→</motion.button>
-
-                        <div className="col-span-1"></div>
-                        <motion.button whileTap={{ scale: 0.9 }} className="btn btn-outline btn-primary btn-circle p-6 text-xl font-bold" {...setupButtonHandlers('down')}>↓</motion.button>
-                        <div className="col-span-1"></div>
+                            {/* 滾球 */}
+                            <motion.div
+                                className="w-20 h-20 bg-primary/80 rounded-full shadow-lg cursor-grab"
+                                style={{ 
+                                    x: knobX, 
+                                    y: knobY 
+                                }}
+                                whileTap={{ cursor: 'grabbing' }}
+                            />
+                        </div>
                     </div>
                 </div>
             </motion.div>

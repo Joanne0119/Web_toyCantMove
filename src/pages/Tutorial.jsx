@@ -22,6 +22,7 @@ const Tutorial = () => {
   });
 
   const [gyroSupported, setGyroSupported] = useState(null);
+  const [isSensorSetupInProgress, setIsSensorSetupInProgress] = useState(false);
 
   const hasSentCalibratedRef = useRef(false);
 
@@ -44,7 +45,8 @@ const Tutorial = () => {
   };
 
   const handleSetupSensors = useCallback(async () => {
-    setInstructionText('請允許感測器權限...');
+    setIsSensorSetupInProgress(true);
+    setInstructionText('正在允許感測器權限...');
     const initSuccess = await initGyroscope();
     
     if (initSuccess) {
@@ -53,6 +55,7 @@ const Tutorial = () => {
     } else {
       setInstructionText('權限被拒絕，無法開始教學');
     }
+    setIsSensorSetupInProgress(false);
   }, [initGyroscope, calibrateGyroscope]);
 
   useEffect(() => {
@@ -182,8 +185,13 @@ const Tutorial = () => {
                     whileTap={{ scale: 0.95 }}
                     onClick={handleSetupSensors}
                     className="btn btn-primary btn-lg"
+                    disabled={isSensorSetupInProgress}
                 >
-                    啟用與校正
+                    {isSensorSetupInProgress ? (
+                        <span className="loading loading-spinner loading-sm"></span>
+                    ) : (
+                        '啟用與校正'
+                    )}
                 </motion.button>
             </div>
         </motion.div>
