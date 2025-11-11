@@ -2,11 +2,20 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 // --- 遊戲常數 ---
 const GAME_SPEED = 5;         // 遊戲移動速度
-const JUMP_FORCE = 17;        // 跳躍力道
+const JUMP_FORCE = 12;        // 跳躍力道
 const GRAVITY = 0.8;          // 重力
-const OBSTACLE_INTERVAL_MIN = 900;  // 障礙物出現最小間隔 (毫秒)
-const OBSTACLE_INTERVAL_MAX = 2200; // 障礙物出現最大間隔 (毫秒)
+const OBSTACLE_INTERVAL_MIN = 800;  // 障礙物出現最小間隔 (毫秒)
+const OBSTACLE_INTERVAL_MAX = 2000; // 障礙物出現最大間隔 (毫秒)
 const PLAYER_BOTTOM_POS = 10; // 玩家距離地上的高度
+
+// --- 圖片和尺寸常數 ---
+const DINO_IMG_SRC = '/images/side_windup.png';      
+const CACTUS_IMG_SRC = '/images/gray_dog.png';  
+
+const PLAYER_WIDTH = 50;
+const PLAYER_HEIGHT = 50;
+const OBSTACLE_WIDTH = 20; 
+const OBSTACLE_HEIGHT = 40;
 
 const DinoGame = () => {
     // --- React 狀態 ---
@@ -33,16 +42,14 @@ const DinoGame = () => {
     const createObstacle = () => {
         if (!gameAreaRef.current) return;
         
-        const obstacleEl = document.createElement('div');
-        // --- 障礙物樣式 (你可以換成 🌵) ---
-        obstacleEl.style.position = 'absolute';
-        obstacleEl.style.bottom = `${PLAYER_BOTTOM_POS}px`; // 跟玩家在同一條線上
-        obstacleEl.style.width = '20px';
-        obstacleEl.style.height = '40px';
-        obstacleEl.style.backgroundColor = 'green';
-        obstacleEl.style.fontSize = '28px'; // 讓 emoji 變大
-        obstacleEl.textContent = '🌵';
-        // --------------------------------
+        const obstacleEl = document.createElement('img');
+        obstacleEl.src = CACTUS_IMG_SRC;
+        obstacleEl.alt = 'Obstacle';
+        
+        obstacleEl.className = `absolute select-none`;
+        obstacleEl.style.bottom = `${PLAYER_BOTTOM_POS}px`;
+        obstacleEl.style.width = `${OBSTACLE_WIDTH}px`;
+        obstacleEl.style.height = `${OBSTACLE_HEIGHT}px`;
 
         const gameAreaWidth = gameAreaRef.current.clientWidth;
         const x = gameAreaWidth; // 從最右邊開始
@@ -54,6 +61,8 @@ const DinoGame = () => {
 
     // 遊戲主循環 (Game Loop)
     const gameLoop = useCallback(() => {
+        // --- DEBUG ---
+        console.log('Game Loop Running');
         if (!playerRef.current) return;
 
         // 1. 更新玩家 
@@ -81,45 +90,51 @@ const DinoGame = () => {
                 playerRect.top < obRect.bottom &&
                 playerRect.bottom > obRect.top
             ) {
+                // --- DEBUG ---
+                console.log('Collision Detected!');
+
                 // --- 遊戲結束 ---
                 setIsGameOver(true);
                 setIsRunning(false);
 
-                // [!!] 使用函式更新來避免 stale closure
                 setHighScore(prevHighScore => Math.max(prevHighScore, scoreRef.current));
                 
                 cancelAnimationFrame(gameLoopRef.current);
                 return;
             }
 
-            // 計分 (保持不變)
-            if (!ob.scored && ob.x < playerRect.left) {
+            // 檢查障礙物的右邊界是否已經超過玩家的左邊界
+            if (!ob.scored && obRect.right < playerRect.left) {
+                // --- DEBUG ---
+                console.log('Score!');
                 ob.scored = true;
                 scoreRef.current += 10;
                 setScore(scoreRef.current);
             }
 
-            // 移除螢幕外的障礙物 (保持不變)
-            if (ob.x < -30) {
+            // 移除螢幕外的障礙物 (使用 -50 確保完全移出)
+            if (ob.x < -50) {
                 ob.element.remove();
                 obstacles.current.splice(i, 1);
             }
         }
 
-        // 3. 產生新的障礙物 (保持不變)
-        obstacleTimerRef.current -= 16;
+        // 3. 產生新的障礙物
+        obstacleTimerRef.current -= 16; // 假設 60fps
         if (obstacleTimerRef.current <= 0) {
             createObstacle();
             obstacleTimerRef.current = Math.random() * (OBSTACLE_INTERVAL_MAX - OBSTACLE_INTERVAL_MIN) + OBSTACLE_INTERVAL_MIN;
         }
 
-        // 4. 請求下一幀 (保持不變)
+        // 4. 請求下一幀
         gameLoopRef.current = requestAnimationFrame(gameLoop);
         
-    }, []);
+    }, []); // 保持 empty dependency array
 
     // 處理跳躍
     const handleJump = useCallback(() => {
+        // --- DEBUG ---
+        console.log('Jump!');
         if (playerY.current === PLAYER_BOTTOM_POS) { // 只能在地上時跳躍
             playerVel.current = JUMP_FORCE;
         }
@@ -127,31 +142,43 @@ const DinoGame = () => {
 
     // 開始/重新開始遊戲
     const startGame = useCallback(() => {
-        // 重設所有狀態
+        console.log('Game Start! Setting state.');
+
         setIsGameOver(false);
         setScore(0);
         scoreRef.current = 0;
         playerY.current = PLAYER_BOTTOM_POS;
         playerVel.current = 0;
         
-        // 清除舊的障礙物
         obstacles.current.forEach(ob => ob.element.remove());
         obstacles.current = [];
         
-        obstacleTimerRef.current = OBSTACLE_INTERVAL_MIN; // 讓第一個障礙物快點出現
-        
+        obstacleTimerRef.current = OBSTACLE_INTERVAL_MIN;
         setIsRunning(true);
-        gameLoopRef.current = requestAnimationFrame(gameLoop);
-    }, [gameLoop]);
+        
+    }, []);
 
     // --- 設定事件監聽 ---
+    useEffect(() => {
+        if (isRunning) {
+            // --- DEBUG ---
+            console.log('useEffect[isRunning]: isRunning is true, starting loop.');
+            gameLoopRef.current = requestAnimationFrame(gameLoop);
+        }
+        return () => {
+            // --- DEBUG ---
+            console.log('useEffect[isRunning]: Cleanup! Canceling frame.');
+            cancelAnimationFrame(gameLoopRef.current);
+        };
+    }, [isRunning, gameLoop]); 
+
+
     useEffect(() => {
         const onJump = (e) => {
             e.preventDefault();
             if (isRunning) {
                 handleJump();
             } else {
-                // 如果遊戲沒在跑 (結束或未開始)，任何點擊都等於開始遊戲
                 startGame();
             }
         };
@@ -164,103 +191,65 @@ const DinoGame = () => {
 
         const gameAreaNode = gameAreaRef.current;
         if (gameAreaNode) {
-            // 'mousedown' 用於電腦點擊
             gameAreaNode.addEventListener('mousedown', onJump);
-            // 'touchstart' 用於手機觸控
             gameAreaNode.addEventListener('touchstart', onJump);
             document.addEventListener('keydown', onKeyDown);
         }
 
-        // 清理函數
         return () => {
             if (gameAreaNode) {
                 gameAreaNode.removeEventListener('mousedown', onJump);
                 gameAreaNode.removeEventListener('touchstart', onJump);
             }
             document.removeEventListener('keydown', onKeyDown);
-            // 當組件卸載時，停止 game loop
-            cancelAnimationFrame(gameLoopRef.current);
         };
     }, [isRunning, handleJump, startGame]);
 
-    // --- 內聯樣式 ---
-    const gameAreaStyle = {
-        position: 'relative',
-        width: '100%',
-        height: '200px',
-        borderRadius: '8px',
-        overflow: 'hidden',
-        cursor: 'pointer',
-        userSelect: 'none', // 防止選取
-        WebkitUserSelect: 'none',
-        touchAction: 'manipulation' // 避免觸控延遲
-    };
-
-    const playerStyle = {
-        position: 'absolute',
-        bottom: `${PLAYER_BOTTOM_POS}px`, // 讓玩家在地上
-        left: '20px',
-        width: '40px',
-        height: '40px',
-        fontSize: '32px',
-        userSelect: 'none',
-        WebkitUserSelect: 'none',
-    };
-
-    const groundStyle = {
-        position: 'absolute',
-        bottom: `${PLAYER_BOTTOM_POS - 2}px`, // 地板線
-        left: '0px',
-        width: '100%',
-        height: '2px',
-        backgroundColor: '#333',
-    };
-    
-    const scoreStyle = {
-        position: 'absolute',
-        top: '10px',
-        right: '10px',
-        fontSize: '20px',
-        fontFamily: 'monospace',
-        color: '#555',
-    };
-
-    const gameOverStyle = {
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        color: 'red',
-        fontSize: '24px',
-        fontFamily: 'monospace',
-        textAlign: 'center',
-    };
-
-    const instructionsStyle = {
-        ...gameOverStyle,
-        color: '#777',
-        fontSize: '16px',
-    };
-
-    // --- 渲染 (Render) ---
     return (
-        <div style={{ padding: '10px', width: '100%' }}>
-            <div ref={gameAreaRef} style={gameAreaStyle} tabIndex={0}>
-                <div style={groundStyle} />
-                <div ref={playerRef} style={playerStyle}>🦖</div>
-                <div style={scoreStyle}>HI: {highScore} | {score}</div>
+        <div className="p-2.5 w-full">
+            {/* 遊戲區域 */}
+            <div 
+                ref={gameAreaRef} 
+                className="relative w-full h-[200px] rounded-lg overflow-hidden cursor-pointer select-none touch-manipulation bg-gray-100 focus:outline-none"
+                tabIndex={0} // 讓 div 可以被 focus 以接收鍵盤事件
+            >
+                {/* 地板線 */}
+                <div 
+                    className="absolute left-0 w-full h-[2px] bg-gray-800"
+                    style={{ bottom: `${PLAYER_BOTTOM_POS - 2}px` }} // 位置依賴常數
+                />
                 
+                {/* 玩家 */}
+                <img
+                    ref={playerRef}
+                    src={DINO_IMG_SRC}
+                    alt="Dino"
+                    className="absolute left-[20px] select-none object-contain"
+                    style={{
+                        bottom: `${PLAYER_BOTTOM_POS}px`,
+                        width: `${PLAYER_WIDTH}px`,
+                        height: `${PLAYER_HEIGHT}px`,
+                    }}
+                />
+
+                {/* 分數 */}
+                <div className="absolute top-2.5 right-2.5 text-xl font-mono text-gray-600">
+                    HI: {highScore} | {score}
+                </div>
+                
+                {/* 遊戲開始提示 */}
                 {!isRunning && !isGameOver && (
-                    <div style={instructionsStyle}>
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-lg text-gray-500 text-center">
                         點擊或按空白鍵開始
                     </div>
                 )}
 
+                {/* 遊戲結束提示 */}
                 {isGameOver && (
-                    <div style={gameOverStyle}>
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-2xl font-mono text-red-500 text-center font-bold">
                         GAME OVER
                         <br />
-                        <span style={{fontSize: '14px'}}>(點擊重玩)</span>
+                        <span className="text-sm font-normal">(點擊重玩)</span>
                     </div>
                 )}
             </div>
