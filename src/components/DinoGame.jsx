@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 // --- 遊戲常數 ---
 const GAME_SPEED = 5;         // 遊戲移動速度
-const JUMP_FORCE = 12;        // 跳躍力道
+const JUMP_FORCE = 14;        // 跳躍力道
 const GRAVITY = 0.8;          // 重力
 const OBSTACLE_INTERVAL_MIN = 800;  // 障礙物出現最小間隔 (毫秒)
 const OBSTACLE_INTERVAL_MAX = 2000; // 障礙物出現最大間隔 (毫秒)
@@ -10,12 +10,16 @@ const PLAYER_BOTTOM_POS = 10; // 玩家距離地上的高度
 
 // --- 圖片和尺寸常數 ---
 const DINO_IMG_SRC = '/images/side_windup.png';      
-const CACTUS_IMG_SRC = '/images/gray_dog.png';  
+const OBSTACLE_TYPES = [
+    { src: '/images/cube123.png', width: 35, height: 30 },
+    { src: '/images/teddy.png', width: 40, height: 42 },
+    { src: '/images/spinner.png', width: 30, height: 28  },
+    { src: '/images/elephant.png', width: 38, height: 30 },
+    { src: '/images/train.png', width: 36 , height: 25 },
+]; 
 
 const PLAYER_WIDTH = 50;
-const PLAYER_HEIGHT = 50;
-const OBSTACLE_WIDTH = 20; 
-const OBSTACLE_HEIGHT = 40;
+const PLAYER_HEIGHT = 35;
 
 const DinoGame = () => {
     // --- React 狀態 ---
@@ -41,15 +45,19 @@ const DinoGame = () => {
     // 建立一個障礙物
     const createObstacle = () => {
         if (!gameAreaRef.current) return;
+
+        const randomIndex = Math.floor(Math.random() * OBSTACLE_TYPES.length);
+        const randomObstacle = OBSTACLE_TYPES[randomIndex];
         
         const obstacleEl = document.createElement('img');
-        obstacleEl.src = CACTUS_IMG_SRC;
+        obstacleEl.src = randomObstacle.src;
         obstacleEl.alt = 'Obstacle';
         
         obstacleEl.className = `absolute select-none`;
         obstacleEl.style.bottom = `${PLAYER_BOTTOM_POS}px`;
-        obstacleEl.style.width = `${OBSTACLE_WIDTH}px`;
-        obstacleEl.style.height = `${OBSTACLE_HEIGHT}px`;
+        obstacleEl.style.width = `${randomObstacle.width}px`;
+        obstacleEl.style.height = `${randomObstacle.height}px`;
+        obstacleEl.style.objectFit = 'contain';
 
         const gameAreaWidth = gameAreaRef.current.clientWidth;
         const x = gameAreaWidth; // 從最右邊開始
