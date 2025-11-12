@@ -9,7 +9,7 @@ const OBSTACLE_INTERVAL_MAX = 2000; // 障礙物出現最大間隔 (毫秒)
 const PLAYER_BOTTOM_POS = 10; // 玩家距離地上的高度
 
 // --- 圖片和尺寸常數 ---
-const DINO_IMG_SRC = '/images/side_windup.png';      
+const DINO_IMG_SRC = '/images/side_red_windup.png';      
 const OBSTACLE_TYPES = [
     { src: '/images/cube123.png', width: 35, height: 30 },
     { src: '/images/teddy.png', width: 40, height: 42 },
