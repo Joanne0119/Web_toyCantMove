@@ -84,8 +84,10 @@ const Playing = () => {
 
     useEffect(() => {
         // 只有在 1. 陀螺儀可用 且 2. 手指 "沒有" 放在搖桿上時 才運作
+        console.log(`Gyro Effect: isInitialized=${isInitialized}, isDragging=${isDraggingRef.current}`);
         if (isInitialized && !isDraggingRef.current) {
 
+            console.log(`Gyro Effect: Running. Coords: { x: ${coordinates.x}, y: ${coordinates.y} }`);
             const vector = { x: coordinates.x, y: -coordinates.y };
             const magnitude = Math.sqrt(vector.x ** 2 + vector.y ** 2);
             
@@ -103,6 +105,8 @@ const Playing = () => {
 
                 const visualKnobX = finalVector.x * maxDistance;
                 const visualKnobY = -finalVector.y * maxDistance;
+
+                console.log(`Gyro Effect: Setting Knobs -> { x: ${visualKnobX}, y: ${visualKnobY} }`);
                 
                 knobX.set(visualKnobX);
                 knobY.set(visualKnobY);
@@ -113,9 +117,14 @@ const Playing = () => {
             if (!connectionStatus || !isCalibrated) return;
 
             const now = Date.now();
-            if (now - lastSentTimeRef.current < 50) return;
+            if (now - lastSentTimeRef.current < 50) { 
+                console.log("Gyro Effect: Throttled (too fast).");
+                return;
+            }
             lastSentTimeRef.current = now;
 
+            console.log(`%cGyro Effect: SENDING SIGNAL { x: ${vector.x}, y: ${vector.y} }`, "color: blue; font-weight: bold;");
+            
             const newX = smoothX.get() + (vector.x * GAME_SPEED);
             const newY = smoothY.get() - (vector.y * GAME_SPEED);
             smoothX.set(Math.max(0, Math.min(100, newX)));
