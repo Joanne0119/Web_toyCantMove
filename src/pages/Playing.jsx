@@ -23,6 +23,14 @@ const Playing = () => {
 
     const rotation = useSpring(0, { stiffness: 300, damping: 30 });
 
+    // Manual Controller Handlers
+    const joystickBaseRef = useRef(null);
+    const knobX = useMotionValue(0);
+    const knobY = useMotionValue(0);
+    const isDraggingRef = useRef(false);
+    const sendIntervalRef = useRef(null);
+    const currentVectorRef = useRef({ x: 0, y: 0 });
+
     // screen wake lock
     useEffect(() => {
         if (screenWakeLock) {
@@ -90,7 +98,8 @@ const Playing = () => {
                 const baseRect = joystickBaseRef.current.getBoundingClientRect();
                 const baseRadius = baseRect.width / 2;
                 
-                const maxDistance = baseRadius / 2; 
+                const knobRadius = baseRect.width / 3 / 2;
+                const maxDistance = baseRadius - knobRadius;
 
                 const visualKnobX = finalVector.x * maxDistance;
                 const visualKnobY = -finalVector.y * maxDistance;
@@ -128,14 +137,6 @@ const Playing = () => {
         knobY  
     ]);
 
-    // Manual Controller Handlers
-    const joystickBaseRef = useRef(null);
-    const knobX = useMotionValue(0);
-    const knobY = useMotionValue(0);
-    const isDraggingRef = useRef(false);
-    const sendIntervalRef = useRef(null);
-    const currentVectorRef = useRef({ x: 0, y: 0 });
-
     const sendManualMove = useCallback((vector) => {
         if (connectionStatus && dataChannelConnections.length > 0) {
             const msg = JSON.stringify({ type: "manualMove", vector });
@@ -171,7 +172,7 @@ const Playing = () => {
 
         const baseRect = joystickBaseRef.current.getBoundingClientRect();
         const baseRadius = baseRect.width / 2;
-        const knobRadius = baseRadius / 2; 
+        const knobRadius = baseRect.width / 3 / 2;
         
         // 滾球中心點能移動的最大距離
         const maxDistance = baseRadius - knobRadius;
@@ -293,7 +294,7 @@ const Playing = () => {
                             <svg className="w-6 h-6 absolute left-5 top-1/2 -translate-y-1/2 -rotate-90" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
 
                             <motion.div
-                                className="w-20 h-full cursor-grab" 
+                                className="w-20 h-20 cursor-grab" 
                                 
                                 style={{ 
                                     x: knobX, 
