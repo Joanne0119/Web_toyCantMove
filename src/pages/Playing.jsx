@@ -75,42 +75,57 @@ const Playing = () => {
     const lastVectorRef = useRef({ x: 0, y: 0 });
 
     useEffect(() => {
-
         // 只有在 1. 陀螺儀可用 且 2. 手指 "沒有" 放在搖桿上時 才運作
         if (isInitialized && !isDraggingRef.current) {
 
-            // 檢查連線和校正狀態 (已移除 isManuallyControlled)
-            if (connectionStatus && isCalibrated) {
-
-                const vector = { x: coordinates.x, y: -coordinates.y };
-                const magnitude = Math.sqrt(vector.x ** 2 + vector.y ** 2);
-
-                if (magnitude < 0.08) return;
-
-                const now = Date.now();
-                if (now - lastSentTimeRef.current < 50) return;
-                lastSentTimeRef.current = now;
-
-                // 更新 UI
-                const newX = smoothX.get() + (vector.x * GAME_SPEED);
-                const newY = smoothY.get() - (vector.y * GAME_SPEED);
-                smoothX.set(Math.max(0, Math.min(100, newX)));
-                smoothY.set(Math.max(0, Math.min(100, newY)));
-
-                // Send Data
-                const msg = JSON.stringify({ type: 'move', vector });
-                sendWebRTCData(msg, null);
+            const vector = { x: coordinates.x, y: -coordinates.y };
+            const magnitude = Math.sqrt(vector.x ** 2 + vector.y ** 2);
+            
+            let finalVector = vector;
+            if (magnitude < 0.08) {
+                finalVector = { x: 0, y: 0 };
             }
+
+            if (joystickBaseRef.current) {
+                const baseRect = joystickBaseRef.current.getBoundingClientRect();
+                const baseRadius = baseRect.width / 2;
+                
+                const maxDistance = baseRadius / 2; 
+
+                const visualKnobX = finalVector.x * maxDistance;
+                const visualKnobY = -finalVector.y * maxDistance;
+                
+                knobX.set(visualKnobX);
+                knobY.set(visualKnobY);
+            }
+
+            if (magnitude < 0.08) return;
+
+            if (!connectionStatus || !isCalibrated) return;
+
+            const now = Date.now();
+            if (now - lastSentTimeRef.current < 50) return;
+            lastSentTimeRef.current = now;
+
+            const newX = smoothX.get() + (vector.x * GAME_SPEED);
+            const newY = smoothY.get() - (vector.y * GAME_SPEED);
+            smoothX.set(Math.max(0, Math.min(100, newX)));
+            smoothY.set(Math.max(0, Math.min(100, newY)));
+
+            const msg = JSON.stringify({ type: 'move', vector });
+            sendWebRTCData(msg, null);
         }
     }, [
         coordinates,
         connectionStatus,
         isCalibrated,
-        isInitialized, 
+        isInitialized,
         sendWebRTCData,
         GAME_SPEED,
         smoothX,
         smoothY,
+        knobX, 
+        knobY  
     ]);
 
     // Manual Controller Handlers
