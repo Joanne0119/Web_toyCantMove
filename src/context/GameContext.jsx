@@ -38,6 +38,7 @@ export const GameProvider = ({ children }) => {
     color: null   // 'red', 'blue' 等
   });
   const [otherPlayers, setOtherPlayers] = useState([]);
+  const [finalResults, setFinalResults] = useState([]);
 
 
   // WebRTC integration
@@ -123,6 +124,11 @@ export const GameProvider = ({ children }) => {
           console.log("Received navigate command from Unity, changing scene to Playing.");
           setGameScene('Playing'); 
         }
+        if (msg.type === "terminate") {
+          console.log("Received terminate message from Unity:", msg.finalPlayerDatas);
+          setFinalResults(msg.finalPlayerDatas || []); 
+          setGameScene('Award'); 
+        }
       } catch (e) {
         console.error(e);
       }
@@ -167,9 +173,10 @@ export const GameProvider = ({ children }) => {
     screenWakeLock: screenWakeLockValue,
     connectionStatus: webRTC.isConnected,
     gyroscopeStatus: gyroscopeStatus, 
+    finalResults,
   }), [
     peerId, hostId, gameScene, localPlayer, otherPlayers, level, score,
-    webRTC, gyroscope, screenWakeLockValue, gyroscopeStatus
+    webRTC, gyroscope, screenWakeLockValue, gyroscopeStatus, finalResults
   ]);
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

@@ -10,22 +10,14 @@ const characters = [
   { name: 'mouse', speed: 6, power: 5, skill: 10, src: '/images/gray_mouse.png', disable: false },
   { name: 'dog', speed: 9, power: 12, skill: 6, src: '/images/gray_dog.png', disable: false },
   { name: 'deer', speed: 7, power: 11, skill: 10, src: '/images/gray_deer.png', disable: false },
-  // { name: 'red', speed: 8, power: 10, skill: 7, src: '/images/red.png', pinSrc: '/images/redPin.png' },
-  // { name: 'blue', speed: 10, power: 6, skill: 9, src: '/images/blue.png', pinSrc: '/images/bluePin.png' },
-  // { name: 'yellow', speed: 7, power: 9, skill: 8, src: '/images/yellow.png', pinSrc: '/images/yellowPin.png' },
-  // { name: 'green', speed: 8, power: 10, skill: 7, src: '/images/green.png', pinSrc: '/images/greenPin.png' },
 ];
 
 const ringColorMap = {
   wind_up: 'ring-gray-600/50',
-  hat: 'ring-hat-600/50',
-  mouse: 'ring-mouse-600/50',
-  dog: 'ring-dog-600/50',
-  deer: 'ring-deer-600/50',
-  // red: 'ring-red-600/50',
-  // blue: 'ring-blue-600/50',
-  // yellow: 'ring-yellow-600/50',
-  // green: 'ring-green-600/50',
+  hat: 'ring-gray-600/50',
+  mouse: 'ring-gray-600/50',
+  dog: 'ring-gray-600/50',
+  deer: 'ring-gray-600/50',
 };
 
 const ChooseChar = () => {
