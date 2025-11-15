@@ -6,10 +6,10 @@ import LazyImage from '@/components/LazyImage';
 
 const characters = [
   { name: 'wind-up', speed: 8, power: 10, skill: 7, src: '/images/gray_wind-up.png', disable: false},
-  { name: 'hat', speed: 10, power: 6, skill: 9, src: '/images/gray_hat.png', disable: true },
-  { name: 'mouse', speed: 6, power: 5, skill: 10, src: '/images/gray_mouse.png', disable: true },
-  { name: 'dog', speed: 9, power: 12, skill: 6, src: '/images/gray_dog.png', disable: true },
-  { name: 'deer', speed: 7, power: 11, skill: 10, src: '/images/gray_deer.png', disable: true },
+  { name: 'hat', speed: 10, power: 6, skill: 9, src: '/images/gray_hat.png', disable: false },
+  { name: 'mouse', speed: 6, power: 5, skill: 10, src: '/images/gray_mouse.png', disable: false },
+  { name: 'dog', speed: 9, power: 12, skill: 6, src: '/images/gray_dog.png', disable: false },
+  { name: 'deer', speed: 7, power: 11, skill: 10, src: '/images/gray_deer.png', disable: false },
   // { name: 'red', speed: 8, power: 10, skill: 7, src: '/images/red.png', pinSrc: '/images/redPin.png' },
   // { name: 'blue', speed: 10, power: 6, skill: 9, src: '/images/blue.png', pinSrc: '/images/bluePin.png' },
   // { name: 'yellow', speed: 7, power: 9, skill: 8, src: '/images/yellow.png', pinSrc: '/images/yellowPin.png' },
