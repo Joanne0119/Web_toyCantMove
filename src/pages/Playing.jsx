@@ -71,6 +71,9 @@ const Playing = () => {
                     smoothX.set(Math.max(0, Math.min(100, newX)));
                     smoothY.set(Math.max(0, Math.min(100, newY)));
                 }
+                if (data.type === 'terminate') {
+                    navigate('/award');
+                }
             } catch (e) {
                 console.error("Failed to parse incoming message:", e);
             }
@@ -308,7 +311,7 @@ const Playing = () => {
                                 style={{ 
                                     x: knobX, 
                                     y: knobY,
-                                    backgroundImage: `url(${localPlayer.avatar ? `/images/${localPlayer.color || 'gray'}_${localPlayer.avatar}Pin.png` : '/images/gray_wind-upPin.png'})`,
+                                    backgroundImage: `url(${localPlayer.avatar ? `/images/${localPlayer.color || 'gray'}_${localPlayer.avatar || 'wind-up'}Pin.png` : '/images/gray_wind-upPin.png'})`,
                                     backgroundSize: 'contain', 
                                     backgroundPosition: 'center',
                                     backgroundRepeat: 'no-repeat'
