@@ -118,7 +118,7 @@ const ChooseChar = () => {
                       onClick={() => handleSelectChar(char)}
                     >
                       <div className="w-16 rounded-full">
-                        <LazyImage src={char.src} alt={char.name}/>
+                        <LazyImage src={char.src} alt={char.name} eager/>
                       </div>
                     </motion.div>
                   ))}
