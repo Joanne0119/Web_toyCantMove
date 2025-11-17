@@ -197,12 +197,11 @@ const Tutorial = () => {
                     transition={{ duration: 0.5 }}
                 >
                     <video
-                        key={currentStep} 
-                        src={videoSrc}
+                        src={stepVideos.calibrate || stepVideos.default} 
                         autoPlay
                         loop
                         muted
-                        playsInline // 確保在手機上不會強制全螢幕
+                        playsInline
                         className="w-full h-full object-contain"
                     />
                 </motion.div>
@@ -249,6 +248,7 @@ const Tutorial = () => {
 
   // 狀態 4: 支援並已校正 (教學中)
   if (gyroSupported === true && isInitialized) {
+    const videoSrc = stepVideos[currentStep] || stepVideos.default;
     return (
       <div className="hero min-h-screen bg-base-200 overflow-x-hidden select-none" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
         <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
