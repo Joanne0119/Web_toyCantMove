@@ -209,7 +209,7 @@ class WebRTCManager {
                   JSON.stringify(event.candidate.toJSON())
               );
           }
-        }, 500);
+        }, 1000);
       }
     };
 
