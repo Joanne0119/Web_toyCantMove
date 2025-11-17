@@ -3,7 +3,7 @@
   themes: bumblebee --default, halloween --prefersdark;
 }
 
-@supports not (color: oklch(0 0 0)) {
+/* @supports not (color: oklch(0 0 0)) { */
   :root {
     /* Bumblebee 主題對應的 HEX */
     --primary: #e0a82e;        
@@ -34,7 +34,7 @@
       --base-content: #e8e8e8;
     }
   }
-}
+/* } */
 
 html, body, #root {
   margin: 0;
