@@ -15,6 +15,7 @@ const stepVideos = {
 
 const Tutorial = () => {
   const navigate = useNavigate();
+  const videoRef = useRef(null);
   const { webRTC, gyroscope, connectionStatus, gyroscopeStatus, screenWakeLock } = useGame();
   const { init: initGyroscope, calibrate: calibrateGyroscope, isSupported } = gyroscope;
   const { lastMessage, sendData: sendWebRTCData, dataChannelConnections } = webRTC;
@@ -173,6 +174,22 @@ const Tutorial = () => {
     }
   }, [coordinates, connectionStatus, isCalibrated, isInitialized, webRTC, gyroSupported]);
 
+  useEffect(() => {
+    const videoElement = videoRef.current;
+    
+    if (videoElement) {
+      videoElement.muted = true;
+      
+      const playPromise = videoElement.play();
+      
+      if (playPromise !== undefined) {
+        playPromise.catch((error) => {
+          console.log("自動播放被瀏覽器阻擋:", error);
+        });
+      }
+    }
+  }, [currentStep]);
+
   // --- 渲染邏輯 (4 種狀態) ---
 
   // 狀態 1: 正在檢查
@@ -198,7 +215,7 @@ const Tutorial = () => {
                 <h1 className="text-4xl font-bold text-base mb-4">控制器教學</h1>
                 <p className="text-base text-lg mb-8">{instructionText}</p>
                 <motion.div
-                    className="w-64 aspect-square bg-base/10 rounded-3xl overflow-hidden mb-6 shadow-inner"
+                    className="w-64 aspect-square bg-base/10 rounded-3xl overflow-hidden mb-2 shadow-inner"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.5 }}
@@ -209,6 +226,7 @@ const Tutorial = () => {
                         loop
                         muted
                         playsInline
+                        controls={false}
                         className="w-full h-full object-contain"
                     />
                 </motion.div>
@@ -274,18 +292,20 @@ const Tutorial = () => {
             </motion.div>
 
             <motion.div
-                className="w-64 aspect-square bg-base/10 rounded-3xl overflow-hidden mb-6 shadow-inner"
+                className="w-64 aspect-square bg-base/10 rounded-3xl overflow-hidden mb-2 shadow-inner"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
             >
                 <video
+                    ref={videoRef}
                     key={currentStep} 
                     src={videoSrc}
                     autoPlay
                     loop
                     muted
                     playsInline // 確保在手機上不會強制全螢幕
+                    controls={false}
                     className="w-full h-full object-contain"
                 />
             </motion.div>
