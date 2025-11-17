@@ -4,6 +4,15 @@ import { useGame } from '../context/GameContext';
 import { motion } from 'framer-motion';
 import DinoGame from '@/components/DinoGame.jsx';
 
+const stepVideos = {
+  calibrate: '/videos/calibrate.mp4',
+  forward: '/videos/forward.mp4',
+  left: '/videos/left.mp4',
+  right: '/videos/right.mp4',
+  backward: '/videos/backward.mp4',
+  default: '/videos/idle.mp4' 
+};
+
 const Tutorial = () => {
   const navigate = useNavigate();
   const { webRTC, gyroscope, connectionStatus, gyroscopeStatus, screenWakeLock } = useGame();
@@ -181,6 +190,22 @@ const Tutorial = () => {
             <div className="card-body">
                 <h1 className="text-4xl font-bold text-base mb-4">控制器教學</h1>
                 <p className="text-base text-lg mb-8">{instructionText}</p>
+                <motion.div
+                    className="w-full aspect-square bg-base/10 rounded-3xl overflow-hidden mb-6 shadow-inner"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5 }}
+                >
+                    <video
+                        key={currentStep} 
+                        src={videoSrc}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline // 確保在手機上不會強制全螢幕
+                        className="w-full h-full object-contain"
+                    />
+                </motion.div>
                 <motion.button 
                     whileTap={{ scale: 0.95 }}
                     onClick={handleSetupSensors}
@@ -242,19 +267,20 @@ const Tutorial = () => {
             </motion.div>
 
             <motion.div
-                className="w-38 h-38 bg-base/20 backdrop-blur-sm rounded-3xl flex items-center justify-center mb-8"
-                animate={{
-                rotateZ: 
-                    currentStep === 'forward' ? -15 :
-                    currentStep === 'backward' ? 15 :
-                    currentStep === 'left' ? 15 :
-                    currentStep === 'right' ? -15 : 0
-                }}
+                className="w-full aspect-square bg-base/10 rounded-3xl overflow-hidden mb-6 shadow-inner"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
             >
-                <div className="w-24 h-32 bg-base rounded-2xl shadow-2xl flex items-center justify-center">
-                <span className="text-6xl">📱</span>
-                </div>
+                <video
+                    key={currentStep} 
+                    src={videoSrc}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline // 確保在手機上不會強制全螢幕
+                    className="w-full h-full object-contain"
+                />
             </motion.div>
 
             <div className="flex gap-4 mb-8">

@@ -14,7 +14,7 @@ const Award = () => {
 
     return finalResults.map(r => {
       
-      const name = `${r.skin} (${r.color})`; 
+      const name = `${r.name})`; 
 
       const avatar = `/images/${r.color}_${r.skin}.png`; 
 
@@ -61,7 +61,7 @@ const Award = () => {
                 {top3[1] && (
                   <div className="text-center mx-2">
                     <div className="avatar">
-                      <div className="w-16 rounded-full ring ring-gray-400">
+                      <div className="w-16">
                         <img src={top3[1].avatar} alt={top3[1].name} />
                       </div>
                     </div>
@@ -73,7 +73,7 @@ const Award = () => {
                 {top3[0] && (
                   <div className="text-center mx-2">
                      <div className="avatar">
-                      <div className="w-20 rounded-full ring ring-yellow-400">
+                      <div className="w-20">
                         <img src={top3[0].avatar} alt={top3[0].name} />
                       </div>
                     </div>
@@ -85,7 +85,7 @@ const Award = () => {
                 {top3[2] && (
                   <div className="text-center mx-2">
                     <div className="avatar">
-                      <div className="w-16 rounded-full ring ring-yellow-700">
+                      <div className="w-16">
                         <img src={top3[2].avatar} alt={top3[2].name} />
                       </div>
                     </div>
