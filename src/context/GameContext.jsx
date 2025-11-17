@@ -30,7 +30,16 @@ export const GameProvider = ({ children }) => {
   const [score, setScore] = useState(0);
   const [hostId, setHostId] = useState(null); 
   const [gameScene, setGameScene] = useState('Lobby');
-  const [peerId] = useState('web-' + Math.random().toString(36).substring(2, 9));
+  const [peerId] = useState(() => {
+    // 1. 嘗試從 sessionStorage 讀取
+    const savedId = sessionStorage.getItem('myPeerId');
+    if (savedId) return savedId;
+
+    // 2. 如果沒有，才生成新的，並存起來
+    const newId = 'web-' + Math.random().toString(36).substring(2, 9);
+    sessionStorage.setItem('myPeerId', newId);
+    return newId;
+  });
   const [localPlayer, setLocalPlayer] = useState({
     id: peerId,
     name: '',
