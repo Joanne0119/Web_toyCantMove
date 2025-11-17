@@ -127,6 +127,7 @@ export const GameProvider = ({ children }) => {
         if (msg.type === "terminate") {
           console.log("Received terminate message from Unity:", msg.finalPlayerDatas);
           setFinalResults(msg.finalPlayerDatas || []); 
+          setGameScene('Awards'); 
         }
       } catch (e) {
         console.error(e);

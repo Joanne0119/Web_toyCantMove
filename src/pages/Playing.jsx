@@ -6,6 +6,8 @@ import { useLocation } from 'react-router-dom';
 
 
 const Playing = () => {
+    const navigate = useNavigate();
+    
     const { localPlayer, webRTC, connectionStatus, gyroscope, gyroscopeStatus, screenWakeLock } = useGame();
     const { lastMessage, sendData: sendWebRTCData, dataChannelConnections } = webRTC;
     const { isCalibrated, coordinates, isInitialized } = gyroscopeStatus;
