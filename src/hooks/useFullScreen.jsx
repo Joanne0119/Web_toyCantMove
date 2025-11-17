@@ -106,7 +106,7 @@ export function useFullscreen(ref) {
       // 這是你的遊戲遙控器很可能需要的功能
       try {
         if (screen.orientation && screen.orientation.lock) {
-          await screen.orientation.lock('landscape');
+          await screen.orientation.lock('portrait');
         }
       } catch (err) {
         console.warn('無法鎖定螢幕方向:', err);

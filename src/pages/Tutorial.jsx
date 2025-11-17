@@ -56,15 +56,22 @@ const Tutorial = () => {
   const handleSetupSensors = useCallback(async () => {
     setIsSensorSetupInProgress(true);
     setInstructionText('正在允許感測器權限...');
-    const initSuccess = await initGyroscope();
-    
-    if (initSuccess) {
-      setInstructionText('請平放手機，校正中...');
-      await calibrateGyroscope();
-    } else {
-      setInstructionText('權限被拒絕，無法開始教學');
+    try {
+      const initSuccess = await initGyroscope();
+      
+      if (initSuccess) {
+        setInstructionText('請平放手機，校正中...');
+        await calibrateGyroscope();
+      } else {
+        setInstructionText('權限被拒絕，無法開始教學');
+        setGyroSupported(false);
+      }
+    } catch (error) {
+      console.error("Sensor setup failed:", error);
+      setGyroSupported(false);
+    } finally {
+      setIsSensorSetupInProgress(false);
     }
-    setIsSensorSetupInProgress(false);
   }, [initGyroscope, calibrateGyroscope]);
 
   useEffect(() => {
