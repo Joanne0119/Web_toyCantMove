@@ -14,7 +14,7 @@ const Award = () => {
 
     return finalResults.map(r => {
       
-      const name = `${r.name})`; 
+      const name = `${r.name}`; 
 
       const avatar = `/images/${r.color}_${r.skin}.png`; 
 

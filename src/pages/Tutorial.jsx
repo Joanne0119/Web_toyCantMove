@@ -191,7 +191,7 @@ const Tutorial = () => {
                 <h1 className="text-4xl font-bold text-base mb-4">控制器教學</h1>
                 <p className="text-base text-lg mb-8">{instructionText}</p>
                 <motion.div
-                    className="w-full aspect-square bg-base/10 rounded-3xl overflow-hidden mb-6 shadow-inner"
+                    className="w-64 aspect-square bg-base/10 rounded-3xl overflow-hidden mb-6 shadow-inner"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.5 }}
@@ -267,7 +267,7 @@ const Tutorial = () => {
             </motion.div>
 
             <motion.div
-                className="w-full aspect-square bg-base/10 rounded-3xl overflow-hidden mb-6 shadow-inner"
+                className="w-64 aspect-square bg-base/10 rounded-3xl overflow-hidden mb-6 shadow-inner"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
