@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useMemo, useEffect } from 'react';
+import React, { createContext, useState, useContext, useMemo, useEffect, useRef } from 'react';
 import { useWebRTC } from '../hooks/useWebRTC';
 import { useGyroscope } from '../hooks/useGyroscope';
 import { useScreenWakeLock } from '../hooks/useScreenWakeLock';
@@ -26,6 +26,7 @@ const STABLE_GYRO_CONFIG = {
 }
 
 export const GameProvider = ({ children }) => {
+  const hasIdentifiedRef = useRef(false);
   const [level, setLevel] = useState(null);
   const [score, setScore] = useState(0);
   const [hostId, setHostId] = useState(null); 
@@ -83,6 +84,30 @@ export const GameProvider = ({ children }) => {
       return updatedPlayers;
     });
   }, [peerIds]);
+
+  useEffect(() => {
+    const isConnected = webRTC.dataChannelConnections.length > 0;
+
+    // 已連線，尚未發送過身分資料
+    if (isConnected && !hasIdentifiedRef.current) {
+      console.log("DataChannel detected! Sending identify message...");
+
+      const identifyMsg = {
+        type: "identify",
+        nickname: localPlayer.name || `Player ${peerId.substring(0, 4)}`,
+        characterName: localPlayer.avatar || "wind_up"
+      };
+      webRTC.sendData(JSON.stringify(identifyMsg));
+      hasIdentifiedRef.current = true; 
+    }
+    // 突然斷線 (列表變空)
+    // 我們要把標記重置為 false，這樣下次連回來時，才能再次發送 identify
+    if (!isConnected && hasIdentifiedRef.current) {
+        console.log("Connection lost. Resetting identify flag.");
+        hasIdentifiedRef.current = false;
+    }
+
+  }, [webRTC.dataChannelConnections, localPlayer.name, localPlayer.avatar, peerId, webRTC]);
 
   useEffect(() => {
     if (lastMessage) {

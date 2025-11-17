@@ -200,7 +200,16 @@ class WebRTCManager {
   _setupPeerConnectionEventHandlers(peerId, pc) {
     pc.onicecandidate = (event) => {
       if (event.candidate) {
-        this.sendWebSocketMessage(SignalingMessageType.CANDIDATE, this.localPeerId, peerId, JSON.stringify(event.candidate.toJSON()));
+        setTimeout(() => {
+          if (pc.signalingState !== 'closed') { // 確保連線還活著
+              this.sendWebSocketMessage(
+                  SignalingMessageType.CANDIDATE, 
+                  this.localPeerId, 
+                  peerId, 
+                  JSON.stringify(event.candidate.toJSON())
+              );
+          }
+        }, 500);
       }
     };
 
