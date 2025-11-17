@@ -127,10 +127,10 @@ const Award = () => {
                 </table>
               </div>
 
-              <div className="card-actions justify-center mt-6">
+              {/* <div className="card-actions justify-center mt-6">
                 <button onClick={handleLeave} className="btn btn-ghost">離開房間</button>
-                {/* <button onClick={handlePlayAgain} className="btn btn-primary">再玩一次</button> */}
-              </div>
+                <button onClick={handlePlayAgain} className="btn btn-primary">再玩一次</button>
+              </div> */}
             </div>
           </motion.div>
         </div>
