@@ -8,7 +8,7 @@ import { useLocation } from 'react-router-dom';
 const Playing = () => {
     const navigate = useNavigate();
     
-    const { localPlayer, webRTC, connectionStatus, gyroscope, gyroscopeStatus, screenWakeLock } = useGame();
+    const { localPlayer, webRTC, connectionStatus, gyroscope, gyroscopeStatus, screenWakeLock, unityPeerId } = useGame();
     const { lastMessage, sendData: sendWebRTCData, dataChannelConnections } = webRTC;
     const { isCalibrated, coordinates, isInitialized } = gyroscopeStatus;
     const { calibrate: calibrateGyroscope } = gyroscope;
@@ -128,7 +128,7 @@ const Playing = () => {
             }
             lastSentTimeRef.current = now;
 
-            console.log(`%cGyro Effect: SENDING SIGNAL { x: ${vector.x}, y: ${vector.y} }`, "color: blue; font-weight: bold;");
+            console.log(`%Gyro Effect: SENDING SIGNAL { x: ${vector.x}, y: ${vector.y} }`, "color: blue; font-weight: bold;");
             
             const newX = smoothX.get() + (vector.x * GAME_SPEED);
             const newY = smoothY.get() - (vector.y * GAME_SPEED);
@@ -136,7 +136,7 @@ const Playing = () => {
             smoothY.set(Math.max(0, Math.min(100, newY)));
 
             const msg = JSON.stringify({ type: 'move', vector });
-            sendWebRTCData(msg, null);
+            sendWebRTCData(msg, unityPeerId || null);
         }
     }, [
         coordinates,
@@ -148,15 +148,16 @@ const Playing = () => {
         smoothX,
         smoothY,
         knobX, 
-        knobY  
+        knobY,
+        unityPeerId
     ]);
 
     const sendManualMove = useCallback((vector) => {
         if (connectionStatus && dataChannelConnections.length > 0) {
             const msg = JSON.stringify({ type: "manualMove", vector });
-            sendWebRTCData(msg, null);
+            sendWebRTCData(msg, unityPeerId || null);
         }
-    }, [connectionStatus, dataChannelConnections, sendWebRTCData]);
+    }, [connectionStatus, dataChannelConnections, sendWebRTCData, unityPeerId]);
 
     const startSendingLoop = useCallback(() => {
         if (sendIntervalRef.current) return;

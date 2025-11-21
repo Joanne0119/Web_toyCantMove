@@ -41,23 +41,6 @@ const WaitingRoom = () => {
   }, [screenWakeLock]); 
 
   useEffect(() => {
-    if (localPlayer.avatar && dataChannelConnections && dataChannelConnections.length > 0 && !hasSentIdentify.current) {
-      
-      hasSentIdentify.current = true;
-
-      const identityMessage = {
-        type: "identify",
-        characterName: localPlayer.avatar, 
-        nickname: localPlayer.name
-      };
-      
-      sendData(JSON.stringify(identityMessage), null);
-
-      console.log('Data Channel is open. Sent identity to Unity:', identityMessage);
-    }
-  }, [dataChannelConnections, localPlayer, sendData]); 
-
-  useEffect(() => {
     if (gameScene === 'Tutorial' && !isHost) { 
       navigate('/tutorial');
     }

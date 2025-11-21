@@ -26,7 +26,7 @@ const STABLE_GYRO_CONFIG = {
 }
 
 export const GameProvider = ({ children }) => {
-  const hasIdentifiedRef = useRef(false);
+  const hasIdentifiedRef = useRef(new Map());
   const [level, setLevel] = useState(null);
   const [score, setScore] = useState(0);
   const [hostId, setHostId] = useState(null); 
@@ -49,7 +49,17 @@ export const GameProvider = ({ children }) => {
   });
   const [otherPlayers, setOtherPlayers] = useState([]);
   const [finalResults, setFinalResults] = useState([]);
+  const [unityPeerId, setUnityPeerId] = useState(null);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlUnityPeerId = params.get('peerId'); 
+    
+    if (urlUnityPeerId) {
+      console.log("Found Unity Peer ID in URL:", urlUnityPeerId);
+      setUnityPeerId(urlUnityPeerId);
+    }
+  }, []);
 
   // WebRTC integration
   const webRTC = useWebRTC(
@@ -88,26 +98,28 @@ export const GameProvider = ({ children }) => {
   useEffect(() => {
     const isConnected = webRTC.dataChannelConnections.length > 0;
 
+    const isConnectedToUnity = unityPeerId && webRTC.dataChannelConnections.includes(unityPeerId);
+
     // 已連線，尚未發送過身分資料
-    if (isConnected && !hasIdentifiedRef.current) {
-      console.log("DataChannel detected! Sending identify message...");
+    if (isConnectedToUnity && !hasIdentifiedRef.current) {
+      console.log(`🔗 Connected to Unity (${unityPeerId})! Sending P2P Identify...`);
 
       const identifyMsg = {
         type: "identify",
         nickname: localPlayer.name || `Player ${peerId.substring(0, 4)}`,
         characterName: localPlayer.avatar || "wind_up"
       };
-      webRTC.sendData(JSON.stringify(identifyMsg));
+      webRTC.sendData(JSON.stringify(identifyMsg), unityPeerId);
       hasIdentifiedRef.current = true; 
     }
     // 突然斷線 (列表變空)
     // 我們要把標記重置為 false，這樣下次連回來時，才能再次發送 identify
-    if (!isConnected && hasIdentifiedRef.current) {
-        console.log("Connection lost. Resetting identify flag.");
+    if (!isConnectedToUnity && hasIdentifiedRef.current) {
+        console.log("Lost connection to Unity. Resetting identify flag.");
         hasIdentifiedRef.current = false;
     }
 
-  }, [webRTC.dataChannelConnections, localPlayer.name, localPlayer.avatar, peerId, webRTC]);
+  }, [webRTC.dataChannelConnections, localPlayer.name, localPlayer.avatar, peerId, webRTC, unityPeerId]);
 
   useEffect(() => {
     if (lastMessage) {
@@ -208,9 +220,11 @@ export const GameProvider = ({ children }) => {
     connectionStatus: webRTC.isConnected,
     gyroscopeStatus: gyroscopeStatus, 
     finalResults,
+    unityPeerId, 
+    setUnityPeerId,
   }), [
     peerId, hostId, gameScene, localPlayer, otherPlayers, level, score,
-    webRTC, gyroscope, screenWakeLockValue, gyroscopeStatus, finalResults
+    webRTC, gyroscope, screenWakeLockValue, gyroscopeStatus, finalResults, unityPeerId
   ]);
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

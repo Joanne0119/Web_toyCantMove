@@ -16,7 +16,7 @@ const stepVideos = {
 const Tutorial = () => {
   const navigate = useNavigate();
   const videoRef = useRef(null);
-  const { webRTC, gyroscope, connectionStatus, gyroscopeStatus, screenWakeLock } = useGame();
+  const { webRTC, gyroscope, connectionStatus, gyroscopeStatus, screenWakeLock, unityPeerId } = useGame();
   const { init: initGyroscope, calibrate: calibrateGyroscope, isSupported } = gyroscope;
   const { lastMessage, sendData: sendWebRTCData, dataChannelConnections } = webRTC;
   const { coordinates, isCalibrated, isInitialized } = gyroscopeStatus;
@@ -109,10 +109,10 @@ const Tutorial = () => {
         step: "calibrate" 
       };
       
-      sendWebRTCData(JSON.stringify(calibratedMessage), null);
+      sendWebRTCData(JSON.stringify(calibratedMessage), unityPeerId || null);
       console.log("Gyro not supported. Sent 'tutorial_step_complete: calibrate' message.");
     }
-  }, [gyroSupported, dataChannelConnections, sendWebRTCData]);
+  }, [gyroSupported, dataChannelConnections, sendWebRTCData, unityPeerId]);
 
   // screen wake lock
     useEffect(() => {
@@ -139,7 +139,7 @@ const Tutorial = () => {
               setInstructionText('等待其他玩家...');
               setCompletedSteps(prev => ({ ...prev, [stepName]: true }));
               const cheatMessage = { type: "move", vector: cheatVector };
-              sendWebRTCData(JSON.stringify(cheatMessage), null);
+              sendWebRTCData(JSON.stringify(cheatMessage), unityPeerId || null);
               
               console.log(`Gyro not supported. Cheating step '${stepName}' with vector:`, cheatVector);
             }
@@ -162,7 +162,7 @@ const Tutorial = () => {
         console.error('Parse tutorial message error:', e);
       }
     }
-  }, [lastMessage, navigate, gyroSupported, sendWebRTCData,  cheatVectors]);
+  }, [lastMessage, navigate, gyroSupported, sendWebRTCData, unityPeerId]);
 
   // 持續發送傾斜數據給 Unity
   useEffect(() => {
