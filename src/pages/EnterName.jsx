@@ -6,7 +6,7 @@ import { useFullscreen } from '../hooks/useFullScreen';
 
 const EnterName = () => {
   const [name, setName] = useState('');
-  const { setLocalPlayer } = useGame();
+  const { setLocalPlayer, unityPeerId } = useGame();
   const navigate = useNavigate();
   const [isFullscreen, toggleFullscreen] = useFullscreen(null);
 
@@ -115,6 +115,12 @@ const EnterName = () => {
           delay: 0.8
         }}
       >
+        <div className="mt-8 p-4 bg-gray-800 text-white text-xs rounded-lg break-all opacity-70">
+            <p className="font-bold mb-1">🔧 除錯資訊 (Debug Info):</p>
+            <p>網址參數: {window.location.search}</p>
+            <p>解析出的 Unity ID: <span className="text-yellow-400">{unityPeerId || '無'}</span></p>
+            <p>完整網址: {window.location.href}</p>
+          </div>
         <div className="card-body">
           <div className="form-control">
             <label className="label select-none">
