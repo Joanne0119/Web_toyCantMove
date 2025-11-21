@@ -793,8 +793,14 @@ class WebRTCManager {
   closeWebRTC() {
     this.cleanupAllPeers();
 
-    // Notify other peers that this peer is leaving
-    this.sendWebSocketMessage(SignalingMessageType.DISPOSE, this.localPeerId, "ALL", `Remove peerConnection for ${this.localPeerId}.`);
+    for (const peerId of this.peerConnections.keys()) {
+        this.sendWebSocketMessage(
+            SignalingMessageType.DISPOSE, 
+            this.localPeerId, 
+            peerId, 
+            `Remove peerConnection for ${this.localPeerId}.`
+        );
+    }
 
     if (this.localStream) {
       this.localStream.getTracks().forEach((track) => track.stop());
