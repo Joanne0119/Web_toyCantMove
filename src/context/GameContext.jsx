@@ -26,7 +26,6 @@ const STABLE_GYRO_CONFIG = {
 }
 
 export const GameProvider = ({ children }) => {
-  const hasIdentifiedRef = useRef(false);
   const [level, setLevel] = useState(null);
   const [score, setScore] = useState(0);
   const [hostId, setHostId] = useState(null); 
@@ -96,41 +95,46 @@ export const GameProvider = ({ children }) => {
   }, [peerIds]);
 
   useEffect(() => {
-    console.log("🔄 [GameContext] 檢查連線狀態...", {
-      unityPeerId,
-      dataChannelConnections: webRTC.dataChannelConnections,
-      isConnectedToUnity: unityPeerId && webRTC.dataChannelConnections.includes(unityPeerId),
-      hasIdentified: hasIdentifiedRef.current
-    });
-    const isConnected = webRTC.dataChannelConnections.length > 0;
-
+    // console.log("🔄 [GameContext] 檢查連線狀態...", {
+    //   unityPeerId,
+    //   dataChannelConnections: webRTC.dataChannelConnections,
+    //   isConnectedToUnity: unityPeerId && webRTC.dataChannelConnections.includes(unityPeerId),
+    // });
     const isConnectedToUnity = unityPeerId && webRTC.dataChannelConnections.includes(unityPeerId);
-
+    let retryTimer;
     // 已連線，尚未發送過身分資料
-    if (isConnectedToUnity && !hasIdentifiedRef.current) {
+    if (isConnectedToUnity && !localPlayer.color) {
       console.log(`🔗 Connected to Unity (${unityPeerId})! Sending P2P Identify...`);
-
-      const identifyMsg = {
-        type: "identify",
-        nickname: localPlayer.name || `Player ${peerId.substring(0, 4)}`,
-        characterName: localPlayer.avatar || "wind_up"
-      };
+      const sendIdentify = () => {
+        const identifyMsg = {
+          type: "identify",
+          nickname: localPlayer.name || `Player ${peerId.substring(0, 4)}`,
+          characterName: localPlayer.avatar || "wind_up"
+        };
+      
       webRTC.sendData(JSON.stringify(identifyMsg), unityPeerId);
-      hasIdentifiedRef.current = true; 
-      console.log("🚀 [GameContext] Identify 發送指令已執行。");
+      console.log("[GameContext] Identify 發送指令已執行。");
+      };
+
+      sendIdentify();
+
+      retryTimer = setInterval(() => {
+        console.log("[GameContext] 1秒...還沒收到顏色，重試發送");
+        sendIdentify();
+      }, 1000);
     }
+    
     // 突然斷線 (列表變空)
     // 我們要把標記重置為 false，這樣下次連回來時，才能再次發送 identify
-    else if (!isConnectedToUnity && hasIdentifiedRef.current) {
+    else if (!isConnectedToUnity) {
         console.log("⚠️ [GameContext] 與 Unity 斷線，重置 Identify 標記。");
-        hasIdentifiedRef.current = false;
     }
     // 情況 3: 正在等待
     else if (unityPeerId && !isConnectedToUnity) {
         console.log("⏳ [GameContext] 已知目標 Unity ID，但 DataChannel 尚未連通...");
     }
 
-  }, [webRTC.dataChannelConnections, localPlayer.name, localPlayer.avatar, peerId, webRTC, unityPeerId]);
+  }, [webRTC.dataChannelConnections, localPlayer.color, peerId, webRTC, unityPeerId]);
 
   useEffect(() => {
     if (lastMessage) {

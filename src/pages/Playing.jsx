@@ -314,7 +314,11 @@ const Playing = () => {
                                 style={{ 
                                     x: knobX, 
                                     y: knobY,
-                                    backgroundImage: `url(${localPlayer.color ? `/images/gray_${localPlayer.avatar || 'wind-up'}Pin.png` : `/images/${localPlayer.color}_${localPlayer.avatar}Pin.png`})`,
+                                    backgroundImage: `url(${
+                                                            localPlayer.color 
+                                                                ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}Pin.png` 
+                                                                : `/images/gray_${localPlayer.avatar || 'wind-up'}Pin.png`
+                                                            })`,
                                     backgroundSize: 'contain', 
                                     backgroundPosition: 'center',
                                     backgroundRepeat: 'no-repeat'
