@@ -151,10 +151,6 @@ class WebRTCManager {
     if (this.webSocketUrl) {
       try {
         await this.connect(this.webSocketUrl, this.isLocalPeerVideoAudioSender, this.isLocalPeerVideoAudioReceiver);
-        const remotePeerId = localStorage.getItem('remotePeerId');
-        if (remotePeerId) {
-          this.initiateOffer(remotePeerId);
-        }
       } catch (error) {
         console.error("Reconnect failed:", error);
       }

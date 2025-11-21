@@ -43,9 +43,6 @@ export const useWebRTC = (localPeerId, stunServerAddress, uiConfig) => {
         });
       };
 
-      manager.onRemotePeerId = (peerId) => {
-        localStorage.setItem('remotePeerId', peerId);
-      };
 
       manager.onDataChannelMessageReceived = (message, peerId) => {
         setLastMessage({ message, peerId, timestamp: Date.now() });
@@ -68,10 +65,6 @@ export const useWebRTC = (localPeerId, stunServerAddress, uiConfig) => {
     if (managerRef.current) {
       try {
         await managerRef.current.connect(webSocketUrl, isVideoAudioSender, isVideoAudioReceiver);
-        const remotePeerId = localStorage.getItem('remotePeerId');
-        if (remotePeerId) {
-          managerRef.current.initiateOffer(remotePeerId);
-        }
         return true;
       } catch (e) {
         setError({ type: 'connect', message: 'Failed to connect to WebSocket', obj: e });
