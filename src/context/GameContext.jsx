@@ -95,31 +95,47 @@ export const GameProvider = ({ children }) => {
     });
   }, [peerIds]);
 
+  // GameContext.jsx
+
   useEffect(() => {
-    const isConnected = webRTC.dataChannelConnections.length > 0;
+    // 除錯 Log：印出目前的所有狀態
+    console.log("🔄 [GameContext] 檢查連線狀態...", {
+      unityPeerId,
+      dataChannelConnections,
+      isConnectedToUnity: unityPeerId && dataChannelConnections.includes(unityPeerId),
+      hasIdentified: hasIdentifiedRef.current
+    });
 
-    const isConnectedToUnity = unityPeerId && webRTC.dataChannelConnections.includes(unityPeerId);
+    const isConnectedToUnity = unityPeerId && dataChannelConnections.includes(unityPeerId);
 
-    // 已連線，尚未發送過身分資料
+    // 情況 1: 條件完全符合，準備發送
     if (isConnectedToUnity && !hasIdentifiedRef.current) {
-      console.log(`🔗 Connected to Unity (${unityPeerId})! Sending P2P Identify...`);
+      console.log(`✅ [GameContext] 條件達成！正在發送 Identify 給 ${unityPeerId}...`);
 
       const identifyMsg = {
         type: "identify",
         nickname: localPlayer.name || `Player ${peerId.substring(0, 4)}`,
         characterName: localPlayer.avatar || "wind_up"
       };
+      
+      // 真正的發送動作
       webRTC.sendData(JSON.stringify(identifyMsg), unityPeerId);
+      
+      // 標記為已發送
       hasIdentifiedRef.current = true; 
-    }
-    // 突然斷線 (列表變空)
-    // 我們要把標記重置為 false，這樣下次連回來時，才能再次發送 identify
-    if (!isConnectedToUnity && hasIdentifiedRef.current) {
-        console.log("Lost connection to Unity. Resetting identify flag.");
+      console.log("🚀 [GameContext] Identify 發送指令已執行。");
+    } 
+    // 情況 2: 斷線重置
+    else if (!isConnectedToUnity && hasIdentifiedRef.current) {
+        console.log("⚠️ [GameContext] 與 Unity 斷線，重置 Identify 標記。");
         hasIdentifiedRef.current = false;
     }
+    // 情況 3: 正在等待
+    else if (unityPeerId && !isConnectedToUnity) {
+        console.log("⏳ [GameContext] 已知目標 Unity ID，但 DataChannel 尚未連通...");
+    }
 
-  }, [webRTC.dataChannelConnections, localPlayer.name, localPlayer.avatar, peerId, webRTC, unityPeerId]);
+  }, [webRTC.dataChannelConnections, localPlayer, peerId, webRTC, unityPeerId]);
 
   useEffect(() => {
     if (lastMessage) {
