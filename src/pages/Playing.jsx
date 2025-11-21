@@ -257,7 +257,7 @@ const Playing = () => {
     }, [knobX, knobY, stopSendingLoop]);
 
     return (
-        <div className="relative w-screen h-screen px-6 flex flex-col items-center justify-center " style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
+        <div className="relative w-screen min-h-screen px-6 flex flex-col items-center justify-center " style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}>
             <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
             <motion.button
                 whileTap={{ scale: 0.9 }}

@@ -275,7 +275,7 @@ const Tutorial = () => {
   if (gyroSupported === true && isInitialized) {
     const videoSrc = stepVideos[currentStep] || stepVideos.default;
     return (
-      <div className="hero min-h-screen bg-base-200 overflow-x-hidden select-none" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
+      <div className="hero min-h-screen bg-base-200 overflow-x-hidden select-none" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}>
         <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
         
         <div className="card bg-base-100 shadow-xl mt-8 mb-8 z-10">

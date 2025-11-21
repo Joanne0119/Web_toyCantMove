@@ -30,7 +30,7 @@ const EnterName = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center" data-theme="dark" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center'}}>
+    <div className="min-h-screen flex flex-col items-center justify-center" data-theme="dark" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh'}}>
       <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
       <div className="text-center mb-8">
         <motion.div
