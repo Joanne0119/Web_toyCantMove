@@ -26,7 +26,7 @@ const STABLE_GYRO_CONFIG = {
 }
 
 export const GameProvider = ({ children }) => {
-  const hasIdentifiedRef = useRef(new Map());
+  const hasIdentifiedRef = useRef(false);
   const [level, setLevel] = useState(null);
   const [score, setScore] = useState(0);
   const [hostId, setHostId] = useState(null); 
