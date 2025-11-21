@@ -3,6 +3,12 @@ import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
 import { BrowserRouter } from 'react-router-dom';
+import VConsole from 'vconsole';
+
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('debug') === 'true' || process.env.NODE_ENV === 'development') {
+  new VConsole({ theme: 'dark' }); 
+}
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   // <React.StrictMode>
