@@ -5,11 +5,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import LazyImage from '@/components/LazyImage';
 
 const characters = [
-  { name: 'wind-up', speed: 8, power: 10, skill: 7, src: '/images/gray_wind-up.png', disable: false},
-  { name: 'hat', speed: 10, power: 6, skill: 9, src: '/images/gray_hat.png', disable: false },
-  { name: 'mouse', speed: 6, power: 5, skill: 10, src: '/images/gray_mouse.png', disable: false },
-  { name: 'dog', speed: 9, power: 12, skill: 6, src: '/images/gray_dog.png', disable: false },
-  { name: 'deer', speed: 7, power: 11, skill: 10, src: '/images/gray_deer.png', disable: false },
+  { name: '沃寶 Wobo', speed: 8, power: 23, skill: 15, src: '/images/gray_wind-up.png', disable: false},
+  { name: '冒冒 Mavo', speed: 20, power: 11, skill: 2, src: '/images/gray_hat.png', disable: false },
+  { name: '雷米 Remy', speed: 10, power: 14, skill: 20, src: '/images/gray_mouse.png', disable: false },
+  { name: '菲菲 Fiffy', speed: 13, power: 17, skill: 9, src: '/images/gray_dog.png', disable: false },
+  { name: '夢鹿 Luka', speed: 15, power: 19, skill: 6, src: '/images/gray_deer.png', disable: false },
 ];
 
 const ringColorMap = {
@@ -19,6 +19,8 @@ const ringColorMap = {
   dog: 'ring-gray-600/50',
   deer: 'ring-gray-600/50',
 };
+
+const fmt = (v) => String(v).padStart(2, '\u00A0');
 
 const ChooseChar = () => {
   const { localPlayer, setLocalPlayer, webRTC, gyroscope, connectionStatus, screenWakeLock } = useGame();
@@ -95,15 +97,15 @@ const ChooseChar = () => {
                 <div className="stats bg-transparent mt-2">
                   <div className="stat">
                     <div className="stat-title">速度</div>
-                    <div className="stat-value">{selectedChar.speed}</div>
+                    <div className="stat-value w-8">{fmt(selectedChar.speed)}</div>
                   </div>
                   <div className="stat">
                     <div className="stat-title">力量</div>
-                    <div className="stat-value">{selectedChar.power}</div>
+                    <div className="stat-value w-8">{fmt(selectedChar.power)}</div>
                   </div>
                   <div className="stat">
                     <div className="stat-title">技巧</div>
-                    <div className="stat-value">{selectedChar.skill}</div>
+                    <div className="stat-value w-8">{fmt(selectedChar.skill)}</div>
                   </div>
                 </div>
               </div>
