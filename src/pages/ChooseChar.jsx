@@ -5,20 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import LazyImage from '@/components/LazyImage';
 
 const characters = [
-  { chrName: '沃寶 Wobo', name: 'wind-up', speed: 8, power: 23, skill: 15, src: '/images/gray_wind-up.png', disable: false},
-  { chrName: '冒冒 Mavo', name: 'hat', speed: 20, power: 11, skill: 2, src: '/images/gray_hat.png', disable: false },
-  { chrName: '雷米 Remy', name: 'mouse', speed: 10, power: 14, skill: 20, src: '/images/gray_mouse.png', disable: false },
-  { chrName: '菲菲 Fiffy', name: 'dog', speed: 13, power: 17, skill: 9, src: '/images/gray_dog.png', disable: false },
-  { chrName: '夢鹿 Luka', name: 'deer', speed: 15, power: 19, skill: 6, src: '/images/gray_deer.png', disable: false },
+  { charName: '沃寶 Wobo', name: 'wind-up', speed: 8, power: 23, skill: 15, src: '/images/gray_wind-up.png', disable: false},
+  { charName: '冒冒 Mavo', name: 'hat', speed: 20, power: 11, skill: 2, src: '/images/gray_hat.png', disable: false },
+  { charName: '雷米 Remy', name: 'mouse', speed: 10, power: 14, skill: 20, src: '/images/gray_mouse.png', disable: false },
+  { charName: '菲菲 Fiffy', name: 'dog', speed: 13, power: 17, skill: 9, src: '/images/gray_dog.png', disable: false },
+  { charName: '夢鹿 Luka', name: 'deer', speed: 15, power: 19, skill: 6, src: '/images/gray_deer.png', disable: false },
 ];
-
-const ringColorMap = {
-  wind_up: 'ring-gray-600/50',
-  hat: 'ring-gray-600/50',
-  mouse: 'ring-gray-600/50',
-  dog: 'ring-gray-600/50',
-  deer: 'ring-gray-600/50',
-};
 
 const fmt = (v) => String(v).padStart(2, '\u00A0');
 
@@ -74,7 +66,7 @@ const ChooseChar = () => {
               <h2 className="card-title">哈囉！{localPlayer.name || '...'}，請選擇角色</h2>
               <div className="flex flex-col items-center mt-4">
                 <div className="avatar online">
-                  <div className={`w-42 h-42 rounded-full ${ringColorMap[selectedChar.name]} ring-4 ring-offset-base-100 ring-offset-2 flex justify-center items-center overflow-hidden`}>
+                  <div className={`w-42 h-42 rounded-full ring-gray-600/50 ring-4 ring-offset-base-100 ring-offset-2 flex justify-center items-center overflow-hidden`}>
                     <AnimatePresence mode="wait">
                       <motion.div
                         key={selectedChar.name}
@@ -93,7 +85,7 @@ const ChooseChar = () => {
                     </AnimatePresence>
                   </div>
                 </div>
-                <div className="text-xl font-bold capitalize mt-4">{selectedChar.name}</div>
+                <div className="text-xl font-bold capitalize mt-4">{selectedChar.charName}</div>
                 <div className="stats bg-transparent mt-2">
                   <div className="stat">
                     <div className="stat-title">速度</div>
@@ -116,11 +108,11 @@ const ChooseChar = () => {
                     <motion.div
                       whileTap={char.disable ? false : { scale: 0.9 }} 
                       key={char.name}
-                      className={`avatar cursor-pointer flex-shrink-0 ${selectedChar.name === char.name ? `ring ${ringColorMap[char.name]} ring-offset-base-100 ring-offset-2 rounded-full` : ''}`}
+                      className={`avatar cursor-pointer flex-shrink-0 ${selectedChar.name === char.name ? `ring-gray-600/50 ring-offset-base-100 ring-offset-2 rounded-full` : ''}`}
                       onClick={() => handleSelectChar(char)}
                     >
                       <div className="w-16 rounded-full">
-                        <LazyImage src={char.src} alt={char.name} eager/>
+                        <LazyImage src={char.src} alt={char.charName} eager/>
                       </div>
                     </motion.div>
                   ))}
