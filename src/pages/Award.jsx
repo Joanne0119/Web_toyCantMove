@@ -66,7 +66,7 @@ const Award = () => {
               <div className="flex justify-center items-end h-64 mb-8 pb-2 border-b border-base-300">
                 <PodiumBar player={top3[1]} maxScore={maxScore}/>
                 
-                <div className="z-10 -mx-2 sm:mx-0 mb-2 scale-110 origin-bottom">
+                <div className="z-10 -mx-2 sm:mx-0 scale-110 origin-bottom">
                    <PodiumBar player={top3[0]} maxScore={maxScore} />
                 </div>
 
