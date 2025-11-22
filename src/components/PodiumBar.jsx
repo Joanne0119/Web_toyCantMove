@@ -31,14 +31,14 @@ switch (rank) {
 }
 };
 
-const PodiumBar = (player, maxScore) => {
+const PodiumBar = ({player, maxScore}) => {
     if (!player) return <div className="w-24 mx-2"></div>; // 佔位符
 
     const style = getRankStyle(player.rank);
     // 計算高度：(分數 / 最高分) * 100%，再加上一個基礎高度避免 0 分太扁
     // 這裡設定最大高度為 10rem (h-40)
     const heightPercent = maxScore > 0 ? (player.score / maxScore) : 0;
-    const barHeight = `${Math.max(2, heightPercent * 10)}rem`; 
+    const barHeight = `${Math.max(2, heightPercent * 10)}rem`;
 
     return (
       <div className="flex flex-col items-center justify-end mx-1 sm:mx-2 w-20 sm:w-24">

@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 // --- 遊戲常數 ---
 const GAME_SPEED = 5;         // 遊戲移動速度
-const JUMP_FORCE = 14;        // 跳躍力道
-const GRAVITY = 0.8;          // 重力
+const JUMP_FORCE = 8;        // 跳躍力道
+const GRAVITY = 0.3;          // 重力
 const OBSTACLE_INTERVAL_MIN = 800;  // 障礙物出現最小間隔 (毫秒)
 const OBSTACLE_INTERVAL_MAX = 2000; // 障礙物出現最大間隔 (毫秒)
 const PLAYER_BOTTOM_POS = 10; // 玩家距離地上的高度

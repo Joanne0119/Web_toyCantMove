@@ -88,7 +88,7 @@ const Award = () => {
                         key={i} 
                         className={`text-center hover ${
                           r.color === localPlayer.color && r.skin === localPlayer.avatar 
-                          ? 'bg-primary/20 font-bold border-l-4 border-primary' 
+                          ? 'bg-primary/20 font-bold' 
                           : ''
                         }`}
                       >
