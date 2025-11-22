@@ -2,6 +2,8 @@ import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import { motion } from "framer-motion";
+import PodiumBar from '@/components/PodiumBar.jsx';
+
 
 const Award = () => {
   const { finalResults, localPlayer } = useGame();
@@ -13,14 +15,13 @@ const Award = () => {
     }
 
     return finalResults.map(r => {
-      
       const name = `${r.name}`; 
-
       const avatar = `/images/${r.color}_${r.skin}.png`; 
 
       return {
         name,
         score: r.point,
+        rank: r.rank, 
         avatar,
         color: r.color,
         skin: r.skin
@@ -28,6 +29,13 @@ const Award = () => {
     });
   }, [finalResults]); 
 
+  // 計算最高分，用於計算高度百分比
+  const maxScore = useMemo(() => {
+    if (results.length === 0) return 100;
+    return Math.max(...results.map(r => r.score));
+  }, [results]);
+
+  // 取前三名顯示在頒獎台
   const top3 = results.slice(0, 3);
 
   const handlePlayAgain = () => {
@@ -41,7 +49,7 @@ const Award = () => {
   return (
     <div className="hero min-h-screen bg-base-200 overflow-x-hidden select-none" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh'}}>
       <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
-      <div className="hero-content text-center">
+        <div className="hero-content text-center">
         <div className="max-w-lg">
           <motion.div 
             className="card bg-base-100 shadow-xl"
@@ -54,73 +62,50 @@ const Award = () => {
               duration: 0.8
             }}
           >
-            <div className="card-body">
-              {/* Podium */}
-              <div className="flex justify-center items-end h-48 mb-6">
-                {/* 顯示第 2 名 (index 1) */}
-                {top3[1] && (
-                  <div className="text-center mx-2">
-                    <div className="avatar">
-                      <div className="w-16">
-                        <img src={top3[1].avatar} alt={top3[1].name} />
-                      </div>
-                    </div>
-                    <div className="font-bold">{top3[1].name}</div>
-                    <div className="bg-gray-400 text-black p-2 rounded-t-lg h-16 flex items-center justify-center">2</div>
-                  </div>
-                )}
-                {/* 顯示第 1 名 (index 0) */}
-                {top3[0] && (
-                  <div className="text-center mx-2">
-                     <div className="avatar">
-                      <div className="w-20">
-                        <img src={top3[0].avatar} alt={top3[0].name} />
-                      </div>
-                    </div>
-                    <div className="font-bold">{top3[0].name}</div>
-                    <div className="bg-yellow-400 text-black p-2 rounded-t-lg h-24 flex items-center justify-center">1</div>
-                  </div>
-                )}
-                {/* 顯示第 3 名 (index 2) */}
-                {top3[2] && (
-                  <div className="text-center mx-2">
-                    <div className="avatar">
-                      <div className="w-16">
-                        <img src={top3[2].avatar} alt={top3[2].name} />
-                      </div>
-                    </div>
-                    <div className="font-bold">{top3[2].name}</div>
-                    <div className="bg-yellow-700 text-black p-2 rounded-t-lg h-12 flex items-center justify-center">3</div>
-                  </div>
-                )}
+            <div className="card-body p-4 sm:p-8">
+              <div className="flex justify-center items-end h-64 mb-8 pb-2 border-b border-base-300">
+                <PodiumBar player={top3[1]} maxScore={maxScore}/>
+                
+                <div className="z-10 -mx-2 sm:mx-0 mb-2 scale-110 origin-bottom">
+                   <PodiumBar player={top3[0]} maxScore={maxScore} />
+                </div>
+
+                <PodiumBar player={top3[2]} maxScore={maxScore} />
               </div>
 
-              {/* Leaderboard */}
-              <div className="overflow-x-auto">
-                <table className="table w-full">
+              <div className="overflow-x-auto w-full">
+                <table className="table table-zebra w-full">
                   <thead>
-                    <tr>
-                      <th>Rank</th>
-                      <th>Name</th>
-                      <th>Score</th>
+                    <tr className="text-center">
+                      <th className="bg-base-200/50">名次</th>
+                      <th className="bg-base-200/50">玩家</th>
+                      <th className="bg-base-200/50">分數</th>
                     </tr>
                   </thead>
                   <tbody>
                     {results.map((r, i) => (
                       <tr 
                         key={i} 
-                        // 7. 高亮邏輯：
-                        // 假設 localPlayer.avatar 對應到 finalResults 的 skin
-                        // 並且 localPlayer.color 對應到 finalResults 的 color
-                        className={`${
+                        className={`text-center hover ${
                           r.color === localPlayer.color && r.skin === localPlayer.avatar 
-                          ? 'active' 
+                          ? 'bg-primary/20 font-bold border-l-4 border-primary' 
                           : ''
                         }`}
                       >
-                        <th>{i + 1}</th>
-                        <td>{r.name}</td>
-                        <td>{r.score}</td>
+                        <th>
+                          {r.rank}
+                        </th>
+                        <td>
+                          <div className="flex items-center justify-center gap-2">
+                            <div className="avatar">
+                              <div className="w-8 rounded-full">
+                                <img src={r.avatar} alt={r.name} />
+                              </div>
+                            </div>
+                            {r.name}
+                          </div>
+                        </td>
+                        <td className="font-mono text-lg">{r.score}</td>
                       </tr>
                     ))}
                   </tbody>
