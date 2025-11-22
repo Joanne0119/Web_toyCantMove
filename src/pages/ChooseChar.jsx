@@ -5,11 +5,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import LazyImage from '@/components/LazyImage';
 
 const characters = [
-  { name: '沃寶 Wobo', speed: 8, power: 23, skill: 15, src: '/images/gray_wind-up.png', disable: false},
-  { name: '冒冒 Mavo', speed: 20, power: 11, skill: 2, src: '/images/gray_hat.png', disable: false },
-  { name: '雷米 Remy', speed: 10, power: 14, skill: 20, src: '/images/gray_mouse.png', disable: false },
-  { name: '菲菲 Fiffy', speed: 13, power: 17, skill: 9, src: '/images/gray_dog.png', disable: false },
-  { name: '夢鹿 Luka', speed: 15, power: 19, skill: 6, src: '/images/gray_deer.png', disable: false },
+  { chrName: '沃寶 Wobo', name: 'wind-up', speed: 8, power: 23, skill: 15, src: '/images/gray_wind-up.png', disable: false},
+  { chrName: '冒冒 Mavo', name: 'hat', speed: 20, power: 11, skill: 2, src: '/images/gray_hat.png', disable: false },
+  { chrName: '雷米 Remy', name: 'mouse', speed: 10, power: 14, skill: 20, src: '/images/gray_mouse.png', disable: false },
+  { chrName: '菲菲 Fiffy', name: 'dog', speed: 13, power: 17, skill: 9, src: '/images/gray_dog.png', disable: false },
+  { chrName: '夢鹿 Luka', name: 'deer', speed: 15, power: 19, skill: 6, src: '/images/gray_deer.png', disable: false },
 ];
 
 const ringColorMap = {
@@ -86,7 +86,7 @@ const ChooseChar = () => {
                       >
                         <LazyImage
                           src={selectedChar.src}
-                          alt={selectedChar.name}
+                          alt={selectedChar.charName}
                           className="w-full max-w-xs object-contain"
                         />
                       </motion.div>
