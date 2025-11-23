@@ -4,21 +4,21 @@ import { useGame } from '../context/GameContext';
 import { motion } from "framer-motion";
 import PodiumBar from '@/components/PodiumBar.jsx';
 
-// const MOCK_FINAL_RESULTS = [
-//   { name: '黃小姿', point: 128, rank: 1, color: 'green', skin: 'wind-up' },
-//   { name: '爆香怪人', point: 96, rank: 2, color: 'red', skin: 'hat' },
-//   { name: '柳橙恩', point: 73, rank: 3, color: 'yellow', skin: 'dog' },
-//   { name: '青銅王', point: 0, rank: 4, color: 'blue', skin: 'deer' },
-// ];
-// const MOCK_LOCAL_PLAYER = { color: 'green', avatar: 'wind-up' };
+const MOCK_FINAL_RESULTS = [
+  { name: '黃小姿', point: 128, rank: 1, color: 'green', skin: 'wind-up' },
+  { name: '爆香怪人', point: 96, rank: 2, color: 'red', skin: 'hat' },
+  { name: '柳橙恩', point: 73, rank: 3, color: 'yellow', skin: 'dog' },
+  // { name: '青銅王', point: 0, rank: 4, color: 'blue', skin: 'deer' },
+];
+const MOCK_LOCAL_PLAYER = { color: 'green', avatar: 'wind-up' };
 
 
 const Award = () => {
   // debug fake data
-  // const finalResults = MOCK_FINAL_RESULTS;
-  // const localPlayer = MOCK_LOCAL_PLAYER;
+  const finalResults = MOCK_FINAL_RESULTS;
+  const localPlayer = MOCK_LOCAL_PLAYER;
 
-  const { finalResults, localPlayer } = useGame();
+  // const { finalResults, localPlayer } = useGame();
   
   const navigate = useNavigate();
 
@@ -59,6 +59,8 @@ const Award = () => {
     navigate('/');
   };
 
+  const compact = top4.length > 3;
+
   return (
     <div className="hero min-h-screen bg-base-200 overflow-x-hidden select-none" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh'}}>
       <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
@@ -76,16 +78,18 @@ const Award = () => {
             }}
           >
             <div className="card-body p-4 sm:p-8">
-              <div className="flex justify-center items-end h-64 mb-8 pb-2 border-b border-base-300">
-                <PodiumBar player={top4[1]} maxScore={maxScore}/>
+              <div className="flex justify-center items-end h-50 mb-8 pb-2 border-b border-base-300">
+                {/** if there are 4 players use compact mode to avoid overflow */}
                 
-                <div className="z-10 -mx-2 sm:mx-0 scale-110 origin-bottom">
-                   <PodiumBar player={top4[0]} maxScore={maxScore} />
+                <PodiumBar player={top4[1]} maxScore={maxScore} compact={compact}/>
+                
+                <div className="z-10 sm:mx-0 scale-110 origin-bottom">
+                   <PodiumBar player={top4[0]} maxScore={maxScore} compact={compact} />
                 </div>
 
-                <PodiumBar player={top4[2]} maxScore={maxScore} />
-                <div className="z-10 -mx-2 sm:mx-0 scale-110 origin-bottom">
-                <PodiumBar player={top4[3]} maxScore={maxScore} />
+                <PodiumBar player={top4[2]} maxScore={maxScore} compact={compact} />
+                <div className="z-10 sm:mx-0 scale-110 origin-bottom">
+                {top4.length > 3 ? <PodiumBar player={top4[3]} maxScore={maxScore} compact={compact} /> : null}
                 </div>
               </div>
 
