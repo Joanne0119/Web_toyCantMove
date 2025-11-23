@@ -19,8 +19,14 @@ switch (rank) {
     case 3:
     return {
         barColor: 'bg-yellow-700',
-        textColor: 'text-white', // 深色背景配白字
+        textColor: 'text-white', 
         badgeColor: 'bg-yellow-700'
+    };
+    case 4:
+    return {
+        barColor: 'bg-amber-700',
+        textColor: 'text-white', 
+        badgeColor: 'bg-amber-700'
     };
     default:
     return {
@@ -42,7 +48,7 @@ const PodiumBar = ({player, maxScore}) => {
     const barHeight = `${Math.max(minBarRem, heightPercent * maxBarRem)}rem`;
 
     return (
-      <div className="flex flex-col items-center justify-end mx-1 sm:mx-2 w-20 sm:w-24">
+      <div className="flex flex-col items-center justify-end sm:mx-1 w-18 sm:w-20">
         <div className="avatar mb-2">
           <div className={`w-14 sm:w-16 rounded-full`}>
             <img src={player.avatar} alt={player.name} />

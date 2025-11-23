@@ -4,9 +4,22 @@ import { useGame } from '../context/GameContext';
 import { motion } from "framer-motion";
 import PodiumBar from '@/components/PodiumBar.jsx';
 
+// const MOCK_FINAL_RESULTS = [
+//   { name: '黃小姿', point: 128, rank: 1, color: 'green', skin: 'wind-up' },
+//   { name: '爆香怪人', point: 96, rank: 2, color: 'red', skin: 'hat' },
+//   { name: '柳橙恩', point: 73, rank: 3, color: 'yellow', skin: 'dog' },
+//   { name: '青銅王', point: 0, rank: 4, color: 'blue', skin: 'deer' },
+// ];
+// const MOCK_LOCAL_PLAYER = { color: 'green', avatar: 'wind-up' };
+
 
 const Award = () => {
+  // debug fake data
+  // const finalResults = MOCK_FINAL_RESULTS;
+  // const localPlayer = MOCK_LOCAL_PLAYER;
+
   const { finalResults, localPlayer } = useGame();
+  
   const navigate = useNavigate();
 
   const results = useMemo(() => {
@@ -35,8 +48,8 @@ const Award = () => {
     return Math.max(...results.map(r => r.score));
   }, [results]);
 
-  // 取前三名顯示在頒獎台
-  const top3 = results.slice(0, 3);
+  // 取前四名顯示在頒獎台
+  const top4 = results
 
   const handlePlayAgain = () => {
     navigate('/choose-level');
@@ -64,17 +77,20 @@ const Award = () => {
           >
             <div className="card-body p-4 sm:p-8">
               <div className="flex justify-center items-end h-64 mb-8 pb-2 border-b border-base-300">
-                <PodiumBar player={top3[1]} maxScore={maxScore}/>
+                <PodiumBar player={top4[1]} maxScore={maxScore}/>
                 
                 <div className="z-10 -mx-2 sm:mx-0 scale-110 origin-bottom">
-                   <PodiumBar player={top3[0]} maxScore={maxScore} />
+                   <PodiumBar player={top4[0]} maxScore={maxScore} />
                 </div>
 
-                <PodiumBar player={top3[2]} maxScore={maxScore} />
+                <PodiumBar player={top4[2]} maxScore={maxScore} />
+                <div className="z-10 -mx-2 sm:mx-0 scale-110 origin-bottom">
+                <PodiumBar player={top4[3]} maxScore={maxScore} />
+                </div>
               </div>
 
               <div className="overflow-x-auto w-full">
-                <table className="table table-zebra w-full">
+                <table className="table w-full">
                   <thead>
                     <tr className="text-center">
                       <th className="bg-base-200/50">名次</th>
