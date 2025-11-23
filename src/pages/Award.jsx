@@ -4,21 +4,21 @@ import { useGame } from '../context/GameContext';
 import { motion } from "framer-motion";
 import PodiumBar from '@/components/PodiumBar.jsx';
 
-const MOCK_FINAL_RESULTS = [
-  { name: '黃小姿', point: 128, rank: 1, color: 'green', skin: 'wind-up' },
-  { name: '爆香怪人', point: 96, rank: 2, color: 'red', skin: 'hat' },
-  { name: '柳橙恩', point: 73, rank: 3, color: 'yellow', skin: 'dog' },
+// const MOCK_FINAL_RESULTS = [
+//   { name: '黃小姿', point: 128, rank: 1, color: 'green', skin: 'wind-up' },
+//   { name: '爆香怪人', point: 96, rank: 2, color: 'red', skin: 'hat' },
+//   { name: '柳橙恩', point: 73, rank: 3, color: 'yellow', skin: 'dog' },
   // { name: '青銅王', point: 0, rank: 4, color: 'blue', skin: 'deer' },
-];
-const MOCK_LOCAL_PLAYER = { color: 'green', avatar: 'wind-up' };
+// ];
+// const MOCK_LOCAL_PLAYER = { color: 'green', avatar: 'wind-up' };
 
 
 const Award = () => {
   // debug fake data
-  const finalResults = MOCK_FINAL_RESULTS;
-  const localPlayer = MOCK_LOCAL_PLAYER;
+  // const finalResults = MOCK_FINAL_RESULTS;
+  // const localPlayer = MOCK_LOCAL_PLAYER;
 
-  // const { finalResults, localPlayer } = useGame();
+  const { finalResults, localPlayer } = useGame();
   
   const navigate = useNavigate();
 
