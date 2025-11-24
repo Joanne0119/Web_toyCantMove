@@ -189,6 +189,7 @@ export const GameProvider = ({ children }) => {
           console.log("Received terminate message from Unity:", msg.finalPlayerDatas);
           setFinalResults(msg.finalPlayerDatas || []); 
           setGameScene('Awards'); 
+          webRTC.disconnect();
         }
       } catch (e) {
         console.error(e);
