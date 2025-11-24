@@ -32,12 +32,12 @@ export const GameProvider = ({ children }) => {
   const [gameScene, setGameScene] = useState('Lobby');
   const [peerId] = useState(() => {
     // 1. 嘗試從 localStorage 讀取
-    const savedId = localStorage.getItem('myPeerId');
-    if (savedId) return savedId;
+    // const savedId = localStorage.getItem('myPeerId');
+    // if (savedId) return savedId;
 
     // 2. 如果沒有，才生成新的，並存起來
     const newId = 'web-' + Math.random().toString(36).substring(2, 9);
-    localStorage.setItem('myPeerId', newId);
+    // localStorage.setItem('myPeerId', newId);
     return newId;
   });
   const [localPlayer, setLocalPlayer] = useState({
