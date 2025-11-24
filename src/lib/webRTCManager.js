@@ -78,7 +78,8 @@ class WebRTCManager {
     this.mediaElements = new Map();
     this.localStream = null; // Store local media stream if any
 
-    this.candidateQueue = new Map(); //peer candidate queue before remote desc set
+    this.candidateQueue = new Map(); // local candidates waiting for remote desc ack
+    this.remoteCandidateQueue = new Map(); // remote candidates waiting for our desc
     this.isRemoteDescriptionSet = new Map(); // Is peer ready for candidates
   }
 
@@ -199,6 +200,7 @@ class WebRTCManager {
   _setupPeerConnectionEventHandlers(peerId, pc) {
 
     this.candidateQueue.set(peerId, []);
+    this.remoteCandidateQueue.set(peerId, []);
     this.isRemoteDescriptionSet.set(peerId, false);
     pc.onicecandidate = (event) => {
       if (event.candidate) {
@@ -637,7 +639,10 @@ class WebRTCManager {
     console.log(`OFFERDESC = ${offerJson}`);
     await pc
       .setRemoteDescription(new RTCSessionDescription(offerDesc))
-      .then(() => console.log(`Remote description (offer) set for ${senderPeerId}. Creating answer.`))
+      .then(async () => {
+        console.log(`Remote description (offer) set for ${senderPeerId}. Creating answer.`);
+        await this._flushRemoteCandidateQueue(senderPeerId);
+      })
       .then(() => pc.createAnswer())
       .then((answer) => pc.setLocalDescription(answer))
       .then(() => {
@@ -660,6 +665,7 @@ class WebRTCManager {
       await pc.setRemoteDescription(new RTCSessionDescription(answerDesc));
       console.log(`Remote description (answer) set for ${senderPeerId}. Connection should establish.`);
       this.isRemoteDescriptionSet.set(senderPeerId, true);
+      await this._flushRemoteCandidateQueue(senderPeerId);
 
       const queue = this.candidateQueue.get(senderPeerId);
       if (queue && queue.length > 0) {
@@ -713,16 +719,56 @@ class WebRTCManager {
 
     try {
       const candidateInit = JSON.parse(candidateJson);
+
+      if (pc.remoteDescription == null) {
+        console.log(`Remote description for ${senderPeerId} not set yet. Queueing ICE candidate.`);
+        this._queueRemoteCandidate(senderPeerId, candidateJson);
+        return;
+      }
+
       await pc.addIceCandidate(new RTCIceCandidate(candidateInit));
       // console.log(`ICE candidate added for ${senderPeerId}`);
     } catch (error) {
       // Ignore error if remote description is not yet set, as candidate is queued.
       if (error.name === "InvalidStateError" && pc.remoteDescription == null) {
         console.log(`ICE candidate for ${senderPeerId} queued as remote description is not set yet.`);
+        this._queueRemoteCandidate(senderPeerId, candidateJson);
       } else {
         console.error(`Error adding ICE candidate for ${senderPeerId}:`, error, candidateJson);
       }
     }
+  }
+
+  _queueRemoteCandidate(peerId, candidateJson) {
+    if (!this.remoteCandidateQueue.has(peerId)) {
+      this.remoteCandidateQueue.set(peerId, []);
+    }
+    this.remoteCandidateQueue.get(peerId).push(candidateJson);
+  }
+
+  async _flushRemoteCandidateQueue(peerId) {
+    const queue = this.remoteCandidateQueue.get(peerId);
+    if (!queue || queue.length === 0) {
+      return;
+    }
+
+    const pc = this.peerConnections.get(peerId);
+    if (!pc) {
+      this.remoteCandidateQueue.set(peerId, []);
+      return;
+    }
+
+    console.log(`Flushing ${queue.length} queued ICE candidates for ${peerId}.`);
+    for (const candidateJson of queue) {
+      try {
+        const candidateInit = JSON.parse(candidateJson);
+        await pc.addIceCandidate(new RTCIceCandidate(candidateInit));
+      } catch (error) {
+        console.error(`Failed to apply queued ICE candidate for ${peerId}:`, error, candidateJson);
+      }
+    }
+
+    this.remoteCandidateQueue.set(peerId, []);
   }
 
   // Call this method to start WebRTC connections after WebSocket is established and peers are known (or use onnegotiationneeded)
@@ -753,6 +799,7 @@ class WebRTCManager {
 
     this.videoTrackSenders.delete(peerId); // RTCRtpSender.stop() is handled by pc.close()
     this.audioTrackSenders.delete(peerId);
+    this.remoteCandidateQueue.delete(peerId);
 
     const mediaPeerBundle = this.mediaElements.get(peerId);
     if (mediaPeerBundle) {
