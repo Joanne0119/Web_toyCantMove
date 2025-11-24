@@ -78,9 +78,9 @@ class WebRTCManager {
     this.mediaElements = new Map();
     this.localStream = null; // Store local media stream if any
 
-    this.candidateQueue = new Map(); // local candidates waiting for remote desc ack
-    this.remoteCandidateQueue = new Map(); // remote candidates waiting for our desc
-    this.isRemoteDescriptionSet = new Map(); // Is peer ready for candidates
+    // this.candidateQueue = new Map(); // local candidates waiting for remote desc ack
+    // this.remoteCandidateQueue = new Map(); // remote candidates waiting for our desc
+    // this.isRemoteDescriptionSet = new Map(); // Is peer ready for candidates
   }
 
   async connect(webSocketUrl, isVideoAudioSender, isVideoAudioReceiver) {
@@ -199,35 +199,35 @@ class WebRTCManager {
 
   _setupPeerConnectionEventHandlers(peerId, pc) {
 
-    this.candidateQueue.set(peerId, []);
-    this.remoteCandidateQueue.set(peerId, []);
-    this.isRemoteDescriptionSet.set(peerId, false);
+    // this.candidateQueue.set(peerId, []);
+    // this.remoteCandidateQueue.set(peerId, []);
+    // this.isRemoteDescriptionSet.set(peerId, false);
     pc.onicecandidate = (event) => {
       if (event.candidate) {
-        // setTimeout(() => {
-        //   if (pc.signalingState !== 'closed') { // 確保連線還活著
+        setTimeout(() => {
+          if (pc.signalingState !== 'closed') { // 確保連線還活著
 
-        const candidateJson = JSON.stringify(event.candidate.toJSON());
+        // const candidateJson = JSON.stringify(event.candidate.toJSON());
 
-        // 如果 Unity 還沒回覆 Answer (還沒準備好)
-        if (!this.isRemoteDescriptionSet.get(peerId)) {
-            console.log("Unity isn't ready yet. Storing Candidate in queue...");
-            // 存進佇列
-            const queue = this.candidateQueue.get(peerId);
-            queue.push(candidateJson);
-        } else {
-            // 已經準備好了，直接送
-            console.log("Unity is ready. Sending Candidate directly.");
+        // // 如果 Unity 還沒回覆 Answer (還沒準備好)
+        // if (!this.isRemoteDescriptionSet.get(peerId)) {
+        //     console.log("Unity isn't ready yet. Storing Candidate in queue...");
+        //     // 存進佇列
+        //     const queue = this.candidateQueue.get(peerId);
+        //     queue.push(candidateJson);
+        // } else {
+        //     // 已經準備好了，直接送
+        //     console.log("Unity is ready. Sending Candidate directly.");
 
             this.sendWebSocketMessage(
                 SignalingMessageType.CANDIDATE, 
                 this.localPeerId, 
                 peerId, 
-                // candidateJson
-                JSON.stringify(event.candidate.toJSON())
+                candidateJson
+                // JSON.stringify(event.candidate.toJSON())
             );
         }
-        // }, 1000);
+        }, 1000);
       }
     };
 
@@ -664,25 +664,25 @@ class WebRTCManager {
       const answerDesc = JSON.parse(answerJson);
       await pc.setRemoteDescription(new RTCSessionDescription(answerDesc));
       console.log(`Remote description (answer) set for ${senderPeerId}. Connection should establish.`);
-      this.isRemoteDescriptionSet.set(senderPeerId, true);
-      await this._flushRemoteCandidateQueue(senderPeerId);
+      // this.isRemoteDescriptionSet.set(senderPeerId, true);
+      // await this._flushRemoteCandidateQueue(senderPeerId);
 
-      const queue = this.candidateQueue.get(senderPeerId);
-      if (queue && queue.length > 0) {
-          console.log(`found ${queue.length} queued candidates for ${senderPeerId}, sending now...`);
+      // const queue = this.candidateQueue.get(senderPeerId);
+      // if (queue && queue.length > 0) {
+      //     console.log(`found ${queue.length} queued candidates for ${senderPeerId}, sending now...`);
           
-          queue.forEach(candidateJson => {
-              this.sendWebSocketMessage(
-                  SignalingMessageType.CANDIDATE, 
-                  this.localPeerId, 
-                  senderPeerId, 
-                  candidateJson
-              );
-          });
+      //     queue.forEach(candidateJson => {
+      //         this.sendWebSocketMessage(
+      //             SignalingMessageType.CANDIDATE, 
+      //             this.localPeerId, 
+      //             senderPeerId, 
+      //             candidateJson
+      //         );
+      //     });
           
-          // 清空佇列
-          this.candidateQueue.set(senderPeerId, []);
-        }
+      //     // 清空佇列
+      //     this.candidateQueue.set(senderPeerId, []);
+      //   }
       // In C#, there was a "COMPLETE" message sent from offerer when its ICE was "Completed".
       // If this side (answerer) reaches 'completed', it can also inform the other side.
       // This is useful if the offerer's 'completed' event didn't fire or message was lost.
