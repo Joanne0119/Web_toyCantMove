@@ -5,7 +5,8 @@ export const isFullscreenSupported = () => {
     return false; 
   }
 
-  if (/iPhone/i.test(navigator.userAgent)) {
+  // if (/iPhone/i.test(navigator.userAgent)) {
+  if (true) {
     return false;
   }
 
