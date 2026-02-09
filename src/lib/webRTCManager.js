@@ -202,30 +202,15 @@ class WebRTCManager {
     // this.isRemoteDescriptionSet.set(peerId, false);
     pc.onicecandidate = (event) => {
       if (event.candidate) {
-        setTimeout(() => {
-          if (pc.signalingState !== 'closed') { // 確保連線還活著
-
-        // const candidateJson = JSON.stringify(event.candidate.toJSON());
-
-        // // 如果 Unity 還沒回覆 Answer (還沒準備好)
-        // if (!this.isRemoteDescriptionSet.get(peerId)) {
-        //     console.log("Unity isn't ready yet. Storing Candidate in queue...");
-        //     // 存進佇列
-        //     const queue = this.candidateQueue.get(peerId);
-        //     queue.push(candidateJson);
-        // } else {
-        //     // 已經準備好了，直接送
-        //     console.log("Unity is ready. Sending Candidate directly.");
-
-            this.sendWebSocketMessage(
-                SignalingMessageType.CANDIDATE, 
-                this.localPeerId, 
-                peerId, 
-                // candidateJson
-                JSON.stringify(event.candidate.toJSON())
-            );
+        // 立即發送 ICE Candidate，不再延遲（延遲會導致網路切換時連線失敗）
+        if (pc.signalingState !== 'closed') {
+          this.sendWebSocketMessage(
+            SignalingMessageType.CANDIDATE,
+            this.localPeerId,
+            peerId,
+            JSON.stringify(event.candidate.toJSON())
+          );
         }
-        }, 1000);
       }
     };
 
@@ -383,12 +368,9 @@ class WebRTCManager {
     };
 
     pc.onnegotiationneeded = async () => {
-      // This often fires multiple times or at sensitive moments.
-      // The original C# code checked pc.signalingState !== RTCSignalingState.Stable
-      // In JS, it's pc.signalingState !== 'stable'
-      // It also deferred this to a coroutine.
-      if (pc.signalingState !== "stable") {
-        // Only if stable, means we are likely the initiator
+      // 只有在 signaling state 為 stable 時才能創建 offer
+      // 這確保不會在協商過程中重複發起 offer
+      if (pc.signalingState === "stable") {
         console.log(`Negotiation needed for ${peerId}. Creating offer.`);
         try {
           await this._createAndSendOffer(peerId);
@@ -439,42 +421,18 @@ class WebRTCManager {
           if (IsVideoAudioSender && this.isLocalPeerVideoAudioReceiver) {
             this._createNewPeerMediaReceivingResources(SenderPeerId);
           }
-          const pc = this._setupPeerConnection(SenderPeerId);
+          this._setupPeerConnection(SenderPeerId);
           console.log(`NEWPEERACK: Created new peerconnection ${SenderPeerId} on peer ${this.localPeerId}`);
+        }
 
-          // The original C# logic had `connectionGameObject.ConnectWebRTC();`
-          // which translated to `InstantiateWebRTC` which called `CreateOffer`.
-          // This was triggered when `signalingMessage.ConnectionCount == peerConnections.Count`.
-          // This implies a "fully meshed" or "all peers aware" state before starting offers.
-          // Let's try to initiate offer if this ACK completes the expected set.
-          // Note: ConnectionCount in the message is from *that* sender's perspective.
-          // We need a more robust way to decide "everyone is here".
-          // For now, let's assume if an ACK comes from a new peer, and we are supposed to send, we can make an offer.
-          // This might lead to multiple offers if not careful.
-          // The original "InstantiateWebRTC" called CreateOffer for *all* connections.
-          // This logic is best handled by the application layer deciding when to call `initiateOfferToAll` or similar.
-          // The original logic:
-          // if (signalingMessage.ConnectionCount == peerConnections.Count) {
-          //    connectionGameObject.ConnectWebRTC(); // -> StartCoroutine(CreateOffer()) for all peers
-          // }
-          // This seems like the role of the "first" peer or a peer that detects all others are present.
-          // This is often a source of race conditions. A simpler model is:
-          // Peer A joins. Peer B joins. B sends NEWPEER. A sends NEWPEERACK to B. A also sends NEWPEER. B sends NEWPEERACK to A.
-          // At this point, A knows B, B knows A. They can start negotiating.
-          // The `onnegotiationneeded` event is often a better trigger for offers if handled carefully.
-
-          // Let's assume for now that if an ACK arrives for a new peer, and we are a sender,
-          // we might need to create an offer to them if `onnegotiationneeded` doesn't fire appropriately.
-          
-          // if (this.isLocalPeerVideoAudioSender && this.peerConnections.has(SenderPeerId)) {
-          //   // Check if an offer is already in progress or if connection is established
-          //   const pc = this.peerConnections.get(SenderPeerId);
-          //   if (pc && pc.signalingState === "stable") {
-          //     // Only if no negotiation is ongoing
-          //     console.log(`Considering offer to ${SenderPeerId} after NEWPEERACK`);
-          //     await this._createAndSendOffer(SenderPeerId);
-          //   }
-          // }
+        // 備用 Offer 機制：如果 Unity 的 Offer 丟失或延遲，Web 可以主動發起
+        // 這提供了網路不穩定時的備援路徑
+        if (this.isLocalPeerVideoAudioSender && this.peerConnections.has(SenderPeerId)) {
+          const pc = this.peerConnections.get(SenderPeerId);
+          if (pc && pc.signalingState === "stable") {
+            console.log(`Initiating backup offer to ${SenderPeerId} after NEWPEERACK`);
+            await this._createAndSendOffer(SenderPeerId);
+          }
         }
 
         break;
