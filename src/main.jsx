@@ -6,8 +6,8 @@ import { BrowserRouter } from 'react-router-dom';
 import VConsole from 'vconsole';
 
 const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.get('debug') === 'true' || process.env.NODE_ENV === 'development') {
-  new VConsole({ theme: 'dark' }); 
+if (urlParams.get('debug') === 'true') {
+  new VConsole({ theme: 'dark' });
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(
