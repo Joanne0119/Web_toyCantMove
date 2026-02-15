@@ -2,15 +2,27 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import { motion } from "framer-motion";
+import { useFullscreen } from '../hooks/useFullScreen';
 
 const EnterName = () => {
   const [name, setName] = useState('');
-  const { setNickname } = useGame();
+  const { setLocalPlayer, unityPeerId } = useGame();
   const navigate = useNavigate();
+  const [isFullscreen, toggleFullscreen] = useFullscreen(null);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (name.trim()) {
-      setNickname(name.trim());
+      if (!isFullscreen) {
+        try {
+          await toggleFullscreen(); 
+        } catch (err) {
+          console.warn("Error toggling fullscreen: due to iOS device restrictions", err.message);
+        }
+      }
+      setLocalPlayer(prev => ({ 
+        ...prev,
+        name: name.trim()
+      }));
       navigate('/choose-char');
     } else {
       alert('Please enter a nickname');
@@ -18,7 +30,7 @@ const EnterName = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center" data-theme="dark" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center'}}>
+    <div className="min-h-screen flex flex-col items-center justify-center" data-theme="dark" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh'}}>
       <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
       <div className="text-center mb-8">
         <motion.div
@@ -69,7 +81,7 @@ const EnterName = () => {
         </motion.div>
         <motion.div
           className="absolute top-0 left-0 w-full h-full"
-          style={{ backgroundImage: "url('/images/character.png')", backgroundSize: "cover", backgroundPosition: "right 46% bottom 50%" }}
+          style={{ backgroundImage: "url('/images/character.png')", backgroundSize: "cover", backgroundPosition: "right 53% bottom 50%" }}
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{
@@ -87,7 +99,7 @@ const EnterName = () => {
               ease: "easeInOut"
             }}
             className="w-full h-full"
-            style={{ backgroundImage: "url('/images/character.png')", backgroundSize: "cover", backgroundPosition: "right 46% bottom 50%" }}
+            style={{ backgroundImage: "url('/images/character.png')", backgroundSize: "cover", backgroundPosition: "right 53% bottom 50%" }}
           />
         </motion.div>
       </div>
@@ -103,6 +115,13 @@ const EnterName = () => {
           delay: 0.8
         }}
       >
+        {/* debug info */}
+          {/* <div className="mt-8 p-4 bg-gray-800 text-white text-xs rounded-lg break-all opacity-70">
+            <p className="font-bold mb-1">🔧 除錯資訊 (Debug Info):</p>
+            <p>網址參數: {window.location.search}</p>
+            <p>解析出的 Unity ID: <span className="text-yellow-400">{unityPeerId || '無'}</span></p>
+            <p>完整網址: {window.location.href}</p>
+          </div> */}
         <div className="card-body">
           <div className="form-control">
             <label className="label select-none">

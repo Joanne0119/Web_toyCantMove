@@ -1,7 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { use, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import { motion, AnimatePresence } from "framer-motion";
+import LazyImage from '@/components/LazyImage';
 
 // const mockPlayers = [
 //   { name: '黃小姿', avatar: '/images/green.png' },
@@ -11,9 +12,8 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const WaitingRoom = () => {
   const {
-    nickname,
-    character,
-    players,
+    localPlayer,
+    otherPlayers,
     setPlayers,
     peerId,
     hostId,
@@ -41,29 +41,11 @@ const WaitingRoom = () => {
   }, [screenWakeLock]); 
 
   useEffect(() => {
-    if (character && dataChannelConnections && dataChannelConnections.length > 0 && !hasSentIdentify.current) {
-      
-      hasSentIdentify.current = true;
-
-      const identityMessage = {
-        type: "identify",
-        characterName: character.name, 
-        nickname: nickname
-      };
-      
-      sendData(JSON.stringify(identityMessage), null);
-
-      console.log('Data Channel is open. Sent identity to Unity:', identityMessage);
-    }
-  }, [dataChannelConnections, character, nickname, sendData]);
-
-  useEffect(() => {
     if (gameScene === 'Tutorial' && !isHost) { 
       navigate('/tutorial');
     }
   }, [gameScene, isHost, navigate]);
 
-  
   useEffect(() => {
     const connectAll = async () => {
       try {
@@ -75,14 +57,14 @@ const WaitingRoom = () => {
           throw new Error('連線失敗 (connectionResult is false)');
         }
 
-        console.log('Successfully connected as', character.name);
+        console.log('Successfully connected as', localPlayer.name); 
 
       } catch (error) {
         navigate('/error', { state: { message: error.message } });
       }
     };
 
-    if (!character || !webRTC) {
+    if (!localPlayer.avatar || !webRTC) {
       return;
     }
     if (!connectionStatus && !hasAttemptedConnection.current) {
@@ -92,7 +74,7 @@ const WaitingRoom = () => {
       connectAll();
     }
     
-  }, [character, webRTC, connectionStatus, navigate, gyroscope]); 
+  }, [localPlayer.avatar, webRTC, connectionStatus, navigate, gyroscope]);
 
 
   const handleNext = () => {
@@ -104,8 +86,10 @@ const WaitingRoom = () => {
     navigate('/');
   };
 
+  const allPlayers = [localPlayer, ...otherPlayers].filter(p => p && p.name);
+
   return (
-    <div className="hero min-h-screen bg-base-200 select-none" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center'}}>
+    <div className="hero min-h-screen bg-base-200 select-none" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh'}}>
       <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
       <div className="hero-content text-center">
         <div className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl">
@@ -127,20 +111,23 @@ const WaitingRoom = () => {
                   <div className="flex justify-center my-4">
                     <span className="loading loading-spinner loading-lg"></span>
                   </div>
-                  <p className="text-center">以 {character?.name || '...'} 的身份加入...</p>
+                  <p className="text-center">以 {localPlayer.name || '...'} 的身份加入...</p>
                 </div>
               ) : (
                 <div>
                   <h2 className="card-title">等待玩家進入...</h2>
                   <div className="space-y-3 mt-4">
-                    {players.map((player, index) => (
-                      <div key={index} className="flex items-center bg-base-200 p-2 rounded-lg ">
+                    {allPlayers.map((player) => (
+                      <div key={player.id} className="flex items-center bg-base-200 p-2 rounded-lg ">
                         <div className="avatar mr-4">
                           <div className="w-14 rounded-full">
-                            <img src={player.avatar} alt={player.name} />
+                            <LazyImage 
+                              src={player.color ? `/images/${player.color}_${player.avatar}.png` : `/images/gray_${player.avatar}.png`} 
+                              alt={player.name} 
+                            />
                           </div>
                         </div>
-                        <span className="text-lg">{player.name}</span>
+                        <span className="text-lg">{player.name} </span>
                       </div>
                     ))}
                   </div>

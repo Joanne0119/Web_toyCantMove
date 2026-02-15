@@ -2,23 +2,20 @@ import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import { motion, AnimatePresence } from "framer-motion";
+import LazyImage from '@/components/LazyImage';
 
 const characters = [
-  { name: 'red', speed: 8, power: 10, skill: 7, src: '/images/red.png', pinSrc: '/images/redPin.png' },
-  { name: 'blue', speed: 10, power: 6, skill: 9, src: '/images/blue.png', pinSrc: '/images/bluePin.png' },
-  { name: 'yellow', speed: 7, power: 9, skill: 8, src: '/images/yellow.png', pinSrc: '/images/yellowPin.png' },
-  { name: 'green', speed: 8, power: 10, skill: 7, src: '/images/green.png', pinSrc: '/images/greenPin.png' },
+  { charName: '沃寶 Wobo', name: 'wind-up', speed: 8, power: 23, skill: 15, src: '/images/gray_wind-up.png', disable: false},
+  { charName: '冒冒 Mavo', name: 'hat', speed: 20, power: 11, skill: 2, src: '/images/gray_hat.png', disable: false },
+  { charName: '雷米 Remy', name: 'mouse', speed: 10, power: 14, skill: 20, src: '/images/gray_mouse.png', disable: false },
+  { charName: '菲菲 Fiffy', name: 'dog', speed: 13, power: 17, skill: 9, src: '/images/gray_dog.png', disable: false },
+  { charName: '夢鹿 Luka', name: 'deer', speed: 15, power: 19, skill: 6, src: '/images/gray_deer.png', disable: false },
 ];
 
-const ringColorMap = {
-  red: 'ring-red-600/50',
-  blue: 'ring-blue-600/50',
-  yellow: 'ring-yellow-600/50',
-  green: 'ring-green-600/50',
-};
+const fmt = (v) => String(v).padStart(2, '\u00A0');
 
 const ChooseChar = () => {
-  const { nickname, setCharacter, webRTC, gyroscope, connectionStatus, screenWakeLock } = useGame();
+  const { localPlayer, setLocalPlayer, webRTC, gyroscope, connectionStatus, screenWakeLock } = useGame();
   const [selectedChar, setSelectedChar] = useState(characters[0]);
   const navigate = useNavigate();
 
@@ -27,6 +24,7 @@ const ChooseChar = () => {
 
   // Handle character selection
   const handleSelectChar = (char) => {
+    if (char.disable) return; 
     setSelectedChar(char);
   };
 
@@ -36,21 +34,25 @@ const ChooseChar = () => {
       await screenWakeLock.request();
       console.log('Wake Lock enabled');
 
-      setCharacter(selectedChar);
+      setLocalPlayer(prev => ({ 
+        ...prev,
+        avatar: selectedChar.name,
+        characterData: selectedChar 
+      }));
 
       navigate('/waiting-room');
     } catch (err) {
       console.error('Failed to enable Wake Lock or connect:', err);
     }
-  }, [screenWakeLock.request,, setCharacter, selectedChar, navigate]);
+  }, [screenWakeLock.request, setLocalPlayer, selectedChar, navigate]);
 
   return (
-    <div className="hero min-h-screen bg-base-200 overflow-x-hidden select-none" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
+    <div className="hero min-h-screen bg-base-200 overflow-x-hidden select-none" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}>
       <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
       <div className="hero-content text-center">
         <div className="max-w-lg">
           <motion.div 
-            className="card bg-base-100 shadow-xl mt-8"
+            className="card bg-base-100 shadow-xl"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{
@@ -61,54 +63,60 @@ const ChooseChar = () => {
             }}
           >
             <div className="card-body">
-              <h2 className="card-title">哈囉！{nickname}，請選擇角色</h2>
-              <div className="flex flex-col items-center my-4">
+              <h2 className="card-title">哈囉！{localPlayer.name || '...'}，請選擇角色</h2>
+              <div className="flex flex-col items-center mt-4">
                 <div className="avatar online">
-                  <div className={`w-48 h-48 rounded-full ${ringColorMap[selectedChar.name]} ring-4 ring-offset-base-100 ring-offset-2 flex justify-center items-center overflow-hidden`}>
+                  <div className={`w-42 h-42 rounded-full ring-gray-600/50 ring-4 ring-offset-base-100 ring-offset-2 flex justify-center items-center overflow-hidden`}>
                     <AnimatePresence mode="wait">
-                      <motion.img
+                      <motion.div
                         key={selectedChar.name}
-                        src={selectedChar.src}
-                        alt={selectedChar.name}
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.8 }}
                         transition={{ duration: 0.3 }}
                         className="w-full max-w-xs object-contain"
-                      />
+                      >
+                        <LazyImage
+                          src={selectedChar.src}
+                          alt={selectedChar.charName}
+                          className="w-full max-w-xs object-contain"
+                        />
+                      </motion.div>
                     </AnimatePresence>
                   </div>
                 </div>
-                <div className="text-2xl font-bold capitalize mt-4">{selectedChar.name}</div>
+                <div className="text-xl font-bold capitalize mt-4">{selectedChar.charName}</div>
                 <div className="stats bg-transparent mt-2">
                   <div className="stat">
                     <div className="stat-title">速度</div>
-                    <div className="stat-value">{selectedChar.speed}</div>
+                    <div className="stat-value w-8">{fmt(selectedChar.speed)}</div>
                   </div>
                   <div className="stat">
                     <div className="stat-title">力量</div>
-                    <div className="stat-value">{selectedChar.power}</div>
+                    <div className="stat-value w-8">{fmt(selectedChar.power)}</div>
                   </div>
                   <div className="stat">
                     <div className="stat-title">技巧</div>
-                    <div className="stat-value">{selectedChar.skill}</div>
+                    <div className="stat-value w-8">{fmt(selectedChar.skill)}</div>
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-center space-x-3 mb-6">
-                {characters.map((char) => (
-                  <motion.div
-                    whileTap={{ scale: 0.9 }}
-                    key={char.name}
-                    className={`avatar cursor-pointer ${selectedChar.name === char.name ? `ring ${ringColorMap[char.name]} ring-offset-base-100 ring-offset-2 rounded-full` : ''}`}
-                    onClick={() => handleSelectChar(char)}
-                  >
-                    <div className="w-16 rounded-full">
-                      <img src={char.src} alt={char.name}/>
-                    </div>
-                  </motion.div>
-                ))}
+              <div className="flex justify-center w-full">
+                <div className="w-64 flex flex-nowrap overflow-x-auto space-x-2 mb-4 p-4">
+                  {characters.map((char) => (
+                    <motion.div
+                      whileTap={char.disable ? false : { scale: 0.9 }} 
+                      key={char.name}
+                      className={`avatar cursor-pointer flex-shrink-0 ${selectedChar.name === char.name ? `ring-gray-600/50 ring-offset-base-100 ring-offset-2 rounded-full` : ''}`}
+                      onClick={() => handleSelectChar(char)}
+                    >
+                      <div className="w-16 rounded-full">
+                        <LazyImage src={char.src} alt={char.charName} eager/>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
 
               <div className="card-actions justify-center">

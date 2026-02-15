@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import { motion, AnimatePresence } from "framer-motion";
+import LazyImage from '@/components/LazyImage';
 
 const levels = [
   { name: "玩具紙箱", image: "/images/toyboxLevel.png", disable: false },
-  { name: "書桌探險", image: "/images/tableLevel.png", disable: true },
+  // { name: "書桌探險", image: "/images/tableLevel.png", disable: true },
   { name: "凌亂床鋪", image: "/images/bedLevel.png", disable: true }
 ];
 
@@ -52,7 +53,7 @@ const ChooseLevel = () => {
   };
 
   return (
-    <div className="hero min-h-screen bg-base-200 select-none" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
+    <div className="hero min-h-screen bg-base-200 select-none" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}>
       <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
       <div className="hero-content text-center">
         {/* <div className="max-w-lg"> */}
@@ -69,7 +70,7 @@ const ChooseLevel = () => {
           >
             <div className="card-body">
               <h2 className="card-title">{isHost ? '請選擇遊戲場景' : '等待房主選擇關卡...'}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 my-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
                 {levels.map((l) => (
                   <motion.div 
                     whileTap={isHost && !l.disable ? { scale: 0.95 } : false}
@@ -80,7 +81,7 @@ const ChooseLevel = () => {
                       pointerEvents: l.disable ? 'none' : 'auto' 
                     }}
                   >
-                    <figure><img src={l.image} alt={l.name} className="w-60 object-cover" style={{ filter: l.disable ? 'grayscale(90%)' : 'none' }}/></figure>
+                    <figure><LazyImage src={l.image} alt={l.name} className="w-60 object-cover" style={{ filter: l.disable ? 'grayscale(90%)' : 'none' }}/></figure>
                     <div className="card-body p-4 items-center text-center">
                       <h2 className="card-title">{l.name}</h2>
                     </div>

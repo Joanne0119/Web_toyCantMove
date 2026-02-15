@@ -1,20 +1,22 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useGame } from '../context/GameContext'; 
-import { motion, useSpring, useTransform  } from "framer-motion";
+import { useGame } from '../context/GameContext';
+import { motion, useSpring, useTransform, useMotionValue } from "framer-motion";
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 
 
 const Playing = () => {
-    const { character, webRTC, connectionStatus, gyroscope, gyroscopeStatus, screenWakeLock } = useGame();
+    const navigate = useNavigate();
+    
+    const { localPlayer, webRTC, connectionStatus, gyroscope, gyroscopeStatus, screenWakeLock, unityPeerId } = useGame();
     const { lastMessage, sendData: sendWebRTCData, dataChannelConnections } = webRTC;
     const { isCalibrated, coordinates, isInitialized } = gyroscopeStatus;
-    const { calibrate: calibrateGyroscope } = gyroscope; 
+    const { calibrate: calibrateGyroscope } = gyroscope;
 
     // --- Game State ---
-    const GAME_SPEED = 5;
+    const GAME_SPEED = 4;
 
-    const springConfig = { stiffness: 300, damping: 30 }; 
+    const springConfig = { stiffness: 300, damping: 30 };
     const smoothX = useSpring(50, springConfig);
     const smoothY = useSpring(50, springConfig);
 
@@ -23,27 +25,35 @@ const Playing = () => {
 
     const rotation = useSpring(0, { stiffness: 300, damping: 30 });
 
+    // Manual Controller Handlers
+    const joystickBaseRef = useRef(null);
+    const knobX = useMotionValue(0);
+    const knobY = useMotionValue(0);
+    const isDraggingRef = useRef(false);
+    const sendIntervalRef = useRef(null);
+    const currentVectorRef = useRef({ x: 0, y: 0 });
+
     // screen wake lock
     useEffect(() => {
-    if (screenWakeLock) {
-        screenWakeLock.request();
-    }
-    }, [screenWakeLock]); 
+        if (screenWakeLock) {
+            screenWakeLock.request();
+        }
+    }, [screenWakeLock]);
 
     useEffect(() => {
         const updateRotation = () => {
             const vx = smoothX.getVelocity();
             const vy = smoothY.getVelocity();
-    
+
             if (Math.abs(vx) > 1 || Math.abs(vy) > 1) {
                 const newAngle = Math.atan2(vy, vx) * (180 / Math.PI) + 90;
                 rotation.set(newAngle);
             }
         };
-    
+
         const unsubscribeX = smoothX.onChange(updateRotation);
         const unsubscribeY = smoothY.onChange(updateRotation);
-    
+
         return () => {
             unsubscribeX();
             unsubscribeY();
@@ -51,8 +61,6 @@ const Playing = () => {
     }, [smoothX, smoothY, rotation]);
 
 
-    const [isControllerOpen, setIsControllerOpen] = useState(false);
-    
     // Effect to handle incoming WebRTC messages for game control
     useEffect(() => {
         if (lastMessage) {
@@ -65,205 +73,213 @@ const Playing = () => {
                     smoothX.set(Math.max(0, Math.min(100, newX)));
                     smoothY.set(Math.max(0, Math.min(100, newY)));
                 }
+                if (data.type === 'terminate') {
+                    navigate('/award');
+                }
             } catch (e) {
                 console.error("Failed to parse incoming message:", e);
             }
         }
-    }, [lastMessage, GAME_SPEED, smoothX, smoothY]); 
+    }, [lastMessage, GAME_SPEED, smoothX, smoothY]);
+
+    // 上次發送時間
+    const lastSentTimeRef = useRef(0);
+    // 上次方向
+    const lastVectorRef = useRef({ x: 0, y: 0 });
 
     useEffect(() => {
-    // 只有當手動控制器關閉時，才處理感測器數據
-        if (!isControllerOpen) {
-            const isManuallyControlled = Object.values(pressed.current).some(v => v);
-            if (connectionStatus && isCalibrated && !isManuallyControlled) {
+        // 只有在 1. 陀螺儀可用 且 2. 手指 "沒有" 放在搖桿上時 才運作
+        console.log(`Gyro Effect: isInitialized=${isInitialized}, isDragging=${isDraggingRef.current}`);
+        if (isInitialized && !isDraggingRef.current) {
+
+            console.log(`Gyro Effect: Running. Coords: { x: ${coordinates.x}, y: ${coordinates.y} }`);
             const vector = { x: coordinates.x, y: -coordinates.y };
+            const magnitude = Math.sqrt(vector.x ** 2 + vector.y ** 2);
+            
+            let finalVector = vector;
+            if (magnitude < 0.08) {
+                finalVector = { x: 0, y: 0 };
+            }
+
+            if (joystickBaseRef.current) {
+                const baseRect = joystickBaseRef.current.getBoundingClientRect();
+                const baseRadius = baseRect.width / 2;
+                
+                const knobRadius = baseRect.width / 3 / 2;
+                const maxDistance = baseRadius - knobRadius;
+
+                const visualKnobX = finalVector.x * maxDistance;
+                const visualKnobY = -finalVector.y * maxDistance;
+
+                console.log(`Gyro Effect: Setting Knobs -> { x: ${visualKnobX}, y: ${visualKnobY} }`);
+                
+                knobX.set(visualKnobX);
+                knobY.set(visualKnobY);
+            }
+
+            if (magnitude < 0.08) return;
+
+            if (!connectionStatus || !isCalibrated) return;
+
+            const now = Date.now();
+            if (now - lastSentTimeRef.current < 50) { 
+                console.log("Gyro Effect: Throttled (too fast).");
+                return;
+            }
+            lastSentTimeRef.current = now;
+
+            console.log(`%Gyro Effect: SENDING SIGNAL { x: ${vector.x}, y: ${vector.y} }`, "color: blue; font-weight: bold;");
+            
             const newX = smoothX.get() + (vector.x * GAME_SPEED);
             const newY = smoothY.get() - (vector.y * GAME_SPEED);
             smoothX.set(Math.max(0, Math.min(100, newX)));
             smoothY.set(Math.max(0, Math.min(100, newY)));
+
             const msg = JSON.stringify({ type: 'move', vector });
-            sendWebRTCData(msg, null);
-            }
+            sendWebRTCData(msg, unityPeerId || null);
         }
     }, [
         coordinates,
         connectionStatus,
         isCalibrated,
+        isInitialized,
         sendWebRTCData,
         GAME_SPEED,
         smoothX,
         smoothY,
-        isControllerOpen, 
+        knobX, 
+        knobY,
+        unityPeerId
     ]);
 
-
-    // --- Button Controls (Manual Sender) ---
-    const pressed = useRef({ up: false, down: false, left: false, right: false });
-    const sendIntervalRef = useRef(null);
-
-    const vectorMap = {
-        up: [0, 1],
-        down: [0, -1],
-        left: [-1, 0],
-        right: [1, 0]
-    };
-
-    const getMoveVector = useCallback(() => {
-        let x = 0, y = 0;
-        for (const dir in pressed.current) {
-            if (pressed.current[dir]) {
-                x += vectorMap[dir][0];
-                y += vectorMap[dir][1];
-            }
+    const sendManualMove = useCallback((vector) => {
+        if (connectionStatus && dataChannelConnections.length > 0) {
+            const msg = JSON.stringify({ type: "manualMove", vector });
+            sendWebRTCData(msg, unityPeerId || null);
         }
-        return { x, y };
-    }, []);
+    }, [connectionStatus, dataChannelConnections, sendWebRTCData, unityPeerId]);
 
-    const startSendingManual = useCallback(() => {
-        if (!sendIntervalRef.current) {
-            sendIntervalRef.current = setInterval(() => {
-                const vec = getMoveVector();
-                if (vec.x === 0 && vec.y === 0) return; // Don't send if not moving
+    const startSendingLoop = useCallback(() => {
+        if (sendIntervalRef.current) return;
+        
+        sendIntervalRef.current = setInterval(() => {
+            const vector = currentVectorRef.current;
+            sendManualMove(vector);
+            const newX = smoothX.get() + (vector.x * GAME_SPEED);
+            const newY = smoothY.get() - (vector.y * GAME_SPEED);
+            smoothX.set(Math.max(0, Math.min(100, newX)));
+            smoothY.set(Math.max(0, Math.min(100, newY)));
 
-                if (connectionStatus && dataChannelConnections.length > 0) {
-                    const msg = JSON.stringify({ type: "manualMove", vector: vec });
-                    sendWebRTCData(msg, null);
-                } else {
-                    console.warn("WebRTC not connected or data channel not open, cannot send manual move vector.");
-                }
-            }, 100); // Send every 100ms
-        }
-    }, [connectionStatus, dataChannelConnections, getMoveVector, sendWebRTCData]);
+        }, 100); 
+    }, [sendManualMove, smoothX, smoothY, GAME_SPEED]);
 
-    const stopSendingManualIfNoDirection = useCallback(() => {
-        if (!Object.values(pressed.current).some(v => v)) {
+    const stopSendingLoop = useCallback(() => {
+        if (sendIntervalRef.current) {
             clearInterval(sendIntervalRef.current);
             sendIntervalRef.current = null;
         }
-    }, []);
+        sendManualMove({ x: 0, y: 0 });
+        currentVectorRef.current = { x: 0, y: 0 };
+    }, [sendManualMove]);
 
-    const setupButtonHandlers = useCallback((id) => {
-        let holdTimeout = null;
+    const updateJoystick = useCallback((clientX, clientY) => {
+        if (!joystickBaseRef.current) return;
 
-        const sendStopMessage = () => {
-            if (connectionStatus && dataChannelConnections.length > 0) {
-                const msg = JSON.stringify({ type: "manualMove", vector: { x: 0, y: 0 } });
-                sendWebRTCData(msg, null);
-            }
+        const baseRect = joystickBaseRef.current.getBoundingClientRect();
+        const baseRadius = baseRect.width / 2;
+        const knobRadius = baseRect.width / 3 / 2;
+        
+        // 滾球中心點能移動的最大距離
+        const maxDistance = baseRadius - knobRadius;
+
+        const centerX = baseRect.left + baseRadius;
+        const centerY = baseRect.top + baseRadius;
+
+        // 計算點擊位置相對於中心的 delta
+        let dx = clientX - centerX;
+        let dy = clientY - centerY;
+
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx);
+
+        let clampedX = dx;
+        let clampedY = dy;
+
+        // 如果拖曳距離超過最大範圍，就限制它
+        if (distance > maxDistance) {
+            clampedX = Math.cos(angle) * maxDistance;
+            clampedY = Math.sin(angle) * maxDistance;
+        }
+        
+        // 更新 UI
+        knobX.set(clampedX);
+        knobY.set(clampedY);
+
+        // 計算並儲存標準化 (normalized) 向量 (-1 到 +1)
+        // 上為正
+        currentVectorRef.current = {
+            x: clampedX / maxDistance,
+            y: -(clampedY / maxDistance) 
         };
 
-        return {
-            onPointerDown: (e) => {
-                e.preventDefault();
-                pressed.current[id] = true;
+    }, [knobX, knobY]);
 
-                const vec = vectorMap[id];
-                const newX = smoothX.get() + (vec[0] * GAME_SPEED);
-                const newY = smoothY.get() - (vec[1] * GAME_SPEED);
-                smoothX.set(Math.max(0, Math.min(100, newX)));
-                smoothY.set(Math.max(0, Math.min(100, newY)));
+    // 處理 Pointer 事件
+    const handlePointerDown = useCallback((e) => {
+        e.preventDefault();
+        isDraggingRef.current = true;
+        updateJoystick(e.clientX, e.clientY);
+        startSendingLoop();
+        window.addEventListener('pointermove', handlePointerMove);
+        window.addEventListener('pointerup', handlePointerUp);
+        window.addEventListener('pointercancel', handlePointerUp);
+    }, [updateJoystick, startSendingLoop]);
 
-                if (connectionStatus && dataChannelConnections.length > 0) {
-                    const msg = JSON.stringify({ type: "manualMove", vector: { x: vec[0], y: vec[1] } });
-                    sendWebRTCData(msg, null);
-                }
+    const handlePointerMove = useCallback((e) => {
+        if (!isDraggingRef.current) return;
+        e.preventDefault();
+        updateJoystick(e.clientX, e.clientY);
+    }, [updateJoystick]);
 
-                holdTimeout = setTimeout(() => {
-                    startSendingManual();
-                }, 300);
-            },
-            onPointerUp: (e) => {
-                e.preventDefault();
-                pressed.current[id] = false;
+    const handlePointerUp = useCallback((e) => {
+        if (!isDraggingRef.current) return;
+        e.preventDefault();
+        isDraggingRef.current = false;
+        
+        // 滾球歸位
+        knobX.set(0);
+        knobY.set(0);
+        
+        stopSendingLoop();
 
-                sendStopMessage(); 
-
-                clearTimeout(holdTimeout);
-                stopSendingManualIfNoDirection();
-            },
-            onPointerLeave: (e) => {
-                e.preventDefault();
-                if (pressed.current[id]) { 
-                    pressed.current[id] = false;
-
-                    sendStopMessage();
-
-                    clearTimeout(holdTimeout);
-                    stopSendingManualIfNoDirection();
-                }
-            },
-            onPointerCancel: (e) => {
-                e.preventDefault();
-                if (pressed.current[id]) {
-                    pressed.current[id] = false;
-
-                    sendStopMessage();
-                    
-                    clearTimeout(holdTimeout);
-                    stopSendingManualIfNoDirection();
-                }
-            },
-        };
-    }, [startSendingManual, stopSendingManualIfNoDirection, smoothX, smoothY, GAME_SPEED, connectionStatus, dataChannelConnections, sendWebRTCData]);
+        window.removeEventListener('pointermove', handlePointerMove);
+        window.removeEventListener('pointerup', handlePointerUp);
+        window.removeEventListener('pointercancel', handlePointerUp);
+    }, [knobX, knobY, stopSendingLoop]);
 
     return (
-        <div className="relative w-screen h-screen px-6 flex flex-col items-center justify-center select-none" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center'}}>
+        <div className="relative w-screen min-h-screen px-6 flex flex-col items-center justify-center " style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}>
             <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
             <motion.button
                 whileTap={{ scale: 0.9 }}
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{
-                    type: "spring",  
-                    stiffness: 120,   
-                    damping: 15,      
+                    type: "spring",
+                    stiffness: 120,
+                    damping: 15,
                     duration: 0.8
                 }}
                 className={`btn btn-sm btn-primary text-base z-10 mb-4 ${isInitialized ? 'visible' : 'invisible'}`}
                 onClick={calibrateGyroscope}
-                disabled={!isInitialized} 
+                disabled={!isInitialized}
             >
                 重新校正
             </motion.button>
 
-            {/* Game Area */}
-            <motion.div 
-                className="relative w-full max-h-full aspect-square bg-base-200/60 rounded-2xl shadow-inner-xl overflow-hidden backdrop-blur-xs"
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{
-                    type: "spring",   
-                    stiffness: 120,   
-                    damping: 15,      
-                    duration: 0.8,
-                    delay: 0.2
-                }}
-            >
-                <motion.div 
-                    className="absolute w-10 h-16" 
-                    style={{ 
-                        left: transformedX, 
-                        top: transformedY,
-                        backgroundImage: `url(${character ? character.pinSrc : '/images/redPin.png'})`, 
-                        backgroundSize: 'cover', 
-                        backgroundPosition: 'center'
-                    }}
-                    rotate={rotation}
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{
-                        type: "spring",
-                        stiffness: 120,
-                        damping: 15,
-                        duration: 0.8
-                    }}
-                ></motion.div>
-                
-            </motion.div>
-
             {/* Manual Controller UI */}
-            <motion.div 
-                className="card absolute bottom-4 bg-base-100 shadow-xl px-6 py-2 max-w-md z-20"
+            <motion.div
+                className="card bg-base-100 shadow-xl px-6 py-2 z-20 mt-4"
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{
                     type: "spring",   // 用彈簧模擬的動畫
@@ -274,35 +290,43 @@ const Playing = () => {
                 }}
             >
                 <div className="card-body items-center text-center py-4">
-                    <div className="flex justify-center items-center w-full relative" onClick={() => setIsControllerOpen(!isControllerOpen)}>
-                        <h2 className="card-title">手動控制器</h2>
-                        <button 
-                            className="btn btn-ghost btn-sm btn-circle absolute right-0"
-                            aria-label={isControllerOpen ? "收合控制器" : "展開控制器"}
-                        >
-                            {isControllerOpen ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-                            ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 15l7-7 7 7" /></svg>
-                            )}
-                        </button>
+                    <div className="flex justify-center items-center w-full relative">
+                        <h2 className="card-title">控制器</h2>
                     </div>
+                    
                     <div className={`
-                        grid grid-cols-3 gap-2 select-none
-                        transition-all duration-300 ease-in-out overflow-hidden 
-                        ${isControllerOpen ? 'max-h-96 mt-4' : 'max-h-0 mt-0'}
-                    `} style={{ touchAction: 'none' }}>
-                        <div className="col-span-1"></div>
-                        <motion.button whileTap={{ scale: 0.9 }} className="btn btn-outline btn-primary btn-circle p-6 text-xl font-bold" {...setupButtonHandlers('up')}>↑</motion.button>
-                        <div className="col-span-1"></div>
+                        flex justify-center items-center w-full select-none mt-4
+                    `}>
+                        <div 
+                            ref={joystickBaseRef}
+                            className="relative w-60 h-60 bg-primary/20 rounded-full flex items-center justify-center text-primary-content/40" // (包含上次的箭頭樣式)
+                            style={{ touchAction: 'none' }}
+                            onPointerDown={handlePointerDown}
+                        >
+                            <svg className="w-6 h-6 absolute top-5 left-1/2 -translate-x-1/2" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
+                            <svg className="w-6 h-6 absolute right-5 top-1/2 -translate-y-1/2 rotate-90" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
+                            <svg className="w-6 h-6 absolute bottom-5 left-1/2 -translate-x-1/2 rotate-180" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
+                            <svg className="w-6 h-6 absolute left-5 top-1/2 -translate-y-1/2 -rotate-90" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
 
-                        <motion.button whileTap={{ scale: 0.9 }} className="btn btn-outline btn-primary btn-circle p-6 text-xl font-bold" {...setupButtonHandlers('left')}>←</motion.button>
-                        <div className="col-span-1"></div>
-                        <motion.button whileTap={{ scale: 0.9 }} className="btn btn-outline btn-primary btn-circle p-6 text-xl font-bold" {...setupButtonHandlers('right')}>→</motion.button>
-
-                        <div className="col-span-1"></div>
-                        <motion.button whileTap={{ scale: 0.9 }} className="btn btn-outline btn-primary btn-circle p-6 text-xl font-bold" {...setupButtonHandlers('down')}>↓</motion.button>
-                        <div className="col-span-1"></div>
+                            <motion.div
+                                className="w-20 h-20 cursor-grab" 
+                                
+                                style={{ 
+                                    x: knobX, 
+                                    y: knobY,
+                                    backgroundImage: `url(${
+                                                            localPlayer.color 
+                                                                ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}Pin.png` 
+                                                                : `/images/gray_${localPlayer.avatar || 'wind-up'}Pin.png`
+                                                            })`,
+                                    backgroundSize: 'contain', 
+                                    backgroundPosition: 'center',
+                                    backgroundRepeat: 'no-repeat'
+                                }}
+                                whileTap={{ cursor: 'grabbing' }}
+                                rotate={rotation} 
+                            />
+                        </div>
                     </div>
                 </div>
             </motion.div>

@@ -11,6 +11,7 @@ import Playing from './pages/Playing';
 import Award from './pages/Award';
 import Error from './pages/Error';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
     <GameProvider>
       <div className="flex flex-col h-screen"> {/* Full height container */}
         <Navbar />
+        <Footer />
         <div className="flex-1"> {/* Content area fills remaining space */}
           <Routes>
             <Route path="/" element={<EnterName />} />

@@ -53,11 +53,18 @@ class WebRTCManager {
     this.onVideoStreamEstablished = null; // (peerId: string, stream: MediaStream) => {}
     this.onAudioStreamEstablished = null; // (peerId: string, stream: MediaStream) => {}
     this.onPeerListChange = null;
+    this.onRemotePeerId = null; // (peerId: string) => {}
 
     this.isWebSocketConnected = false;
     this.isWebSocketConnectionInProgress = false;
 
     this.ws = null;
+    this.webSocketUrl = null;
+    this.reconnectAttempts = 0;
+    this.maxReconnectAttempts = 5;
+    this.reconnectInterval = 2000; // 2 seconds
+    this.shouldReconnect = false;
+
     this.isLocalPeerVideoAudioSender = false;
     this.isLocalPeerVideoAudioReceiver = false;
 
@@ -70,6 +77,9 @@ class WebRTCManager {
     // For browser: peerId -> { videoElement: HTMLVideoElement, audioElement: HTMLAudioElement }
     this.mediaElements = new Map();
     this.localStream = null; // Store local media stream if any
+
+    // this.candidateQueue = new Map(); //peer candidate queue before remote desc set
+    // this.isRemoteDescriptionSet = new Map(); // Is peer ready for candidates
   }
 
   async connect(webSocketUrl, isVideoAudioSender, isVideoAudioReceiver) {
@@ -81,6 +91,10 @@ class WebRTCManager {
       console.warn("WebSocket connection attempt already in progress.");
       return;
     }
+
+    this.webSocketUrl = webSocketUrl;
+    this.shouldReconnect = true;
+    this.reconnectAttempts = 0;
 
     this.isWebSocketConnectionInProgress = true;
     this.isLocalPeerVideoAudioSender = isVideoAudioSender;
@@ -94,6 +108,7 @@ class WebRTCManager {
         console.log("WebSocket connection opened!");
         this.isWebSocketConnected = true;
         this.isWebSocketConnectionInProgress = false;
+        this.reconnectAttempts = 0; // Reset on successful connection
         this.onWebSocketConnection?.("open");
         this.sendWebSocketMessage(SignalingMessageType.NEWPEER, this.localPeerId, "ALL", `New peer ${this.localPeerId}`);
         resolve();
@@ -106,7 +121,6 @@ class WebRTCManager {
       this.ws.onerror = (error) => {
         console.error("WebSocket Error:", error);
         this.isWebSocketConnectionInProgress = false;
-        // No onWebSocketConnection for 'error' in original, but good practice
         this.onWebSocketConnection?.("error");
         reject(error);
       };
@@ -116,12 +130,40 @@ class WebRTCManager {
         this.isWebSocketConnected = false;
         this.isWebSocketConnectionInProgress = false;
         this.onWebSocketConnection?.("closed");
-        // Potentially attempt to reconnect or clean up WebRTC connections
-        this.cleanupAllPeers();
+        this.handleDisconnection();
         reject(new Error(`WebSocket closed: ${event.code} ${event.reason}`));
       };
     });
   }
+
+  handleDisconnection() {
+    this.cleanupAllPeers();
+    if (this.shouldReconnect && this.reconnectAttempts < this.maxReconnectAttempts) {
+      this.reconnectAttempts++;
+      console.log(`WebSocket disconnected. Attempting to reconnect... (Attempt ${this.reconnectAttempts})`);
+      setTimeout(() => this.reconnect(), this.reconnectInterval);
+    } else {
+      console.log("WebSocket disconnected. Not attempting to reconnect.");
+    }
+  }
+
+  async reconnect() {
+    if (this.webSocketUrl) {
+      try {
+        await this.connect(this.webSocketUrl, this.isLocalPeerVideoAudioSender, this.isLocalPeerVideoAudioReceiver);
+      } catch (error) {
+        console.error("Reconnect failed:", error);
+      }
+    }
+  }
+  
+  async initiateOffer(peerId) {
+    if (!this.peerConnections.has(peerId)) {
+      this._setupPeerConnection(peerId);
+    }
+    await this._createAndSendOffer(peerId);
+  }
+
 
   _setupPeerConnection(peerId) {
     if (this.peerConnections.has(peerId)) {
@@ -155,9 +197,20 @@ class WebRTCManager {
   }
 
   _setupPeerConnectionEventHandlers(peerId, pc) {
+
+    // this.candidateQueue.set(peerId, []);
+    // this.isRemoteDescriptionSet.set(peerId, false);
     pc.onicecandidate = (event) => {
       if (event.candidate) {
-        this.sendWebSocketMessage(SignalingMessageType.CANDIDATE, this.localPeerId, peerId, JSON.stringify(event.candidate.toJSON()));
+        // 立即發送 ICE Candidate，不再延遲（延遲會導致網路切換時連線失敗）
+        if (pc.signalingState !== 'closed') {
+          this.sendWebSocketMessage(
+            SignalingMessageType.CANDIDATE,
+            this.localPeerId,
+            peerId,
+            JSON.stringify(event.candidate.toJSON())
+          );
+        }
       }
     };
 
@@ -195,6 +248,7 @@ class WebRTCManager {
           `ReceiverDataChannel on ${this.localPeerId} for ${peerId} established.`
         );
         this.onDataChannelConnection?.(peerId); // Inform app that data channel is ready from receiver side
+        this.onRemotePeerId?.(peerId);
       };
       receiveChannel.onmessage = (ev) => {
         console.log(`${this.localPeerId} received on ${peerId} receiverDataChannel: ${ev.data}`);
@@ -314,12 +368,9 @@ class WebRTCManager {
     };
 
     pc.onnegotiationneeded = async () => {
-      // This often fires multiple times or at sensitive moments.
-      // The original C# code checked pc.signalingState !== RTCSignalingState.Stable
-      // In JS, it's pc.signalingState !== 'stable'
-      // It also deferred this to a coroutine.
-      if (pc.signalingState !== "stable") {
-        // Only if stable, means we are likely the initiator
+      // 只有在 signaling state 為 stable 時才能創建 offer
+      // 這確保不會在協商過程中重複發起 offer
+      if (pc.signalingState === "stable") {
         console.log(`Negotiation needed for ${peerId}. Creating offer.`);
         try {
           await this._createAndSendOffer(peerId);
@@ -370,42 +421,18 @@ class WebRTCManager {
           if (IsVideoAudioSender && this.isLocalPeerVideoAudioReceiver) {
             this._createNewPeerMediaReceivingResources(SenderPeerId);
           }
-          const pc = this._setupPeerConnection(SenderPeerId);
+          this._setupPeerConnection(SenderPeerId);
           console.log(`NEWPEERACK: Created new peerconnection ${SenderPeerId} on peer ${this.localPeerId}`);
+        }
 
-          // The original C# logic had `connectionGameObject.ConnectWebRTC();`
-          // which translated to `InstantiateWebRTC` which called `CreateOffer`.
-          // This was triggered when `signalingMessage.ConnectionCount == peerConnections.Count`.
-          // This implies a "fully meshed" or "all peers aware" state before starting offers.
-          // Let's try to initiate offer if this ACK completes the expected set.
-          // Note: ConnectionCount in the message is from *that* sender's perspective.
-          // We need a more robust way to decide "everyone is here".
-          // For now, let's assume if an ACK comes from a new peer, and we are supposed to send, we can make an offer.
-          // This might lead to multiple offers if not careful.
-          // The original "InstantiateWebRTC" called CreateOffer for *all* connections.
-          // This logic is best handled by the application layer deciding when to call `initiateOfferToAll` or similar.
-          // The original logic:
-          // if (signalingMessage.ConnectionCount == peerConnections.Count) {
-          //    connectionGameObject.ConnectWebRTC(); // -> StartCoroutine(CreateOffer()) for all peers
-          // }
-          // This seems like the role of the "first" peer or a peer that detects all others are present.
-          // This is often a source of race conditions. A simpler model is:
-          // Peer A joins. Peer B joins. B sends NEWPEER. A sends NEWPEERACK to B. A also sends NEWPEER. B sends NEWPEERACK to A.
-          // At this point, A knows B, B knows A. They can start negotiating.
-          // The `onnegotiationneeded` event is often a better trigger for offers if handled carefully.
-
-          // Let's assume for now that if an ACK arrives for a new peer, and we are a sender,
-          // we might need to create an offer to them if `onnegotiationneeded` doesn't fire appropriately.
-          
-          // if (this.isLocalPeerVideoAudioSender && this.peerConnections.has(SenderPeerId)) {
-          //   // Check if an offer is already in progress or if connection is established
-          //   const pc = this.peerConnections.get(SenderPeerId);
-          //   if (pc && pc.signalingState === "stable") {
-          //     // Only if no negotiation is ongoing
-          //     console.log(`Considering offer to ${SenderPeerId} after NEWPEERACK`);
-          //     await this._createAndSendOffer(SenderPeerId);
-          //   }
-          // }
+        // 備用 Offer 機制：如果 Unity 的 Offer 丟失或延遲，Web 可以主動發起
+        // 這提供了網路不穩定時的備援路徑
+        if (this.isLocalPeerVideoAudioSender && this.peerConnections.has(SenderPeerId)) {
+          const pc = this.peerConnections.get(SenderPeerId);
+          if (pc && pc.signalingState === "stable") {
+            console.log(`Initiating backup offer to ${SenderPeerId} after NEWPEERACK`);
+            await this._createAndSendOffer(SenderPeerId);
+          }
         }
 
         break;
@@ -590,7 +617,24 @@ class WebRTCManager {
       const answerDesc = JSON.parse(answerJson);
       await pc.setRemoteDescription(new RTCSessionDescription(answerDesc));
       console.log(`Remote description (answer) set for ${senderPeerId}. Connection should establish.`);
+      // this.isRemoteDescriptionSet.set(senderPeerId, true);
 
+      // const queue = this.candidateQueue.get(senderPeerId);
+      // if (queue && queue.length > 0) {
+      //     console.log(`found ${queue.length} queued candidates for ${senderPeerId}, sending now...`);
+          
+      //     queue.forEach(candidateJson => {
+      //         this.sendWebSocketMessage(
+      //             SignalingMessageType.CANDIDATE, 
+      //             this.localPeerId, 
+      //             senderPeerId, 
+      //             candidateJson
+      //         );
+      //     });
+          
+      //     // 清空佇列
+      //     this.candidateQueue.set(senderPeerId, []);
+      //   }
       // In C#, there was a "COMPLETE" message sent from offerer when its ICE was "Completed".
       // If this side (answerer) reaches 'completed', it can also inform the other side.
       // This is useful if the offerer's 'completed' event didn't fire or message was lost.
@@ -713,8 +757,14 @@ class WebRTCManager {
   closeWebRTC() {
     this.cleanupAllPeers();
 
-    // Notify other peers that this peer is leaving
-    this.sendWebSocketMessage(SignalingMessageType.DISPOSE, this.localPeerId, "ALL", `Remove peerConnection for ${this.localPeerId}.`);
+    for (const peerId of this.peerConnections.keys()) {
+        this.sendWebSocketMessage(
+            SignalingMessageType.DISPOSE, 
+            this.localPeerId, 
+            peerId, 
+            `Remove peerConnection for ${this.localPeerId}.`
+        );
+    }
 
     if (this.localStream) {
       this.localStream.getTracks().forEach((track) => track.stop());
@@ -730,6 +780,7 @@ class WebRTCManager {
   }
 
   closeWebSocket() {
+    this.shouldReconnect = false;
     if (this.ws) {
       this.ws.close();
       // this.ws = null; // ws.onclose will handle setting isWebSocketConnected to false

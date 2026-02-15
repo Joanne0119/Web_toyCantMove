@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { WebRTCManager } from '../lib/webRTCManager.js';
 
 export const useWebRTC = (localPeerId, stunServerAddress, uiConfig) => {
@@ -42,6 +42,7 @@ export const useWebRTC = (localPeerId, stunServerAddress, uiConfig) => {
           return prev;
         });
       };
+
 
       manager.onDataChannelMessageReceived = (message, peerId) => {
         setLastMessage({ message, peerId, timestamp: Date.now() });
@@ -103,18 +104,26 @@ export const useWebRTC = (localPeerId, stunServerAddress, uiConfig) => {
     }
   }, []);
 
-  return {
-    isConnected,
-    webRTCConnections,
-    dataChannelConnections,
-    lastMessage,
-    error,
-    connect,
-    disconnect,
-    sendData,
-    setLocalStream,
-    initiateOffersToAllPeers,
-    peers,
-    manager: managerRef.current // Expose manager instance for advanced use if needed
-  };
+  const memoizedValue = useMemo(() => {
+    return {
+      isConnected,
+      webRTCConnections,
+      dataChannelConnections,
+      lastMessage,
+      error,
+      connect,
+      disconnect,
+      sendData,
+      setLocalStream,
+      initiateOffersToAllPeers,
+      peers,
+      manager: managerRef.current
+    };
+  }, [ 
+    isConnected, webRTCConnections, dataChannelConnections, lastMessage,
+    error, connect, disconnect, sendData, setLocalStream,
+    initiateOffersToAllPeers, peers, managerRef.current
+  ]);
+
+  return memoizedValue; 
 };
