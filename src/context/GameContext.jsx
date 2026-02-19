@@ -176,6 +176,16 @@ export const GameProvider = ({ children }) => {
           setHostId(msg.hostId);
         }
 
+        if (msg.type === "level_selected") {
+          console.log("Received level_selected from Unity:", msg.level);
+          // 更新選擇的關卡（讓非房主也能看到）
+          // 這裡使用 sceneName 來匹配
+          setLevel(prevLevel => ({
+            ...prevLevel,
+            sceneName: msg.level
+          }));
+        }
+
         if (msg.type === "navigate_to_game") {
           console.log("Received navigate command from Unity, changing scene to Tutorial.");
           setGameScene('Tutorial');

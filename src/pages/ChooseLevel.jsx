@@ -5,9 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import LazyImage from '@/components/LazyImage';
 
 const levels = [
-  { name: "玩具紙箱", image: "/images/toyboxLevel.png", disable: false },
-  // { name: "書桌探險", image: "/images/tableLevel.png", disable: true },
-  { name: "凌亂床鋪", image: "/images/bedLevel.png", disable: true }
+  { name: "玩具紙箱", sceneName: "4_Toybox", image: "/images/toyboxLevel.png", disable: false },
+  { name: "塗鴉畫紙", sceneName: "4_ColorPaper", image: "/images/tableLevel.png", disable: false },
+  // { name: "凌亂床鋪", sceneName: "4_Bed", image: "/images/bedLevel.png", disable: true }
 ];
 
 const ChooseLevel = () => {
@@ -31,6 +31,14 @@ const ChooseLevel = () => {
   const handleSelectLevel = (selectedLevel) => {
     if (isHost && !selectedLevel.disable) {
       setLevel(selectedLevel);
+
+      // 發送選擇關卡訊息給 Unity
+      const selectLevelMessage = {
+        type: "select_level",
+        level: selectedLevel.sceneName
+      };
+      webRTC.sendData(JSON.stringify(selectLevelMessage), null);
+      console.log("Sent select_level:", selectedLevel.sceneName);
     }
   };
 
