@@ -425,15 +425,9 @@ class WebRTCManager {
           console.log(`NEWPEERACK: Created new peerconnection ${SenderPeerId} on peer ${this.localPeerId}`);
         }
 
-        // 備用 Offer 機制：如果 Unity 的 Offer 丟失或延遲，Web 可以主動發起
-        // 這提供了網路不穩定時的備援路徑
-        if (this.isLocalPeerVideoAudioSender && this.peerConnections.has(SenderPeerId)) {
-          const pc = this.peerConnections.get(SenderPeerId);
-          if (pc && pc.signalingState === "stable") {
-            console.log(`Initiating backup offer to ${SenderPeerId} after NEWPEERACK`);
-            await this._createAndSendOffer(SenderPeerId);
-          }
-        }
+        // 不主動發送 Offer，讓 Unity 當 Offerer
+        // 這避免雙方同時發送 Offer 造成的 glare 問題
+        console.log(`Waiting for offer from ${SenderPeerId}...`);
 
         break;
 
