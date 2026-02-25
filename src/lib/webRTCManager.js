@@ -78,8 +78,8 @@ class WebRTCManager {
     this.mediaElements = new Map();
     this.localStream = null; // Store local media stream if any
 
-    // this.candidateQueue = new Map(); //peer candidate queue before remote desc set
-    // this.isRemoteDescriptionSet = new Map(); // Is peer ready for candidates
+    // ICE candidate queue - 當 remote description 還沒設定時，先將 candidate 排隊
+    this.candidateQueue = new Map(); // peerId -> [candidateJson, ...]
   }
 
   async connect(webSocketUrl, isVideoAudioSender, isVideoAudioReceiver) {
@@ -587,16 +587,21 @@ class WebRTCManager {
 
     const offerDesc = JSON.parse(offerJson);
     console.log(`OFFERDESC = ${offerJson}`);
-    await pc
-      .setRemoteDescription(new RTCSessionDescription(offerDesc))
-      .then(() => console.log(`Remote description (offer) set for ${senderPeerId}. Creating answer.`))
-      .then(() => pc.createAnswer())
-      .then((answer) => pc.setLocalDescription(answer))
-      .then(() => {
-        this.sendWebSocketMessage(SignalingMessageType.ANSWER, this.localPeerId, senderPeerId, JSON.stringify(pc.localDescription));
-        console.log(`Answer sent to ${senderPeerId}`);
-      })
-      .catch((error) => console.error(`Error handling offer from ${senderPeerId}:`, error));
+
+    try {
+      await pc.setRemoteDescription(new RTCSessionDescription(offerDesc));
+      console.log(`Remote description (offer) set for ${senderPeerId}. Creating answer.`);
+
+      // 處理在 remote description 設定前收到的排隊 candidates
+      await this._processQueuedCandidates(senderPeerId);
+
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      this.sendWebSocketMessage(SignalingMessageType.ANSWER, this.localPeerId, senderPeerId, JSON.stringify(pc.localDescription));
+      console.log(`Answer sent to ${senderPeerId}`);
+    } catch (error) {
+      console.error(`Error handling offer from ${senderPeerId}:`, error);
+    }
   }
 
   async _handleAnswer(senderPeerId, answerJson) {
@@ -611,40 +616,10 @@ class WebRTCManager {
       const answerDesc = JSON.parse(answerJson);
       await pc.setRemoteDescription(new RTCSessionDescription(answerDesc));
       console.log(`Remote description (answer) set for ${senderPeerId}. Connection should establish.`);
-      // this.isRemoteDescriptionSet.set(senderPeerId, true);
 
-      // const queue = this.candidateQueue.get(senderPeerId);
-      // if (queue && queue.length > 0) {
-      //     console.log(`found ${queue.length} queued candidates for ${senderPeerId}, sending now...`);
-          
-      //     queue.forEach(candidateJson => {
-      //         this.sendWebSocketMessage(
-      //             SignalingMessageType.CANDIDATE, 
-      //             this.localPeerId, 
-      //             senderPeerId, 
-      //             candidateJson
-      //         );
-      //     });
-          
-      //     // 清空佇列
-      //     this.candidateQueue.set(senderPeerId, []);
-      //   }
-      // In C#, there was a "COMPLETE" message sent from offerer when its ICE was "Completed".
-      // If this side (answerer) reaches 'completed', it can also inform the other side.
-      // This is useful if the offerer's 'completed' event didn't fire or message was lost.
-      // However, typically, just setting remote answer is enough for connection to proceed.
-      // The original code sent COMPLETE *from the offerer* when its ICE completed.
-      // And if the answerer received COMPLETE, it invoked onWebRTCConnection.
-      // This seems to indicate the original "COMPLETE" message was more of a final handshake step.
-      // If our local ICE connection state becomes 'connected' or 'completed', onWebRTCConnection will fire.
-      // Let's send the "COMPLETE" message from the *offerer* when its ICE state is "completed".
-      // This "COMPLETE" handling in handleMessage is for *receiving* it.
-      // The logic for *sending* COMPLETE is effectively:
-      // if (pc.iceConnectionState === 'completed' && pc.signalingState === 'stable' && !this.isLocalPeerVideoAudioReceiver) {
-      // This heuristic (not receiver) suggests the offerer sends it.
-      // The current `oniceconnectionstatechange` doesn't distinguish offerer/answerer for sending COMPLETE.
-      // Let's refine `oniceconnectionstatechange` to send COMPLETE if it's likely the offerer.
-      // This is tricky. For now, `onWebRTCConnection` callback is the primary local indicator.
+      // 處理在 remote description 設定前收到的排隊 candidates
+      await this._processQueuedCandidates(senderPeerId);
+
     } catch (error) {
       console.error(`Error handling answer from ${senderPeerId}:`, error);
     }
@@ -657,10 +632,15 @@ class WebRTCManager {
       console.warn(`No peer connection for ${senderPeerId} to add ICE candidate. Candidate might be early or PC closed.`);
       return;
     }
-    // It's possible setRemoteDescription hasn't completed yet.
-    // RTCPeerConnection.addIceCandidate will queue candidates if needed.
+
+    // 如果 remote description 還沒設定，先將 candidate 排隊
     if (pc.remoteDescription == null) {
-      console.warn(`Remote description for ${senderPeerId} is not set yet. ICE candidate will be queued.`);
+      if (!this.candidateQueue.has(senderPeerId)) {
+        this.candidateQueue.set(senderPeerId, []);
+      }
+      this.candidateQueue.get(senderPeerId).push(candidateJson);
+      console.log(`ICE candidate for ${senderPeerId} queued (remote description not set yet). Queue size: ${this.candidateQueue.get(senderPeerId).length}`);
+      return;
     }
 
     try {
@@ -668,13 +648,32 @@ class WebRTCManager {
       await pc.addIceCandidate(new RTCIceCandidate(candidateInit));
       // console.log(`ICE candidate added for ${senderPeerId}`);
     } catch (error) {
-      // Ignore error if remote description is not yet set, as candidate is queued.
-      if (error.name === "InvalidStateError" && pc.remoteDescription == null) {
-        console.log(`ICE candidate for ${senderPeerId} queued as remote description is not set yet.`);
-      } else {
-        console.error(`Error adding ICE candidate for ${senderPeerId}:`, error, candidateJson);
+      console.error(`Error adding ICE candidate for ${senderPeerId}:`, error, candidateJson);
+    }
+  }
+
+  // 處理排隊的 ICE candidates（在 remote description 設定後調用）
+  async _processQueuedCandidates(peerId) {
+    const queue = this.candidateQueue.get(peerId);
+    if (!queue || queue.length === 0) return;
+
+    const pc = this.peerConnections.get(peerId);
+    if (!pc) return;
+
+    console.log(`Processing ${queue.length} queued ICE candidates for ${peerId}`);
+
+    for (const candidateJson of queue) {
+      try {
+        const candidateInit = JSON.parse(candidateJson);
+        await pc.addIceCandidate(new RTCIceCandidate(candidateInit));
+        console.log(`Queued ICE candidate added for ${peerId}`);
+      } catch (error) {
+        console.error(`Error adding queued ICE candidate for ${peerId}:`, error);
       }
     }
+
+    // 清空佇列
+    this.candidateQueue.set(peerId, []);
   }
 
   // Call this method to start WebRTC connections after WebSocket is established and peers are known (or use onnegotiationneeded)
@@ -702,6 +701,7 @@ class WebRTCManager {
 
     this.senderDataChannels.delete(peerId); // RTCDataChannel.close() is called by pc.close()
     this.receiverDataChannels.delete(peerId);
+    this.candidateQueue.delete(peerId); // 清除排隊的 candidates
 
     this.videoTrackSenders.delete(peerId); // RTCRtpSender.stop() is handled by pc.close()
     this.audioTrackSenders.delete(peerId);
@@ -740,6 +740,7 @@ class WebRTCManager {
     this.receiverDataChannels.clear();
     this.videoTrackSenders.clear();
     this.audioTrackSenders.clear();
+    this.candidateQueue.clear(); // 清除所有排隊的 candidates
     this.mediaElements.forEach((els) => {
       els.videoElement?.remove();
       els.audioElement?.remove();
