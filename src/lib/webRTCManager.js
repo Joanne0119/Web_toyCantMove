@@ -40,9 +40,16 @@ class SignalingMessage {
 }
 
 class WebRTCManager {
-  constructor(localPeerId, stunServerAddress, uiConfig) {
+  constructor(localPeerId, iceServersConfig, uiConfig) {
     this.localPeerId = localPeerId;
-    this.stunServerAddress = stunServerAddress;
+    // 支援舊格式（單一 STUN URL string）和新格式（iceServers 陣列）
+    if (typeof iceServersConfig === 'string') {
+      this.iceServers = [{ urls: iceServersConfig }];
+    } else if (Array.isArray(iceServersConfig)) {
+      this.iceServers = iceServersConfig;
+    } else {
+      this.iceServers = [];
+    }
     this.uiConfig = uiConfig; // { videoContainerId: 'videos', localVideoPlayerId: 'localVideo' }
 
     // Event Callbacks
@@ -172,8 +179,8 @@ class WebRTCManager {
     }
 
     const config = {};
-    if (this.stunServerAddress) {
-      config.iceServers = [{ urls: this.stunServerAddress }];
+    if (this.iceServers && this.iceServers.length > 0) {
+      config.iceServers = this.iceServers;
     }
 
     const pc = new RTCPeerConnection(config);

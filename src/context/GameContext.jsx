@@ -25,6 +25,35 @@ const STABLE_GYRO_CONFIG = {
     autoCalibrate: false,
 }
 
+// ICE Servers 設定（包含 STUN 和 TURN）
+// TURN credentials 從環境變數讀取
+const TURN_USERNAME = import.meta.env.VITE_TURN_USERNAME;
+const TURN_CREDENTIAL = import.meta.env.VITE_TURN_CREDENTIAL;
+
+const ICE_SERVERS = [
+  { urls: "stun:stun.relay.metered.ca:80" },
+  {
+    urls: "turn:global.relay.metered.ca:80",
+    username: TURN_USERNAME,
+    credential: TURN_CREDENTIAL,
+  },
+  {
+    urls: "turn:global.relay.metered.ca:80?transport=tcp",
+    username: TURN_USERNAME,
+    credential: TURN_CREDENTIAL,
+  },
+  {
+    urls: "turn:global.relay.metered.ca:443",
+    username: TURN_USERNAME,
+    credential: TURN_CREDENTIAL,
+  },
+  {
+    urls: "turns:global.relay.metered.ca:443?transport=tcp",
+    username: TURN_USERNAME,
+    credential: TURN_CREDENTIAL,
+  },
+];
+
 export const GameProvider = ({ children }) => {
   const [level, setLevel] = useState(null);
   const [score, setScore] = useState(0);
@@ -60,10 +89,10 @@ export const GameProvider = ({ children }) => {
     }
   }, []);
 
-  // WebRTC integration
+  // WebRTC integration（使用 STUN + TURN servers）
   const webRTC = useWebRTC(
     peerId,
-    'stun:stun.l.google.com:19302',
+    ICE_SERVERS,
     STABLE_UI_CONFIG
   );
 
