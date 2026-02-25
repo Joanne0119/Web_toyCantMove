@@ -368,18 +368,9 @@ class WebRTCManager {
     };
 
     pc.onnegotiationneeded = async () => {
-      // 只有在 signaling state 為 stable 時才能創建 offer
-      // 這確保不會在協商過程中重複發起 offer
-      if (pc.signalingState === "stable") {
-        console.log(`Negotiation needed for ${peerId}. Creating offer.`);
-        try {
-          await this._createAndSendOffer(peerId);
-        } catch (error) {
-          console.error(`Error during negotiationneeded for ${peerId}:`, error);
-        }
-      } else {
-        console.log(`Negotiation needed for ${peerId}, but signaling state is ${pc.signalingState}. Skipping offer creation.`);
-      }
+      // Web 端不主動發送 Offer，讓 Unity 當 Offerer
+      // 這避免雙方同時發送 Offer 造成的 glare 問題
+      console.log(`Negotiation needed for ${peerId}, but Web waits for Unity's offer. Skipping.`);
     };
   }
 
