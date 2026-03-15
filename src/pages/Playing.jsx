@@ -33,6 +33,10 @@ const Playing = () => {
     const sendIntervalRef = useRef(null);
     const currentVectorRef = useRef({ x: 0, y: 0 });
 
+    // 按壓按鈕狀態（用於繪圖）
+    const [isPressing, setIsPressing] = useState(false);
+    const isPressingRef = useRef(false);  // 用於 interval 內讀取最新狀態
+
     // screen wake lock
     useEffect(() => {
         if (screenWakeLock) {
@@ -128,14 +132,14 @@ const Playing = () => {
             }
             lastSentTimeRef.current = now;
 
-            console.log(`%Gyro Effect: SENDING SIGNAL { x: ${vector.x}, y: ${vector.y} }`, "color: blue; font-weight: bold;");
-            
+            console.log(`%Gyro Effect: SENDING SIGNAL { x: ${vector.x}, y: ${vector.y}, is_press: ${isPressingRef.current} }`, "color: blue; font-weight: bold;");
+
             const newX = smoothX.get() + (vector.x * GAME_SPEED);
             const newY = smoothY.get() - (vector.y * GAME_SPEED);
             smoothX.set(Math.max(0, Math.min(100, newX)));
             smoothY.set(Math.max(0, Math.min(100, newY)));
 
-            const msg = JSON.stringify({ type: 'move', vector });
+            const msg = JSON.stringify({ type: 'move', vector, is_press: isPressingRef.current });
             sendWebRTCData(msg, unityPeerId || null);
         }
     }, [
@@ -154,7 +158,7 @@ const Playing = () => {
 
     const sendManualMove = useCallback((vector) => {
         if (connectionStatus && dataChannelConnections.length > 0) {
-            const msg = JSON.stringify({ type: "manualMove", vector });
+            const msg = JSON.stringify({ type: "move", vector, is_press: isPressingRef.current });
             sendWebRTCData(msg, unityPeerId || null);
         }
     }, [connectionStatus, dataChannelConnections, sendWebRTCData, unityPeerId]);
@@ -245,17 +249,30 @@ const Playing = () => {
         if (!isDraggingRef.current) return;
         e.preventDefault();
         isDraggingRef.current = false;
-        
+
         // 滾球歸位
         knobX.set(0);
         knobY.set(0);
-        
+
         stopSendingLoop();
 
         window.removeEventListener('pointermove', handlePointerMove);
         window.removeEventListener('pointerup', handlePointerUp);
         window.removeEventListener('pointercancel', handlePointerUp);
     }, [knobX, knobY, stopSendingLoop]);
+
+    // 按壓按鈕事件處理
+    const handlePressStart = useCallback((e) => {
+        e.preventDefault();
+        setIsPressing(true);
+        isPressingRef.current = true;
+    }, []);
+
+    const handlePressEnd = useCallback((e) => {
+        e.preventDefault();
+        setIsPressing(false);
+        isPressingRef.current = false;
+    }, []);
 
     return (
         <div className="relative w-screen min-h-screen px-6 flex flex-col items-center justify-center " style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}>
@@ -282,9 +299,9 @@ const Playing = () => {
                 className="card bg-base-100 shadow-xl px-6 py-2 z-20 mt-4"
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{
-                    type: "spring",   // 用彈簧模擬的動畫
-                    stiffness: 120,   // 彈性
-                    damping: 15,      // 阻尼 (越小越彈)
+                    type: "spring",
+                    stiffness: 120,
+                    damping: 15,
                     duration: 0.8,
                     delay: 0.3
                 }}
@@ -293,13 +310,12 @@ const Playing = () => {
                     <div className="flex justify-center items-center w-full relative">
                         <h2 className="card-title">控制器</h2>
                     </div>
-                    
-                    <div className={`
-                        flex justify-center items-center w-full select-none mt-4
-                    `}>
-                        <div 
+
+                    <div className="flex flex-col justify-center items-center w-full select-none mt-4 gap-4">
+                        {/* 搖桿 */}
+                        <div
                             ref={joystickBaseRef}
-                            className="relative w-60 h-60 bg-primary/20 rounded-full flex items-center justify-center text-primary-content/40" // (包含上次的箭頭樣式)
+                            className="relative w-52 h-52 bg-primary/20 rounded-full flex items-center justify-center text-primary-content/40"
                             style={{ touchAction: 'none' }}
                             onPointerDown={handlePointerDown}
                         >
@@ -309,24 +325,51 @@ const Playing = () => {
                             <svg className="w-6 h-6 absolute left-5 top-1/2 -translate-y-1/2 -rotate-90" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
 
                             <motion.div
-                                className="w-20 h-20 cursor-grab" 
-                                
-                                style={{ 
-                                    x: knobX, 
+                                className="w-20 h-20 cursor-grab"
+                                style={{
+                                    x: knobX,
                                     y: knobY,
                                     backgroundImage: `url(${
-                                                            localPlayer.color 
-                                                                ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}Pin.png` 
+                                                            localPlayer.color
+                                                                ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}Pin.png`
                                                                 : `/images/gray_${localPlayer.avatar || 'wind-up'}Pin.png`
                                                             })`,
-                                    backgroundSize: 'contain', 
+                                    backgroundSize: 'contain',
                                     backgroundPosition: 'center',
                                     backgroundRepeat: 'no-repeat'
                                 }}
                                 whileTap={{ cursor: 'grabbing' }}
-                                rotate={rotation} 
+                                rotate={rotation}
                             />
                         </div>
+
+                        {/* 繪圖按鈕 */}
+                        <motion.div
+                            className={`
+                                w-full h-16 rounded-full flex items-center justify-center cursor-pointer select-none
+                                transition-all duration-150 shadow-lg
+                                ${isPressing
+                                    ? 'bg-accent scale-105 shadow-accent/50'
+                                    : 'bg-secondary hover:bg-secondary-focus'
+                                }
+                            `}
+                            style={{ touchAction: 'none' }}
+                            onPointerDown={handlePressStart}
+                            onPointerUp={handlePressEnd}
+                            onPointerLeave={handlePressEnd}
+                            onPointerCancel={handlePressEnd}
+                            whileTap={{ scale: 0.98 }}
+                        >
+                            <div className="flex items-center gap-3 text-secondary-content">
+                                {/* 顏料圖示 */}
+                                <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M19.228 18.732l1.768-1.768 1.767 1.768a2.5 2.5 0 1 1-3.535 0zM8.878 1.08l11.314 11.313a1 1 0 0 1 0 1.415l-8.485 8.485a1 1 0 0 1-1.414 0l-8.485-8.485a1 1 0 0 1 0-1.415l7.778-7.778-2.122-2.121L8.88 1.08zM11 6.03L3.929 13.1 11 20.173l7.071-7.071L11 6.029z"/>
+                                </svg>
+                                <span className="text-lg font-bold">
+                                    {isPressing ? '繪圖中...' : '按住繪圖'}
+                                </span>
+                            </div>
+                        </motion.div>
                     </div>
                 </div>
             </motion.div>
