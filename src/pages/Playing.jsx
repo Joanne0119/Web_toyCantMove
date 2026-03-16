@@ -363,7 +363,7 @@ const Playing = () => {
                             onPointerCancel={handlePressEnd}
                             whileTap={{ scale: 0.98 }}
                         >
-                            <div className="flex items-center gap-3 text-primary-content">
+                            <div className={`flex items-center gap-3 ${isPressing ? 'text-accent-content' : 'text-primary-content'}`}>
                                 {/* 圖示：Toybox 用閃電，ColorPaper 用顏料 */}
                                 {isToybox ? (
                                     <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
