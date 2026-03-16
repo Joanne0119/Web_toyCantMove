@@ -195,7 +195,7 @@ const Tutorial = () => {
   // 狀態 1: 正在檢查
   if (gyroSupported === null) {
     return (
-      <div className="hero min-h-screen bg-base-200" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
+      <div className="hero min-h-screen bg-base-200 safe-area-bottom" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
         <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
         <div className="text-center z-10 card bg-base-100 shadow-xl p-8">
           <span className="loading loading-spinner loading-lg"></span>
@@ -208,7 +208,7 @@ const Tutorial = () => {
   // 狀態 2: 支援陀螺儀，但尚未啟用/校正
   if (gyroSupported === true && !isInitialized) {
     return (
-      <div className="hero min-h-screen bg-base-200" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
+      <div className="hero min-h-screen bg-base-200 safe-area-bottom" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
         <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
         <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center z-10 card bg-base-100 shadow-xl mt-8">
             <div className="card-body">
@@ -251,7 +251,7 @@ const Tutorial = () => {
   // 狀態 3: 不支援陀螺儀 (顯示專屬等待畫面)
   if (gyroSupported === false) {
     return (
-      <div className="hero min-h-screen bg-base-200" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
+      <div className="hero min-h-screen bg-base-200 safe-area-bottom" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
         <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
         <motion.div 
           initial={{ scale: 0.8, opacity: 0 }} 
@@ -275,7 +275,7 @@ const Tutorial = () => {
   if (gyroSupported === true && isInitialized) {
     const videoSrc = stepVideos[currentStep] || stepVideos.default;
     return (
-      <div className="hero min-h-screen bg-base-200 overflow-x-hidden select-none" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}>
+      <div className="hero min-h-screen bg-base-200 safe-area-bottom overflow-x-hidden select-none" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}>
         <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
         
         <div className="card bg-base-100 shadow-xl mt-8 mb-8 z-10">

@@ -44,6 +44,20 @@ html, body, #root {
   overflow: hidden; /* Prevent horizontal scrolling */
 }
 
+/* Safe area 支援 - 避免被手機底部 bar 擋住 */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-area-all {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
 * {
   box-sizing: border-box; /* Ensure padding and borders are included in element dimensions */
 }
