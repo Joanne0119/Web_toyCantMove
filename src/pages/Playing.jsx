@@ -8,7 +8,10 @@ import { useLocation } from 'react-router-dom';
 const Playing = () => {
     const navigate = useNavigate();
     
-    const { localPlayer, webRTC, connectionStatus, gyroscope, gyroscopeStatus, screenWakeLock, unityPeerId } = useGame();
+    const { localPlayer, webRTC, connectionStatus, gyroscope, gyroscopeStatus, screenWakeLock, unityPeerId, level } = useGame();
+
+    // 判斷是否為 Toybox 關卡
+    const isToybox = level?.sceneName?.includes('Toybox') || level?.sceneName?.includes('toybox');
     const { lastMessage, sendData: sendWebRTCData, dataChannelConnections } = webRTC;
     const { isCalibrated, coordinates, isInitialized } = gyroscopeStatus;
     const { calibrate: calibrateGyroscope } = gyroscope;
@@ -343,14 +346,14 @@ const Playing = () => {
                             />
                         </div>
 
-                        {/* 繪圖按鈕 */}
+                        {/* 技能/繪圖按鈕 */}
                         <motion.div
                             className={`
                                 w-full h-16 rounded-full flex items-center justify-center cursor-pointer select-none
                                 transition-all duration-150 shadow-lg
                                 ${isPressing
                                     ? 'bg-accent scale-105 shadow-accent/50'
-                                    : 'bg-secondary hover:bg-secondary-focus'
+                                    : 'bg-primary hover:bg-primary-focus'
                                 }
                             `}
                             style={{ touchAction: 'none' }}
@@ -360,13 +363,22 @@ const Playing = () => {
                             onPointerCancel={handlePressEnd}
                             whileTap={{ scale: 0.98 }}
                         >
-                            <div className="flex items-center gap-3 text-secondary-content">
-                                {/* 顏料圖示 */}
-                                <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M19.228 18.732l1.768-1.768 1.767 1.768a2.5 2.5 0 1 1-3.535 0zM8.878 1.08l11.314 11.313a1 1 0 0 1 0 1.415l-8.485 8.485a1 1 0 0 1-1.414 0l-8.485-8.485a1 1 0 0 1 0-1.415l7.778-7.778-2.122-2.121L8.88 1.08zM11 6.03L3.929 13.1 11 20.173l7.071-7.071L11 6.029z"/>
-                                </svg>
+                            <div className="flex items-center gap-3 text-primary-content">
+                                {/* 圖示：Toybox 用閃電，ColorPaper 用顏料 */}
+                                {isToybox ? (
+                                    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M13 10h7l-9 13v-9H4l9-13v9z"/>
+                                    </svg>
+                                ) : (
+                                    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M19.228 18.732l1.768-1.768 1.767 1.768a2.5 2.5 0 1 1-3.535 0zM8.878 1.08l11.314 11.313a1 1 0 0 1 0 1.415l-8.485 8.485a1 1 0 0 1-1.414 0l-8.485-8.485a1 1 0 0 1 0-1.415l7.778-7.778-2.122-2.121L8.88 1.08zM11 6.03L3.929 13.1 11 20.173l7.071-7.071L11 6.029z"/>
+                                    </svg>
+                                )}
                                 <span className="text-lg font-bold">
-                                    {isPressing ? '繪圖中...' : '按住繪圖'}
+                                    {isToybox
+                                        ? (isPressing ? '使用中...' : '按住使用技能')
+                                        : (isPressing ? '繪圖中...' : '按住繪圖')
+                                    }
                                 </span>
                             </div>
                         </motion.div>
