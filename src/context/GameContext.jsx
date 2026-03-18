@@ -124,13 +124,9 @@ export const GameProvider = ({ children }) => {
   }, [peerIds]);
 
   useEffect(() => {
-    // console.log("🔄 [GameContext] 檢查連線狀態...", {
-    //   unityPeerId,
-    //   dataChannelConnections: webRTC.dataChannelConnections,
-    //   isConnectedToUnity: unityPeerId && webRTC.dataChannelConnections.includes(unityPeerId),
-    // });
     const isConnectedToUnity = unityPeerId && webRTC.dataChannelConnections.includes(unityPeerId);
-    let retryTimer;
+    let retryTimer = null;
+
     // 已連線，尚未發送過身分資料
     if (isConnectedToUnity && !localPlayer.color) {
       console.log(`🔗 Connected to Unity (${unityPeerId})! Sending P2P Identify...`);
@@ -140,29 +136,31 @@ export const GameProvider = ({ children }) => {
           nickname: localPlayer.name || `Player ${peerId.substring(0, 4)}`,
           characterName: localPlayer.avatar || "wind_up"
         };
-      
-      webRTC.sendData(JSON.stringify(identifyMsg), unityPeerId);
-      console.log("[GameContext] Identify 發送指令已執行。");
+
+        webRTC.sendData(JSON.stringify(identifyMsg), unityPeerId);
+        console.log("[GameContext] Identify 發送指令已執行。");
       };
 
       sendIdentify();
 
+      // 每秒重試，直到收到顏色
       retryTimer = setInterval(() => {
         console.log("[GameContext] 1秒...還沒收到顏色，重試發送");
         sendIdentify();
       }, 1000);
     }
-    
-    // 突然斷線 (列表變空)
-    // 我們要把標記重置為 false，這樣下次連回來時，才能再次發送 identify
-    else if (!isConnectedToUnity) {
-        console.log("⚠️ [GameContext] 與 Unity 斷線，重置 Identify 標記。");
-    }
-    // 情況 3: 正在等待
-    else if (unityPeerId && !isConnectedToUnity) {
-        console.log("⏳ [GameContext] 已知目標 Unity ID，但 DataChannel 尚未連通...");
+    // 斷線時的 log
+    else if (!isConnectedToUnity && unityPeerId) {
+      console.log("⚠️ [GameContext] 與 Unity 斷線或尚未連通。");
     }
 
+    // 清理函數：清除 interval，防止重複發送
+    return () => {
+      if (retryTimer) {
+        clearInterval(retryTimer);
+        retryTimer = null;
+      }
+    };
   }, [webRTC.dataChannelConnections, localPlayer.color, peerId, webRTC, unityPeerId]);
 
   useEffect(() => {
