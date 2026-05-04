@@ -321,7 +321,7 @@ const Award = () => {
                   </svg>
                 </button>
                 <button
-                  className="btn btn-sm btn-circle btn-ghost"
+                  className="btn btn-circle btn-ghost text-xl"
                   onClick={() => setShowPostcardModal(false)}
                 >
                   ✕
