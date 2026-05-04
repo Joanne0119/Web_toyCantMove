@@ -77,6 +77,7 @@ export const GameProvider = ({ children }) => {
   });
   const [otherPlayers, setOtherPlayers] = useState([]);
   const [finalResults, setFinalResults] = useState([]);
+  const [terminateImageLink, setTerminateImageLink] = useState(null);
   const [unityPeerId, setUnityPeerId] = useState(null);
 
   useEffect(() => {
@@ -224,8 +225,10 @@ export const GameProvider = ({ children }) => {
         }
         if (msg.type === "terminate") {
           console.log("Received terminate message from Unity:", msg.finalPlayerDatas);
-          setFinalResults(msg.finalPlayerDatas || []); 
-          setGameScene('Awards'); 
+          console.log("Terminate image link:", msg.link);
+          setFinalResults(msg.finalPlayerDatas || []);
+          setTerminateImageLink(msg.link || null);
+          setGameScene('Awards');
           webRTC.disconnect();
         }
       } catch (e) {
@@ -273,11 +276,12 @@ export const GameProvider = ({ children }) => {
     connectionStatus: webRTC.isConnected,
     gyroscopeStatus: gyroscopeStatus, 
     finalResults,
-    unityPeerId, 
+    terminateImageLink,
+    unityPeerId,
     setUnityPeerId,
   }), [
     peerId, hostId, gameScene, localPlayer, otherPlayers, level, score,
-    webRTC, gyroscope, screenWakeLockValue, gyroscopeStatus, finalResults, unityPeerId
+    webRTC, gyroscope, screenWakeLockValue, gyroscopeStatus, finalResults, terminateImageLink, unityPeerId
   ]);
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
