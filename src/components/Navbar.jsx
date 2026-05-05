@@ -16,12 +16,12 @@ const Navbar = () => {
     const confirmGoHome = window.confirm('返回首頁將斷開連線，確認返回首頁？');
     if (confirmGoHome) {
       disconnect();
-      navigate('/'); 
+      navigate('/enter-name');
     }
   };
 
   // Only show the back button if we are not on the home page
-  const showBackButton = location.pathname !== '/';
+  const showBackButton = location.pathname !== '/enter-name';
 
   return (
     <div className="navbar absolute top-0 left-0 right-0 z-10">

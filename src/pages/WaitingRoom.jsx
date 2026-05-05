@@ -83,7 +83,7 @@ const WaitingRoom = () => {
 
   const handleLeave = () => {
     webRTC.disconnect();
-    navigate('/');
+    navigate('/enter-name');
   };
 
   const allPlayers = [localPlayer, ...otherPlayers].filter(p => p && p.name);

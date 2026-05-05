@@ -57,7 +57,7 @@ const ChooseLevel = () => {
 
   const handleLeave = () => {
     webRTC.disconnect();
-    navigate('/');
+    navigate('/enter-name');
   };
 
   return (

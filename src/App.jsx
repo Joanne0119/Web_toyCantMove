@@ -12,29 +12,35 @@ import Award from './pages/Award';
 import Error from './pages/Error';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import OfficialSite from './pages/OfficialSite/OfficialSite';
 
 
 function App() {
   return (
-    <GameProvider>
-      <div className="flex flex-col h-screen"> {/* Full height container */}
-        <Navbar />
-        <Footer />
-        <div className="flex-1"> {/* Content area fills remaining space */}
-          <Routes>
-            <Route path="/" element={<EnterName />} />
-            <Route path="/choose-char" element={<ChooseChar />} />
-            <Route path="/waiting-room" element={<WaitingRoom />} />
-            <Route path="/choose-level" element={<ChooseLevel />} />
-            <Route path="/testing" element={<ControllerTest />} />
-            <Route path="/tutorial" element={<Tutorial />} />
-            <Route path="/playing" element={<Playing />} />
-            <Route path="/award" element={<Award />} />
-            <Route path="/error" element={<Error />} />
-          </Routes>
-        </div>
-      </div>
-    </GameProvider>
+    <Routes>
+      <Route path="/" element={<OfficialSite />} />
+      <Route path="/*" element={
+        <GameProvider>
+          <div className="flex flex-col h-screen">
+            <Navbar />
+            <Footer />
+            <div className="flex-1">
+              <Routes>
+                <Route path="enter-name" element={<EnterName />} />
+                <Route path="choose-char" element={<ChooseChar />} />
+                <Route path="waiting-room" element={<WaitingRoom />} />
+                <Route path="choose-level" element={<ChooseLevel />} />
+                <Route path="testing" element={<ControllerTest />} />
+                <Route path="tutorial" element={<Tutorial />} />
+                <Route path="playing" element={<Playing />} />
+                <Route path="award" element={<Award />} />
+                <Route path="error" element={<Error />} />
+              </Routes>
+            </div>
+          </div>
+        </GameProvider>
+      } />
+    </Routes>
   );
 }
 

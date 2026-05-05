@@ -48,8 +48,11 @@ const Award = () => {
   const generatePostcard = useCallback(async () => {
     if (!terminateImageLink) return null;
 
+    const FRAME_COUNT = 4;
+    const frameIndex = Math.floor(Math.random() * FRAME_COUNT) + 1;
+
     const screenshotPromise = loadImage(terminateImageLink, true);
-    const frameBottomPromise = loadImage('/images/postcard_frame.png').catch(() => null);
+    const frameBottomPromise = loadImage(`/images/postcard_frame${frameIndex}.png`).catch(() => null);
     const frameTopPromise = loadImage('/images/postcard_frame_top.png').catch(() => null);
     const characterPromises = (finalResults || []).map(r =>
       loadImage(`/images/${r.color}_${r.skin}.png`).catch(() => null)
@@ -191,7 +194,7 @@ const Award = () => {
   };
 
   const handleLeave = () => {
-    navigate('/');
+    navigate('/enter-name');
   };
 
   const compact = top4.length > 3;

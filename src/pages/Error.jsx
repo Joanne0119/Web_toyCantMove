@@ -10,7 +10,7 @@ const Error = () => {
 
   const handleBackHome = () => {
     webRTC.disconnect(); 
-    navigate('/');
+    navigate('/enter-name');
   };
 
   return (

@@ -1,0 +1,15 @@
+body.official-page,
+body.official-page html {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+body.official-page #root {
+  overflow: visible !important;
+  height: auto !important;
+}
+
+/* Smooth scroll for anchor links */
+body.official-page {
+  scroll-behavior: smooth;
+}
