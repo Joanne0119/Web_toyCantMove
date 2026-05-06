@@ -1,14 +1,9 @@
-import React, { use, useEffect, useRef } from 'react';
+import React, { use, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import { motion, AnimatePresence } from "framer-motion";
+import { Gamepad2, Timer } from 'lucide-react';
 import LazyImage from '@/components/LazyImage';
-
-// const mockPlayers = [
-//   { name: '黃小姿', avatar: '/images/green.png' },
-//   { name: '爆香怪人', avatar: '/images/red.png' },
-//   { name: '柳橙恩', avatar: '/images/yellow.png' },
-// ];
 
 const WaitingRoom = () => {
   const {
@@ -21,27 +16,58 @@ const WaitingRoom = () => {
     webRTC,
     gyroscope,
     connectionStatus,
-    screenWakeLock
+    screenWakeLock,
+    unityPeerId
   } = useGame();
 
   const { dataChannelConnections, sendData } = webRTC;
-  
+
   const navigate = useNavigate();
 
   const isHost = peerId === hostId;
-  
+
   const hasAttemptedConnection = useRef(false);
   const hasSentIdentify = useRef(false);
+  const [showNoGameModal, setShowNoGameModal] = useState(false);
+  const [connectionTimeout, setConnectionTimeout] = useState(false);
+
+  // Check if Unity game is running (peerId in URL)
+  useEffect(() => {
+    if (!unityPeerId) {
+      setShowNoGameModal(true);
+    }
+  }, [unityPeerId]);
+
+  // Connection timeout: if connected to server but no Unity data channel after 15s
+  useEffect(() => {
+    if (!connectionStatus || !unityPeerId) return;
+
+    const timer = setTimeout(() => {
+      const isConnectedToUnity = dataChannelConnections.includes(unityPeerId);
+      if (!isConnectedToUnity) {
+        setConnectionTimeout(true);
+      }
+    }, 15000);
+
+    return () => clearTimeout(timer);
+  }, [connectionStatus, unityPeerId, dataChannelConnections]);
+
+  // Clear timeout state if Unity connects
+  useEffect(() => {
+    if (unityPeerId && dataChannelConnections.includes(unityPeerId)) {
+      setConnectionTimeout(false);
+    }
+  }, [dataChannelConnections, unityPeerId]);
 
   // screen wake lock
   useEffect(() => {
     if (screenWakeLock) {
       screenWakeLock.request();
     }
-  }, [screenWakeLock]); 
+  }, [screenWakeLock]);
 
   useEffect(() => {
-    if (gameScene === 'Tutorial' && !isHost) { 
+    if (gameScene === 'Tutorial' && !isHost) {
       navigate('/tutorial');
     }
   }, [gameScene, isHost, navigate]);
@@ -50,14 +76,14 @@ const WaitingRoom = () => {
     const connectAll = async () => {
       try {
         const websocketUrl = 'wss://server-for-toy-cant-move.onrender.com';
-        
+
         const connectionResult = await webRTC.connect(websocketUrl, true, false);
-        
+
         if (!connectionResult) {
           throw new Error('連線失敗 (connectionResult is false)');
         }
 
-        console.log('Successfully connected as', localPlayer.name); 
+        console.log('Successfully connected as', localPlayer.name);
 
       } catch (error) {
         navigate('/error', { state: { message: error.message } });
@@ -70,10 +96,10 @@ const WaitingRoom = () => {
     if (!connectionStatus && !hasAttemptedConnection.current) {
 
       hasAttemptedConnection.current = true;
-      
+
       connectAll();
     }
-    
+
   }, [localPlayer.avatar, webRTC, connectionStatus, navigate, gyroscope]);
 
 
@@ -93,14 +119,14 @@ const WaitingRoom = () => {
       <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
       <div className="hero-content text-center">
         <div className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl">
-          <motion.div 
+          <motion.div
             className="card bg-base-100 shadow-xl mt-8"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{
-              type: "spring",   // 用彈簧模擬的動畫
-              stiffness: 120,   // 彈性
-              damping: 15,      // 阻尼 (越小越彈)
+              type: "spring",
+              stiffness: 120,
+              damping: 15,
               duration: 0.8
             }}
           >
@@ -121,9 +147,9 @@ const WaitingRoom = () => {
                       <div key={player.id} className="flex items-center bg-base-200 p-2 rounded-lg ">
                         <div className="avatar mr-4">
                           <div className="w-14 rounded-full">
-                            <LazyImage 
-                              src={player.color ? `/images/${player.color}_${player.avatar}.png` : `/images/gray_${player.avatar}.png`} 
-                              alt={player.name} 
+                            <LazyImage
+                              src={player.color ? `/images/${player.color}_${player.avatar}.png` : `/images/gray_${player.avatar}.png`}
+                              alt={player.name}
                             />
                           </div>
                         </div>
@@ -152,6 +178,91 @@ const WaitingRoom = () => {
           </motion.div>
         </div>
       </div>
+
+      {/* Modal: No Unity game detected */}
+      <AnimatePresence>
+        {showNoGameModal && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="card bg-base-100 shadow-2xl mx-4 max-w-sm"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 120, damping: 15 }}
+            >
+              <div className="card-body items-center text-center">
+                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+                  <Gamepad2 className="w-7 h-7 text-primary" />
+                </div>
+                <h3 className="card-title text-lg">請先開啟遊戲</h3>
+                <p className="text-sm text-base-content/70 mt-2">
+                  請先在電腦上開啟遊戲主程式，再透過遊戲畫面上的 QR Code 掃碼加入。
+                </p>
+                <div className="card-actions mt-4 w-full">
+                  <button
+                    onClick={() => { webRTC.disconnect(); navigate('/enter-name'); }}
+                    className="btn btn-primary btn-block"
+                  >
+                    返回首頁
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal: Connection timeout */}
+      <AnimatePresence>
+        {connectionTimeout && !showNoGameModal && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="card bg-base-100 shadow-2xl mx-4 max-w-sm"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 120, damping: 15 }}
+            >
+              <div className="card-body items-center text-center">
+                <div className="w-14 h-14 rounded-full bg-warning/10 flex items-center justify-center mb-2">
+                  <Timer className="w-7 h-7 text-warning" />
+                </div>
+                <h3 className="card-title text-lg">連線逾時</h3>
+                <p className="text-sm text-base-content/70 mt-2">
+                  無法連接到遊戲主程式，請確認電腦上的遊戲是否已開啟。
+                </p>
+                <div className="card-actions mt-4 w-full flex flex-col gap-2">
+                  <button
+                    onClick={() => {
+                      setConnectionTimeout(false);
+                      hasAttemptedConnection.current = false;
+                    }}
+                    className="btn btn-primary btn-block"
+                  >
+                    重新連線
+                  </button>
+                  <button
+                    onClick={() => { webRTC.disconnect(); navigate('/enter-name'); }}
+                    className="btn btn-ghost btn-block"
+                  >
+                    返回首頁
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
