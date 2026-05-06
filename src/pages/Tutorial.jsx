@@ -153,10 +153,12 @@ const Tutorial = () => {
         
         // 如果收到「進入遊戲」的指令
         if (msg.type === 'navigate_to_game') {
+          sendWebRTCData(JSON.stringify({ type: "navigate_ack", target: "tutorial" }), unityPeerId || null);
           navigate('/tutorial');
         }
         if (msg.type === 'navigate_to_playing') {
-          navigate('/playing'); 
+          sendWebRTCData(JSON.stringify({ type: "navigate_ack", target: "playing" }), unityPeerId || null);
+          navigate('/playing');
         }
       } catch (e) {
         console.error('Parse tutorial message error:', e);
