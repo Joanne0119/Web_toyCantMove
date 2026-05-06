@@ -5,9 +5,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import LazyImage from '@/components/LazyImage';
 
 const levels = [
-  { name: "玩具紙箱", sceneName: "4_Toybox", image: "/images/toyboxLevel.png", disable: false },
-  { name: "塗鴉畫紙", sceneName: "4_ColorPaper", image: "/images/tableLevel.png", disable: false },
-  // { name: "凌亂床鋪", sceneName: "4_Bed", image: "/images/bedLevel.png", disable: true }
+  { name: "玩具紙箱", sceneName: "4_Toybox", image: "/images/toyboxLevel.png", inputType: "gyro", disable: false },
+  { name: "塗鴉畫紙", sceneName: "4_ColorPaper", image: "/images/tableLevel.png", inputType: "gyro", disable: false },
+  { name: "瘋狂餐桌", sceneName: "4_TapEat", image: "/images/tableLevel.png", inputType: "tap", disable: false },
+  // { name: "凌亂床鋪", sceneName: "4_Bed", image: "/images/bedLevel.png", inputType: "gyro", disable: true }
 ];
 
 const ChooseLevel = () => {

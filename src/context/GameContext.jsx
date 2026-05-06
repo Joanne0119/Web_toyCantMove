@@ -207,10 +207,18 @@ export const GameProvider = ({ children }) => {
         if (msg.type === "level_selected") {
           console.log("Received level_selected from Unity:", msg.level);
           // 更新選擇的關卡（讓非房主也能看到）
-          // 這裡使用 sceneName 來匹配
+          // 根據 sceneName 找到對應的 inputType
+          const inputTypeMap = {
+            '4_Toybox': 'gyro',
+            '4_ColorPaper': 'gyro',
+            '4_TapEat': 'tap',
+            '4_ShakeRace': 'shake',
+            '4_CountChallenge': 'count',
+          };
           setLevel(prevLevel => ({
             ...prevLevel,
-            sceneName: msg.level
+            sceneName: msg.level,
+            inputType: inputTypeMap[msg.level] || 'gyro',
           }));
         }
 

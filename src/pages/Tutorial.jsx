@@ -17,8 +17,9 @@ const stepVideos = {
 const Tutorial = () => {
   const navigate = useNavigate();
   const videoRef = useRef(null);
-  const { webRTC, gyroscope, connectionStatus, gyroscopeStatus, screenWakeLock, unityPeerId, localPlayer } = useGame();
+  const { webRTC, gyroscope, connectionStatus, gyroscopeStatus, screenWakeLock, unityPeerId, localPlayer, level } = useGame();
   const { init: initGyroscope, calibrate: calibrateGyroscope, isSupported } = gyroscope;
+  const inputType = level?.inputType || 'gyro';
   const { lastMessage, sendData: sendWebRTCData, dataChannelConnections } = webRTC;
   const { coordinates, isCalibrated, isInitialized } = gyroscopeStatus;
 
@@ -35,6 +36,8 @@ const Tutorial = () => {
   const [gyroSupported, setGyroSupported] = useState(null);
   const [isSensorSetupInProgress, setIsSensorSetupInProgress] = useState(false);
   const [skippedTutorial, setSkippedTutorial] = useState(false);
+  const [nonGyroCountdown, setNonGyroCountdown] = useState(3);
+  const nonGyroCompletedRef = useRef(false);
 
   const hasSentCalibratedRef = useRef(false);
 
@@ -194,9 +197,109 @@ const Tutorial = () => {
     }
   }, [currentStep]);
 
-  // --- 渲染邏輯 (4 種狀態) ---
+  // --- 渲染邏輯 ---
 
-  // 狀態 1: 正在檢查
+  // 非陀螺儀關卡：顯示簡短教學 + 3 秒倒數
+  const tutorialInfo = {
+    tap: { title: '瘋狂餐桌', desc: '快速點擊螢幕來吃東西！' },
+    shake: { title: '搖動賽跑', desc: '上下搖動手機來前進！' },
+    count: { title: '數數挑戰', desc: '數數看有幾隻角色跑過去！' },
+  };
+
+  // 非陀螺儀關卡的倒數邏輯
+  useEffect(() => {
+    if (inputType === 'gyro' || nonGyroCompletedRef.current) return;
+    const timer = setInterval(() => {
+      setNonGyroCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          if (!nonGyroCompletedRef.current) {
+            nonGyroCompletedRef.current = true;
+            const msg = { type: "tutorial_step_complete", step: "calibrate" };
+            sendWebRTCData(JSON.stringify(msg), unityPeerId || null);
+          }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [inputType, sendWebRTCData, unityPeerId]);
+
+  // 非陀螺儀關卡也要監聽 navigate 訊息
+  useEffect(() => {
+    if (inputType === 'gyro') return;
+    if (lastMessage && lastMessage.timestamp > lastProcessedTimestamp.current) {
+      lastProcessedTimestamp.current = lastMessage.timestamp;
+      try {
+        const msg = JSON.parse(lastMessage.message);
+        if (msg.type === 'navigate_to_playing') {
+          sendWebRTCData(JSON.stringify({ type: "navigate_ack", target: "playing" }), unityPeerId || null);
+          navigate('/playing');
+        }
+      } catch (e) {}
+    }
+  }, [inputType, lastMessage, navigate, sendWebRTCData, unityPeerId]);
+
+  if (inputType !== 'gyro') {
+    const info = tutorialInfo[inputType] || { title: '準備開始', desc: '遊戲即將開始！' };
+
+    return (
+      <div className="hero min-h-screen bg-base-200 safe-area-bottom select-none" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}>
+        <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="text-center z-10 card bg-base-100 shadow-xl mt-4"
+        >
+          <div className="card-body p-6 items-center">
+            <h1 className="text-2xl font-bold mb-2">{info.title}</h1>
+            <p className="text-base mb-6">{info.desc}</p>
+
+            {/* 簡單的點擊示意動畫 */}
+            {inputType === 'tap' && (
+              <motion.div
+                className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mb-4"
+                animate={{ scale: [1, 0.85, 1] }}
+                transition={{ duration: 0.6, repeat: Infinity }}
+              >
+                <motion.div className="w-12 h-12 rounded-full bg-primary/40" />
+              </motion.div>
+            )}
+
+            {/* 搖動示意動畫 */}
+            {inputType === 'shake' && (
+              <motion.div
+                className="text-5xl mb-4"
+                animate={{ y: [0, -15, 0, 15, 0] }}
+                transition={{ duration: 0.5, repeat: Infinity }}
+              >
+                📱
+              </motion.div>
+            )}
+
+            {/* 數數示意動畫 */}
+            {inputType === 'count' && (
+              <motion.div
+                className="text-5xl mb-4 font-bold text-primary"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.8, repeat: Infinity }}
+              >
+                🔢
+              </motion.div>
+            )}
+
+            <div className="text-4xl font-bold text-primary">
+              {nonGyroCountdown > 0 ? nonGyroCountdown : '開始！'}
+            </div>
+            <p className="text-xs text-base-content/50 mt-2">等待其他玩家...</p>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // 狀態 1: 正在檢查（陀螺儀關卡）
   if (gyroSupported === null) {
     return (
       <div className="hero min-h-screen bg-base-200 safe-area-bottom" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
