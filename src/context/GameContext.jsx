@@ -14,7 +14,7 @@ const STABLE_UI_CONFIG = {
 };
 
 const STABLE_GYRO_CONFIG = {
-  movementThreshold: 20,
+  movementThreshold: 12,
     calibrationTime: 1000,
     smoothingFactor: 0.3,
     deadZone: 5,
@@ -217,15 +217,21 @@ export const GameProvider = ({ children }) => {
         if (msg.type === "navigate_to_game") {
           console.log("Received navigate command from Unity, changing scene to Tutorial.");
           setGameScene('Tutorial');
+          // ACK 回傳給 Unity，確認收到跳轉指令
+          webRTC.sendData(JSON.stringify({ type: "navigate_ack", target: "tutorial" }), null);
         }
 
         if (msg.type === "navigate_to_playing") {
           console.log("Received navigate command from Unity, changing scene to Playing.");
-          setGameScene('Playing'); 
+          setGameScene('Playing');
+          // ACK 回傳給 Unity，確認收到跳轉指令
+          webRTC.sendData(JSON.stringify({ type: "navigate_ack", target: "playing" }), null);
         }
         if (msg.type === "terminate") {
           console.log("Received terminate message from Unity:", msg.finalPlayerDatas);
           console.log("Terminate image link:", msg.link);
+          // ACK 回傳給 Unity，確認收到結束指令
+          webRTC.sendData(JSON.stringify({ type: "navigate_ack", target: "terminate" }), null);
           setFinalResults(msg.finalPlayerDatas || []);
           setTerminateImageLink(msg.link || null);
           setGameScene('Awards');

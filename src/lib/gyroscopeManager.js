@@ -765,12 +765,12 @@ class GyroscopeManager {
     applyPlatformSpecificConfig() {
         switch (this.platform) {
             case 'iOS':
-                this.config.movementThreshold = Math.min(this.config.movementThreshold, 15);
+                this.config.movementThreshold = Math.min(this.config.movementThreshold, 10);
                 this.config.deadZone = Math.max(this.config.deadZone, 3);
                 break;
             case 'Android':
-                this.config.movementThreshold = Math.max(this.config.movementThreshold, 25);
-                this.config.deadZone = Math.max(this.config.deadZone, 8);
+                this.config.movementThreshold = Math.max(this.config.movementThreshold, 15);
+                this.config.deadZone = Math.max(this.config.deadZone, 5);
                 break;
             default:
                 break;
