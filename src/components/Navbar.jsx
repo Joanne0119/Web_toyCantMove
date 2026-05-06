@@ -2,14 +2,36 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 
+// Define which pages allow going back, and where they go
+const backRoutes = {
+  '/choose-char': '/enter-name',
+  '/waiting-room': null,     // Use leave button in page instead
+  '/choose-level': null,     // Use leave button in page instead
+};
+
+// Pages where back/home buttons should be hidden entirely
+const hideNavPages = ['/tutorial', '/playing', '/award'];
+
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { webRTC } = useGame(); 
-  const { disconnect,isConnected } = webRTC;
+  const { webRTC } = useGame();
+  const { disconnect, isConnected } = webRTC;
+
+  const currentPath = location.pathname;
+
+  // Hide navbar entirely on gameplay pages
+  if (hideNavPages.includes(currentPath)) {
+    return null;
+  }
+
+  const backTarget = backRoutes[currentPath];
+  const showBackButton = currentPath !== '/enter-name' && backTarget !== undefined && backTarget !== null;
 
   const handleBack = () => {
-    navigate(-1);
+    if (backTarget) {
+      navigate(backTarget);
+    }
   };
 
   const handleGoHome = () => {
@@ -19,9 +41,6 @@ const Navbar = () => {
       navigate('/enter-name');
     }
   };
-
-  // Only show the back button if we are not on the home page
-  const showBackButton = location.pathname !== '/enter-name';
 
   return (
     <div className="navbar absolute top-0 left-0 right-0 z-10">
