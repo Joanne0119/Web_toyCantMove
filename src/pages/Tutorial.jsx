@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import { motion } from 'framer-motion';
+import { Wifi, WifiOff, CheckCircle, XCircle } from 'lucide-react';
 import DinoGame from '@/components/DinoGame.jsx';
 
 const stepVideos = {
@@ -16,7 +17,7 @@ const stepVideos = {
 const Tutorial = () => {
   const navigate = useNavigate();
   const videoRef = useRef(null);
-  const { webRTC, gyroscope, connectionStatus, gyroscopeStatus, screenWakeLock, unityPeerId } = useGame();
+  const { webRTC, gyroscope, connectionStatus, gyroscopeStatus, screenWakeLock, unityPeerId, localPlayer } = useGame();
   const { init: initGyroscope, calibrate: calibrateGyroscope, isSupported } = gyroscope;
   const { lastMessage, sendData: sendWebRTCData, dataChannelConnections } = webRTC;
   const { coordinates, isCalibrated, isInitialized } = gyroscopeStatus;
@@ -33,6 +34,7 @@ const Tutorial = () => {
 
   const [gyroSupported, setGyroSupported] = useState(null);
   const [isSensorSetupInProgress, setIsSensorSetupInProgress] = useState(false);
+  const [skippedTutorial, setSkippedTutorial] = useState(false);
 
   const hasSentCalibratedRef = useRef(false);
 
@@ -131,8 +133,8 @@ const Tutorial = () => {
         // 如果收到教學指示
         if (msg.type === 'tutorial_instruction') {
           const stepName = msg.step;
-          if (gyroSupported === false) {
-            // (不支援的玩家)
+          if (gyroSupported === false || skippedTutorial) {
+            // (不支援的玩家 或 已略過教學)
             const cheatVector = cheatVectors[stepName];
 
             if (cheatVector) {
@@ -140,8 +142,8 @@ const Tutorial = () => {
               setCompletedSteps(prev => ({ ...prev, [stepName]: true }));
               const cheatMessage = { type: "move", vector: cheatVector };
               sendWebRTCData(JSON.stringify(cheatMessage), unityPeerId || null);
-              
-              console.log(`Gyro not supported. Cheating step '${stepName}' with vector:`, cheatVector);
+
+              console.log(`Skipping step '${stepName}' with vector:`, cheatVector);
             }
 
           } else if (gyroSupported === true) {
@@ -164,7 +166,7 @@ const Tutorial = () => {
         console.error('Parse tutorial message error:', e);
       }
     }
-  }, [lastMessage, navigate, gyroSupported, sendWebRTCData, unityPeerId]);
+  }, [lastMessage, navigate, gyroSupported, skippedTutorial, sendWebRTCData, unityPeerId]);
 
   // 持續發送傾斜數據給 Unity
   useEffect(() => {
@@ -212,18 +214,18 @@ const Tutorial = () => {
     return (
       <div className="hero min-h-screen bg-base-200 safe-area-bottom" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
         <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
-        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center z-10 card bg-base-100 shadow-xl mt-8">
-            <div className="card-body">
-                <h1 className="text-4xl font-bold text-base mb-4">控制器教學</h1>
-                <p className="text-base text-lg mb-8">{instructionText}</p>
+        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center z-10 card bg-base-100 shadow-xl mt-4">
+            <div className="card-body p-4">
+                <h1 className="text-2xl font-bold text-base mb-2">控制器教學</h1>
+                <p className="text-sm mb-4">{instructionText}</p>
                 <motion.div
-                    className="w-64 aspect-square bg-base/10 rounded-3xl overflow-hidden mb-2 shadow-inner"
+                    className="w-48 aspect-square bg-base/10 rounded-2xl overflow-hidden mb-2 shadow-inner mx-auto"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.5 }}
                 >
                     <video
-                        src={stepVideos.calibrate || stepVideos.default} 
+                        src={stepVideos.calibrate || stepVideos.default}
                         autoPlay
                         loop
                         muted
@@ -232,10 +234,10 @@ const Tutorial = () => {
                         className="w-full h-full object-contain"
                     />
                 </motion.div>
-                <motion.button 
+                <motion.button
                     whileTap={{ scale: 0.95 }}
                     onClick={handleSetupSensors}
-                    className="btn btn-primary btn-lg"
+                    className="btn btn-primary"
                     disabled={isSensorSetupInProgress}
                 >
                     {isSensorSetupInProgress ? (
@@ -266,7 +268,7 @@ const Tutorial = () => {
           <p className="text-lg">
             請等待其他玩家完成 <span className="loading loading-dots loading-xs"></span>
           </p>
-          <DinoGame />
+          <DinoGame playerColor={localPlayer.color || 'red'} />
           <p className="text-sm">等待時可以玩個小遊戲！</p>
         </motion.div>
       </div>
@@ -280,68 +282,93 @@ const Tutorial = () => {
       <div className="hero min-h-screen bg-base-200 safe-area-bottom overflow-x-hidden select-none" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}>
         <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
         
-        <div className="card bg-base-100 shadow-xl mt-8 mb-8 z-10">
-        <div className="card-body items-center text-center">
+        <div className="card bg-base-100 shadow-xl mt-4 mb-4 z-10">
+        <div className="card-body items-center text-center p-4">
             <motion.div
                 key={instructionText}
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="text-center mb-8"
+                className="text-center mb-3"
             >
-                <h1 className="text-4xl font-bold text-base mb-4">
+                <h1 className="text-2xl font-bold text-base mb-1">
                 {instructionText}
                 </h1>
             </motion.div>
 
             <motion.div
-                className="w-64 aspect-square bg-base/10 rounded-3xl overflow-hidden mb-2 shadow-inner"
+                className="w-48 aspect-square bg-base/10 rounded-2xl overflow-hidden mb-2 shadow-inner"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
             >
                 <video
                     ref={videoRef}
-                    key={currentStep} 
+                    key={currentStep}
                     src={videoSrc}
                     autoPlay
                     loop
                     muted
-                    playsInline // 確保在手機上不會強制全螢幕
+                    playsInline
                     controls={false}
                     className="w-full h-full object-contain"
                 />
             </motion.div>
 
-            <div className="flex gap-4 mb-8">
+            <div className="flex gap-3 mb-4">
                 {['forward', 'left', 'right', 'backward'].map((step, index) => (
                 <div key={step} className="flex flex-col items-center">
                     <div className={`
-                    w-12 h-12 rounded-full flex items-center justify-center
+                    w-10 h-10 rounded-full flex items-center justify-center
                     ${currentStep === step ? 'ring-4 ring-gray-100' : ''}
                     ${completedSteps[step] ? 'bg-green-500' : 'bg-base/30'}
                     `}>
                     {completedSteps[step] ? (
-                        <span className="text-2xl">✓</span>
+                        <span className="text-lg">✓</span>
                     ) : (
-                        <span className="text-base font-bold">{index + 1}</span>
+                        <span className="text-sm font-bold">{index + 1}</span>
                     )}
                     </div>
-                    <span className="text-base text-xs mt-2">
+                    <span className="text-xs mt-1">
                     {step === 'forward' ? '向前' :
                     step === 'left' ? '向左' :
                     step === 'right' ? '向右' : '向後'}
                     </span>
                 </div>
                 ))}
-            </div>        
-            
-            <div className="text-base p-4 items-center text-center mb-4">
-                <div>
-                  <p>當前座標: ({coordinates.x.toFixed(2)}, {coordinates.y.toFixed(2)})</p>
-                  <p>校正狀態: {isCalibrated ? '✅ 已校正' : '❌ 未校正'}</p>
-                </div>
-                <p>連線狀態: {connectionStatus ? '✅ 已連線' : '❌ 未連線'}</p>
             </div>
+
+            {/* 狀態指示 */}
+            <div className="flex items-center gap-3 text-xs text-base-content/50">
+                <div className="flex items-center gap-1">
+                    {connectionStatus
+                      ? <Wifi className="w-3.5 h-3.5 text-success" />
+                      : <WifiOff className="w-3.5 h-3.5 text-error" />}
+                    <span>{connectionStatus ? '已連線' : '未連線'}</span>
+                </div>
+                <span className="text-base-content/20">|</span>
+                <div className="flex items-center gap-1">
+                    {isCalibrated
+                      ? <CheckCircle className="w-3.5 h-3.5 text-success" />
+                      : <XCircle className="w-3.5 h-3.5 text-error" />}
+                    <span>{isCalibrated ? '已校正' : '未校正'}</span>
+                </div>
+            </div>
+
+            {/* 略過教學 */}
+            {!skippedTutorial && (
+              <button
+                onClick={() => {
+                  setSkippedTutorial(true);
+                  setInstructionText('等待其他玩家...');
+                  // 發送 calibrated 訊息讓 Unity 知道這個玩家略過
+                  const calibratedMsg = { type: "tutorial_step_complete", step: "calibrate" };
+                  sendWebRTCData(JSON.stringify(calibratedMsg), unityPeerId || null);
+                }}
+                className="btn btn-ghost btn-xs text-base-content/30 mt-2"
+              >
+                略過教學
+              </button>
+            )}
         </div>
       </div>
       </div>

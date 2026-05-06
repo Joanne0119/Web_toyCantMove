@@ -66,7 +66,7 @@ const ChooseLevel = () => {
       <div className="hero-content text-center">
         {/* <div className="max-w-lg"> */}
           <motion.div 
-            className="card bg-base-100 shadow-xl mt-8"
+            className="card bg-base-100 shadow-xl mt-4"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{
@@ -76,22 +76,22 @@ const ChooseLevel = () => {
               duration: 0.8
             }}
           >
-            <div className="card-body">
-              <h2 className="card-title">{isHost ? '請選擇遊戲場景' : '等待房主選擇關卡...'}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+            <div className="card-body p-4">
+              <h2 className="card-title text-base">{isHost ? '請選擇遊戲場景' : '等待房主選擇關卡...'}</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 my-3">
                 {levels.map((l) => (
-                  <motion.div 
+                  <motion.div
                     whileTap={isHost && !l.disable ? { scale: 0.95 } : false}
                     key={l.name}
                     className={`card bg-base-200 shadow-md cursor-pointer relative ${level?.name === l.name ? 'ring ring-primary' : ''} ${l.disabled ? 'opacity-50 cursor-not-allowed' : ''} ${!isHost && 'cursor-default'}`}
                     onClick={() => handleSelectLevel(l)}
                     style={{
-                      pointerEvents: l.disable ? 'none' : 'auto' 
+                      pointerEvents: l.disable ? 'none' : 'auto'
                     }}
                   >
-                    <figure><LazyImage src={l.image} alt={l.name} className="w-60 object-cover" style={{ filter: l.disable ? 'grayscale(90%)' : 'none' }}/></figure>
-                    <div className="card-body p-4 items-center text-center">
-                      <h2 className="card-title">{l.name}</h2>
+                    <figure><LazyImage src={l.image} alt={l.name} className="w-48 object-cover" style={{ filter: l.disable ? 'grayscale(90%)' : 'none' }}/></figure>
+                    <div className="card-body p-3 items-center text-center">
+                      <h2 className="card-title text-sm">{l.name}</h2>
                     </div>
                     {l.disable && (
                       <div className="absolute top-0 left-0 w-full h-full bg-black/50 flex items-center justify-center">
@@ -104,11 +104,11 @@ const ChooseLevel = () => {
               <div className="card-actions justify-center">
                 <div className="flex flex-col space-y-2 w-full">
                   {isHost ? (
-                    <motion.button whileTap={{ scale: 0.9 }} onClick={handleStartGame} className="btn btn-primary text-base">
+                    <motion.button whileTap={{ scale: 0.9 }} onClick={handleStartGame} className="btn btn-primary btn-sm">
                       開始遊戲
                     </motion.button>
                   ) : null}
-                  <motion.button whileTap={{ scale: 0.9 }} onClick={handleLeave} className="btn btn-ghost">
+                  <motion.button whileTap={{ scale: 0.9 }} onClick={handleLeave} className="btn btn-ghost btn-sm">
                     離開房間
                   </motion.button>
                 </div>
