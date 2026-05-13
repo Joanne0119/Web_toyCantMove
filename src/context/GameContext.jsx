@@ -79,6 +79,8 @@ export const GameProvider = ({ children }) => {
   const [finalResults, setFinalResults] = useState([]);
   const [terminateImageLink, setTerminateImageLink] = useState(null);
   const [unityPeerId, setUnityPeerId] = useState(null);
+  const [unityDisconnected, setUnityDisconnected] = useState(false);
+  const wasConnectedRef = useRef(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -241,7 +243,22 @@ export const GameProvider = ({ children }) => {
         console.error(e);
       }
     }
-  }, [lastMessage, peerId]); 
+  }, [lastMessage, peerId]);
+
+  // 偵測與 Unity 的連線中斷（非主動斷線）
+  useEffect(() => {
+    const isConnectedToUnity = unityPeerId && webRTC.dataChannelConnections.includes(unityPeerId);
+
+    if (isConnectedToUnity) {
+      wasConnectedRef.current = true;
+    }
+
+    // 曾經連上但現在斷了，且不是正常結束（Awards 時會主動斷線）
+    if (wasConnectedRef.current && !isConnectedToUnity && unityPeerId && gameScene !== 'Awards') {
+      console.log("⚠️ [GameContext] Unity 連線中斷！");
+      setUnityDisconnected(true);
+    }
+  }, [webRTC.dataChannelConnections, unityPeerId, gameScene]);
 
   const gyroscopeStatus = useMemo(() => ({
     isSupported: gyroscope.isSupported(),
@@ -285,9 +302,11 @@ export const GameProvider = ({ children }) => {
     terminateImageLink,
     unityPeerId,
     setUnityPeerId,
+    setGameScene,
+    unityDisconnected,
   }), [
     peerId, hostId, gameScene, localPlayer, otherPlayers, level, score,
-    webRTC, gyroscope, screenWakeLockValue, gyroscopeStatus, finalResults, terminateImageLink, unityPeerId
+    webRTC, gyroscope, screenWakeLockValue, gyroscopeStatus, finalResults, terminateImageLink, unityPeerId, setGameScene, unityDisconnected
   ]);
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

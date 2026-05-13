@@ -264,6 +264,7 @@ class WebRTCManager {
       receiveChannel.onclose = () => {
         console.log(`ReceiverDataChannel for ${peerId} closed on ${this.localPeerId}.`);
         this.receiverDataChannels.delete(peerId);
+        this.onDataChannelDisconnection?.(peerId);
       };
       receiveChannel.onerror = (err) => {
         console.error(`ReceiverDataChannel for ${peerId} error on ${this.localPeerId}:`, err);
@@ -290,6 +291,7 @@ class WebRTCManager {
       senderChannel.onclose = () => {
         console.log(`SenderDataChannel to ${peerId} closed on ${this.localPeerId}.`);
         this.senderDataChannels.delete(peerId);
+        this.onDataChannelDisconnection?.(peerId);
       };
       senderChannel.onerror = (err) => {
         console.error(`SenderDataChannel to ${peerId} error on ${this.localPeerId}:`, err);
