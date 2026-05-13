@@ -59,7 +59,17 @@ html, body, #root {
 }
 
 * {
-  box-sizing: border-box; /* Ensure padding and borders are included in element dimensions */
+  box-sizing: border-box;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 輸入框需要允許選取 */
+input, textarea {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 .hero {
