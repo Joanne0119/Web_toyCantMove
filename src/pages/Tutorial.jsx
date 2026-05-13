@@ -38,6 +38,8 @@ const Tutorial = () => {
   const [skippedTutorial, setSkippedTutorial] = useState(false);
   const [nonGyroCountdown, setNonGyroCountdown] = useState(3);
   const nonGyroCompletedRef = useRef(false);
+  const [tapCount, setTapCount] = useState(0);
+  const TAP_REQUIRED = 5;
 
   const hasSentCalibratedRef = useRef(false);
 
@@ -206,9 +208,10 @@ const Tutorial = () => {
     count: { title: '數數挑戰', desc: '數數看有幾隻角色跑過去！' },
   };
 
-  // 非陀螺儀關卡的倒數邏輯
+  // 非陀螺儀關卡的完成邏輯
+  // tap 類型：點擊 N 下完成；其他類型：3 秒倒數自動完成
   useEffect(() => {
-    if (inputType === 'gyro' || nonGyroCompletedRef.current) return;
+    if (inputType === 'gyro' || inputType === 'tap' || nonGyroCompletedRef.current) return;
     const timer = setInterval(() => {
       setNonGyroCountdown(prev => {
         if (prev <= 1) {
@@ -226,6 +229,20 @@ const Tutorial = () => {
     return () => clearInterval(timer);
   }, [inputType, sendWebRTCData, unityPeerId]);
 
+  // tap 類型：點擊夠了就完成
+  const handleTapPractice = useCallback(() => {
+    if (nonGyroCompletedRef.current) return;
+    setTapCount(prev => {
+      const next = prev + 1;
+      if (next >= TAP_REQUIRED && !nonGyroCompletedRef.current) {
+        nonGyroCompletedRef.current = true;
+        const msg = { type: "tutorial_step_complete", step: "calibrate" };
+        sendWebRTCData(JSON.stringify(msg), unityPeerId || null);
+      }
+      return next;
+    });
+  }, [sendWebRTCData, unityPeerId]);
+
   // 非陀螺儀關卡也要監聽 navigate 訊息
   useEffect(() => {
     if (inputType === 'gyro') return;
@@ -241,6 +258,101 @@ const Tutorial = () => {
     }
   }, [inputType, lastMessage, navigate, sendWebRTCData, unityPeerId]);
 
+  // tap 教學：點擊練習（layout 對齊陀螺儀教學）
+  if (inputType === 'tap') {
+    const isCompleted = tapCount >= TAP_REQUIRED;
+    return (
+      <div
+        className="hero min-h-screen bg-base-200 safe-area-bottom overflow-x-hidden select-none"
+        style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}
+        onClick={!isCompleted ? handleTapPractice : undefined}
+      >
+        <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
+
+        <motion.div
+          className="card bg-base-100 shadow-xl mt-4 mb-4 z-10"
+          animate={tapCount > 0 ? { scale: [0.95, 1] } : {}}
+          transition={{ type: "spring", stiffness: 400, damping: 15 }}
+          key={tapCount}
+        >
+          <div className="card-body items-center text-center p-4">
+            <motion.div
+              key={isCompleted ? 'done' : 'tap'}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="text-center mb-3"
+            >
+              <h1 className="text-2xl font-bold text-base mb-1">
+                {isCompleted ? '完成！等待其他玩家...' : '快速點擊螢幕來吃東西！'}
+              </h1>
+            </motion.div>
+
+            {/* 影片區（跟陀螺儀教學一樣大小） */}
+            <motion.div
+              className="w-48 aspect-square bg-base-200/50 rounded-2xl overflow-hidden mb-2 shadow-inner flex items-center justify-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              {/* 點擊示意動畫（之後可換成影片） */}
+              <motion.div
+                className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center"
+                animate={{ scale: [1, 0.8, 1] }}
+                transition={{ duration: 0.5, repeat: Infinity }}
+              >
+                <motion.div className="w-12 h-12 rounded-full bg-primary/40 flex items-center justify-center">
+                  <motion.div
+                    className="w-6 h-6 rounded-full bg-primary"
+                    animate={{ scale: [1, 0.6, 1] }}
+                    transition={{ duration: 0.5, repeat: Infinity, delay: 0.1 }}
+                  />
+                </motion.div>
+              </motion.div>
+            </motion.div>
+
+            {/* 進度圈（跟陀螺儀的 4 步驟進度圈對齊） */}
+            <div className="flex gap-3 mb-4">
+              {Array.from({ length: TAP_REQUIRED }).map((_, i) => (
+                <div key={i} className="flex flex-col items-center">
+                  <motion.div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      i < tapCount ? 'bg-green-500' : 'bg-base-300/50'
+                    }`}
+                    animate={i === tapCount - 1 && tapCount > 0 ? { scale: [1.3, 1] } : {}}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {i < tapCount ? (
+                      <span className="text-lg">✓</span>
+                    ) : (
+                      <span className="text-sm font-bold">{i + 1}</span>
+                    )}
+                  </motion.div>
+                </div>
+              ))}
+            </div>
+
+            {/* 狀態指示（跟陀螺儀教學對齊） */}
+            <div className="flex items-center gap-3 text-xs text-base-content/50">
+              <div className="flex items-center gap-1">
+                {connectionStatus
+                  ? <Wifi className="w-3.5 h-3.5 text-success" />
+                  : <WifiOff className="w-3.5 h-3.5 text-error" />}
+                <span>{connectionStatus ? '已連線' : '未連線'}</span>
+              </div>
+              <span className="text-base-content/20">|</span>
+              <span>{isCompleted ? '已完成' : `${tapCount}/${TAP_REQUIRED}`}</span>
+            </div>
+
+            {!isCompleted && (
+              <p className="text-xs text-base-content/30 mt-2">點擊螢幕任意位置練習</p>
+            )}
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // 其他非陀螺儀關卡（shake、count 等）：倒數自動完成
   if (inputType !== 'gyro') {
     const info = tutorialInfo[inputType] || { title: '準備開始', desc: '遊戲即將開始！' };
 
@@ -256,18 +368,6 @@ const Tutorial = () => {
             <h1 className="text-2xl font-bold mb-2">{info.title}</h1>
             <p className="text-base mb-6">{info.desc}</p>
 
-            {/* 簡單的點擊示意動畫 */}
-            {inputType === 'tap' && (
-              <motion.div
-                className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mb-4"
-                animate={{ scale: [1, 0.85, 1] }}
-                transition={{ duration: 0.6, repeat: Infinity }}
-              >
-                <motion.div className="w-12 h-12 rounded-full bg-primary/40" />
-              </motion.div>
-            )}
-
-            {/* 搖動示意動畫 */}
             {inputType === 'shake' && (
               <motion.div
                 className="text-5xl mb-4"
@@ -278,7 +378,6 @@ const Tutorial = () => {
               </motion.div>
             )}
 
-            {/* 數數示意動畫 */}
             {inputType === 'count' && (
               <motion.div
                 className="text-5xl mb-4 font-bold text-primary"
