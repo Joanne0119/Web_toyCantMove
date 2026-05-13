@@ -264,7 +264,7 @@ const Playing = () => {
         window.removeEventListener('pointercancel', handlePointerUp);
     }, [knobX, knobY, stopSendingLoop]);
 
-    // 按壓按鈕事件處理
+    // 按壓按鈕事件處理（ColorPaper 按住繪圖）
     const handlePressStart = useCallback((e) => {
         e.preventDefault();
         setIsPressing(true);
@@ -277,112 +277,136 @@ const Playing = () => {
         isPressingRef.current = false;
     }, []);
 
+    // 點擊技能按鈕（Toybox 點一下觸發）
+    const skillCooldownRef = useRef(false);
+    const handleSkillTap = useCallback((e) => {
+        e.preventDefault();
+        if (skillCooldownRef.current) return;
+        skillCooldownRef.current = true;
+        setIsPressing(true);
+        isPressingRef.current = true;
+
+        setTimeout(() => {
+            setIsPressing(false);
+            isPressingRef.current = false;
+            skillCooldownRef.current = false;
+        }, 300);
+    }, []);
+
     return (
-        <div className="relative w-screen min-h-screen px-6 flex flex-col items-center justify-center safe-area-bottom" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}>
+        <div className="relative w-screen min-h-screen flex flex-col safe-area-bottom" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}>
             <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
-            <motion.button
-                whileTap={{ scale: 0.9 }}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{
-                    type: "spring",
-                    stiffness: 120,
-                    damping: 15,
-                    duration: 0.8
-                }}
-                className={`btn btn-sm btn-primary text-base z-10 mb-4 ${isInitialized ? 'visible' : 'invisible'}`}
-                onClick={calibrateGyroscope}
-                disabled={!isInitialized}
-            >
-                重新校正
-            </motion.button>
 
-            {/* Manual Controller UI */}
-            <motion.div
-                className="card bg-base-100 shadow-xl px-6 py-2 z-20 mt-4"
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{
-                    type: "spring",
-                    stiffness: 120,
-                    damping: 15,
-                    duration: 0.8,
-                    delay: 0.3
-                }}
-            >
-                <div className="card-body items-center text-center py-4">
-                    <div className="flex justify-center items-center w-full relative">
+            {/* 上方區域：搖桿 */}
+            <div className="flex-1 flex flex-col items-center justify-center px-6 z-10">
+                <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{
+                        type: "spring",
+                        stiffness: 120,
+                        damping: 15,
+                        duration: 0.8
+                    }}
+                    className={`btn btn-sm btn-primary text-base mb-4 ${isInitialized ? 'visible' : 'invisible'}`}
+                    onClick={calibrateGyroscope}
+                    disabled={!isInitialized}
+                >
+                    重新校正
+                </motion.button>
+
+                <motion.div
+                    className="card bg-base-100 shadow-xl px-6 py-2"
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{
+                        type: "spring",
+                        stiffness: 120,
+                        damping: 15,
+                        duration: 0.8,
+                        delay: 0.3
+                    }}
+                >
+                    <div className="card-body items-center text-center py-4">
                         <h2 className="card-title">控制器</h2>
-                    </div>
 
-                    <div className="flex flex-col justify-center items-center w-full select-none mt-4 gap-4">
-                        {/* 搖桿 */}
-                        <div
-                            ref={joystickBaseRef}
-                            className="relative w-52 h-52 bg-primary/20 rounded-full flex items-center justify-center text-primary-content/40"
-                            style={{ touchAction: 'none' }}
-                            onPointerDown={handlePointerDown}
-                        >
-                            <svg className="w-6 h-6 absolute top-5 left-1/2 -translate-x-1/2" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
-                            <svg className="w-6 h-6 absolute right-5 top-1/2 -translate-y-1/2 rotate-90" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
-                            <svg className="w-6 h-6 absolute bottom-5 left-1/2 -translate-x-1/2 rotate-180" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
-                            <svg className="w-6 h-6 absolute left-5 top-1/2 -translate-y-1/2 -rotate-90" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
+                        <div className="flex flex-col justify-center items-center w-full select-none mt-4">
+                            {/* 搖桿 */}
+                            <div
+                                ref={joystickBaseRef}
+                                className="relative w-52 h-52 bg-primary/20 rounded-full flex items-center justify-center text-primary-content/40"
+                                style={{ touchAction: 'none' }}
+                                onPointerDown={handlePointerDown}
+                            >
+                                <svg className="w-6 h-6 absolute top-5 left-1/2 -translate-x-1/2" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
+                                <svg className="w-6 h-6 absolute right-5 top-1/2 -translate-y-1/2 rotate-90" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
+                                <svg className="w-6 h-6 absolute bottom-5 left-1/2 -translate-x-1/2 rotate-180" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
+                                <svg className="w-6 h-6 absolute left-5 top-1/2 -translate-y-1/2 -rotate-90" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
 
-                            <motion.div
-                                className="w-20 h-20 cursor-grab"
-                                style={{
-                                    x: knobX,
-                                    y: knobY,
-                                    backgroundImage: `url(${
-                                                            localPlayer.color
-                                                                ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}Pin.png`
-                                                                : `/images/gray_${localPlayer.avatar || 'wind-up'}Pin.png`
-                                                            })`,
-                                    backgroundSize: 'contain',
-                                    backgroundPosition: 'center',
-                                    backgroundRepeat: 'no-repeat'
-                                }}
-                                whileTap={{ cursor: 'grabbing' }}
-                                rotate={rotation}
-                            />
-                        </div>
-
-                        {/* 技能/繪圖按鈕 */}
-                        <motion.div
-                            className={`
-                                w-full h-16 rounded-full flex items-center justify-center cursor-pointer select-none
-                                transition-all duration-150 shadow-lg
-                                ${isPressing
-                                    ? 'bg-accent scale-105 shadow-accent/50'
-                                    : 'bg-primary hover:bg-primary-focus'
-                                }
-                            `}
-                            style={{ touchAction: 'none' }}
-                            onPointerDown={handlePressStart}
-                            onPointerUp={handlePressEnd}
-                            onPointerLeave={handlePressEnd}
-                            onPointerCancel={handlePressEnd}
-                            whileTap={{ scale: 0.98 }}
-                        >
-                            <div className={`flex items-center gap-3 ${isPressing ? 'text-accent-content' : 'text-primary-content'}`}>
-                                {/* 圖示：Toybox 用閃電，ColorPaper 用顏料 */}
-                                {isToybox ? (
-                                    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M13 10h7l-9 13v-9H4l9-13v9z"/>
-                                    </svg>
-                                ) : (
-                                    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M19.228 18.732l1.768-1.768 1.767 1.768a2.5 2.5 0 1 1-3.535 0zM8.878 1.08l11.314 11.313a1 1 0 0 1 0 1.415l-8.485 8.485a1 1 0 0 1-1.414 0l-8.485-8.485a1 1 0 0 1 0-1.415l7.778-7.778-2.122-2.121L8.88 1.08zM11 6.03L3.929 13.1 11 20.173l7.071-7.071L11 6.029z"/>
-                                    </svg>
-                                )}
-                                <span className="text-lg font-bold">
-                                    {isToybox
-                                        ? (isPressing ? '使用中...' : '按住使用技能')
-                                        : (isPressing ? '繪圖中...' : '按住繪圖')
-                                    }
-                                </span>
+                                <motion.div
+                                    className="w-20 h-20 cursor-grab"
+                                    style={{
+                                        x: knobX,
+                                        y: knobY,
+                                        backgroundImage: `url(${
+                                                                localPlayer.color
+                                                                    ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}Pin.png`
+                                                                    : `/images/gray_${localPlayer.avatar || 'wind-up'}Pin.png`
+                                                                })`,
+                                        backgroundSize: 'contain',
+                                        backgroundPosition: 'center',
+                                        backgroundRepeat: 'no-repeat'
+                                    }}
+                                    whileTap={{ cursor: 'grabbing' }}
+                                    rotate={rotation}
+                                />
                             </div>
-                        </motion.div>
+                        </div>
                     </div>
+                </motion.div>
+            </div>
+
+            {/* 下方獨立區塊：技能/繪圖按鈕 */}
+            <motion.div
+                className="w-full px-4 z-20 flex items-center justify-center transition-all duration-150"
+                style={{
+                    touchAction: 'none',
+                    backdropFilter: 'blur(10px)',
+                    borderTopLeftRadius: '1.5rem',
+                    borderTopRightRadius: '1.5rem',
+                    minHeight: '30vh',
+                    paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))',
+                    paddingTop: '1.5rem',
+                    backgroundColor: isPressing
+                        ? ({ red: 'rgba(239,68,68,0.8)', blue: 'rgba(59,130,246,0.8)', green: 'rgba(34,197,94,0.8)', yellow: 'rgba(234,179,8,0.8)' }[localPlayer.color] || 'rgba(0,0,0,0.6)')
+                        : 'rgba(0,0,0,0.4)',
+                }}
+                {...(isToybox
+                    ? { onClick: handleSkillTap }
+                    : {
+                        onPointerDown: handlePressStart,
+                        onPointerUp: handlePressEnd,
+                        onPointerLeave: handlePressEnd,
+                        onPointerCancel: handlePressEnd,
+                    }
+                )}
+            >
+                <div className="flex items-center gap-3 text-white">
+                    {isToybox ? (
+                        <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M13 10h7l-9 13v-9H4l9-13v9z"/>
+                        </svg>
+                    ) : (
+                        <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19.228 18.732l1.768-1.768 1.767 1.768a2.5 2.5 0 1 1-3.535 0zM8.878 1.08l11.314 11.313a1 1 0 0 1 0 1.415l-8.485 8.485a1 1 0 0 1-1.414 0l-8.485-8.485a1 1 0 0 1 0-1.415l7.778-7.778-2.122-2.121L8.88 1.08zM11 6.03L3.929 13.1 11 20.173l7.071-7.071L11 6.029z"/>
+                        </svg>
+                    )}
+                    <span className="text-lg font-bold">
+                        {isToybox
+                            ? (isPressing ? '使用中...' : '點擊使用技能')
+                            : (isPressing ? '繪圖中...' : '按住繪圖')
+                        }
+                    </span>
                 </div>
             </motion.div>
         </div>
