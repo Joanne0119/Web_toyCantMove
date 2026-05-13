@@ -5,8 +5,8 @@ export const isFullscreenSupported = () => {
     return false; 
   }
 
-  // if (/iPhone/i.test(navigator.userAgent)) {
-  if (true) {
+  // iOS 不支援全螢幕 API
+  if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
     return false;
   }
 
