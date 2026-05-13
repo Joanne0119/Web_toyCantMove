@@ -17,7 +17,7 @@ const stepVideos = {
 const Tutorial = () => {
   const navigate = useNavigate();
   const videoRef = useRef(null);
-  const { webRTC, gyroscope, connectionStatus, gyroscopeStatus, screenWakeLock, unityPeerId, localPlayer } = useGame();
+  const { webRTC, gyroscope, connectionStatus, gyroscopeStatus, screenWakeLock, unityPeerId, localPlayer, gameScene } = useGame();
   const { init: initGyroscope, calibrate: calibrateGyroscope, isSupported } = gyroscope;
   const { lastMessage, sendData: sendWebRTCData, dataChannelConnections } = webRTC;
   const { coordinates, isCalibrated, isInitialized } = gyroscopeStatus;
@@ -122,6 +122,13 @@ const Tutorial = () => {
         screenWakeLock.request();
         }
     }, [screenWakeLock]); 
+
+  // 監聽 gameScene 變化，確保跳轉到 Playing
+  useEffect(() => {
+    if (gameScene === 'Playing') {
+      navigate('/playing');
+    }
+  }, [gameScene, navigate]);
 
   // 監聽 Unity 發來的訊息
   useEffect(() => {
