@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 
 const COUNTDOWN_SECONDS = 10;
+const CIRCLE_SIZE = 80;
+const STROKE_WIDTH = 5;
+const RADIUS = (CIRCLE_SIZE - STROKE_WIDTH) / 2;
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 const DisconnectModal = () => {
   const navigate = useNavigate();
@@ -45,16 +49,53 @@ const DisconnectModal = () => {
 
   if (!shouldShow) return null;
 
+  // 圓環進度：從滿到空
+  const progress = countdown / COUNTDOWN_SECONDS;
+  const strokeDashoffset = CIRCUMFERENCE * (1 - progress);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div className="bg-base-100 rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
-        <div className="text-4xl mb-4">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-12 h-12 mx-auto text-warning">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-            <line x1="12" y1="9" x2="12" y2="13" />
-            <line x1="12" y1="17" x2="12.01" y2="17" />
-          </svg>
+        {/* 圓環倒數 */}
+        <div className="flex justify-center mb-4">
+          <div className="relative" style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}>
+            <svg
+              width={CIRCLE_SIZE}
+              height={CIRCLE_SIZE}
+              className="transform -rotate-90"
+            >
+              {/* 背景圓環 */}
+              <circle
+                cx={CIRCLE_SIZE / 2}
+                cy={CIRCLE_SIZE / 2}
+                r={RADIUS}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={STROKE_WIDTH}
+                className="text-base-300"
+              />
+              {/* 倒數圓環 */}
+              <circle
+                cx={CIRCLE_SIZE / 2}
+                cy={CIRCLE_SIZE / 2}
+                r={RADIUS}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={STROKE_WIDTH}
+                strokeLinecap="round"
+                strokeDasharray={CIRCUMFERENCE}
+                strokeDashoffset={strokeDashoffset}
+                className="text-warning"
+                style={{ transition: 'stroke-dashoffset 1s linear' }}
+              />
+            </svg>
+            {/* 中間秒數 */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-2xl font-bold">{countdown}</span>
+            </div>
+          </div>
         </div>
+
         <h3 className="text-lg font-bold mb-2">連線已中斷</h3>
         <p className="text-base-content/70 mb-4">
           與遊戲主機的連線已斷開，{countdown} 秒後將自動返回首頁
