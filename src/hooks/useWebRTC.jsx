@@ -4,25 +4,11 @@ import { WebRTCManager } from '../lib/webRTCManager.js';
 export const useWebRTC = (localPeerId, stunServerAddress, uiConfig) => {
   const managerRef = useRef(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [webRTCConnections, setWebRTCConnections] = useState([]); // List of connected peer IDs
-  const [dataChannelConnections, setDataChannelConnections] = useState([]); // List of peer IDs with open data channels
+  const [webRTCConnections, setWebRTCConnections] = useState([]);
+  const [dataChannelConnections, setDataChannelConnections] = useState([]);
   const [lastMessage, setLastMessage] = useState(null);
   const [error, setError] = useState(null);
   const [peers, setPeers] = useState([]);
-
-  useEffect(() => {
-    if (localPeerId) {
-      setupManager();
-
-      return () => {
-        if (managerRef.current) {
-          managerRef.current.closeWebRTC();
-          managerRef.current.closeWebSocket();
-          managerRef.current = null;
-        }
-      };
-    }
-  }, [localPeerId, setupManager]);
 
   const setupManager = useCallback(() => {
     if (managerRef.current) return managerRef.current;
@@ -56,6 +42,20 @@ export const useWebRTC = (localPeerId, stunServerAddress, uiConfig) => {
     return manager;
   }, [localPeerId, stunServerAddress, uiConfig]);
 
+  useEffect(() => {
+    if (localPeerId) {
+      setupManager();
+
+      return () => {
+        if (managerRef.current) {
+          managerRef.current.closeWebRTC();
+          managerRef.current.closeWebSocket();
+          managerRef.current = null;
+        }
+      };
+    }
+  }, [localPeerId, setupManager]);
+
   const connect = useCallback(async (webSocketUrl, isVideoAudioSender, isVideoAudioReceiver) => {
     const manager = setupManager();
     if (manager) {
@@ -74,7 +74,7 @@ export const useWebRTC = (localPeerId, stunServerAddress, uiConfig) => {
     if (managerRef.current) {
       managerRef.current.closeWebRTC();
       managerRef.current.closeWebSocket();
-      managerRef.current = null; // 銷毀 manager，下次 connect 時重建
+      managerRef.current = null;
       setIsConnected(false);
       setWebRTCConnections([]);
       setDataChannelConnections([]);
@@ -119,11 +119,11 @@ export const useWebRTC = (localPeerId, stunServerAddress, uiConfig) => {
       peers,
       manager: managerRef.current
     };
-  }, [ 
+  }, [
     isConnected, webRTCConnections, dataChannelConnections, lastMessage,
     error, connect, disconnect, sendData, setLocalStream,
     initiateOffersToAllPeers, peers, managerRef.current
   ]);
 
-  return memoizedValue; 
+  return memoizedValue;
 };
