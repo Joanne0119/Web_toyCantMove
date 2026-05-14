@@ -103,23 +103,25 @@ const Tutorial = () => {
   }, [isSupported]);
 
   useEffect(() => {
+    // 只有陀螺儀關卡 + 不支援陀螺儀的設備才自動跳過
+    if (inputType !== 'gyro') return;
     if (
-      gyroSupported === false && 
-      dataChannelConnections && 
-      dataChannelConnections.length > 0 && 
+      gyroSupported === false &&
+      dataChannelConnections &&
+      dataChannelConnections.length > 0 &&
       !hasSentCalibratedRef.current
     ) {
       hasSentCalibratedRef.current = true;
 
-      const calibratedMessage = { 
-        type: "tutorial_step_complete", 
-        step: "calibrate" 
+      const calibratedMessage = {
+        type: "tutorial_step_complete",
+        step: "calibrate"
       };
-      
+
       sendWebRTCData(JSON.stringify(calibratedMessage), unityPeerId || null);
       console.log("Gyro not supported. Sent 'tutorial_step_complete: calibrate' message.");
     }
-  }, [gyroSupported, dataChannelConnections, sendWebRTCData, unityPeerId]);
+  }, [inputType, gyroSupported, dataChannelConnections, sendWebRTCData, unityPeerId]);
 
   // screen wake lock
     useEffect(() => {
