@@ -777,8 +777,13 @@ class WebRTCManager {
   closeWebSocket() {
     this.shouldReconnect = false;
     if (this.ws) {
+      this.ws.onclose = null;  // 清除回調，防止觸發重連
+      this.ws.onmessage = null;
+      this.ws.onerror = null;
       this.ws.close();
-      // this.ws = null; // ws.onclose will handle setting isWebSocketConnected to false
+      this.ws = null;
+      this.isWebSocketConnected = false;
+      this.isWebSocketConnectionInProgress = false;
     }
   }
 
