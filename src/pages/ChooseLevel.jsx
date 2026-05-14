@@ -63,27 +63,31 @@ const ChooseLevel = () => {
     scrollRef.current.scrollTo({ left: scrollTarget, behavior: 'smooth' });
   }, [cardWidth]);
 
-  // 即時偵測滾動位置更新 currentIndex
+  // 偵測滾動位置更新 currentIndex（debounce 防止抖動）
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
 
+    let timer;
     const onScroll = () => {
       if (!cardWidth) return;
       const index = Math.round(el.scrollLeft / (cardWidth + GAP));
       const clamped = Math.max(0, Math.min(index, levels.length - 1));
-      setCurrentIndex(prev => {
-        if (prev !== clamped) {
-          if (isHost && !levels[clamped].disable) {
-            selectLevel(levels[clamped]);
-          }
-          return clamped;
+      setCurrentIndex(clamped);
+
+      // debounce 選關卡，等滾動穩定後才發送
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        if (isHost && !levels[clamped].disable) {
+          selectLevel(levels[clamped]);
         }
-        return prev;
-      });
+      }, 200);
     };
     el.addEventListener('scroll', onScroll, { passive: true });
-    return () => el.removeEventListener('scroll', onScroll);
+    return () => {
+      el.removeEventListener('scroll', onScroll);
+      clearTimeout(timer);
+    };
   }, [cardWidth, isHost]);
 
   const paginate = (dir) => {
