@@ -18,7 +18,7 @@ const Award = () => {
   // const finalResults = MOCK_FINAL_RESULTS;
   // const localPlayer = MOCK_LOCAL_PLAYER;
   // const terminateImageLink = MOCK_TERMINATE_IMAGE;
-  const { finalResults, localPlayer, terminateImageLink } = useGame();
+  const { finalResults, localPlayer, terminateImageLink, setGameScene } = useGame();
 
   const navigate = useNavigate();
   const [isGenerating, setIsGenerating] = useState(false);
@@ -190,10 +190,12 @@ const Award = () => {
   const top4 = results
 
   const handlePlayAgain = () => {
+    setGameScene('Lobby');
     navigate('/choose-level');
   };
 
   const handleLeave = () => {
+    setGameScene('Lobby');
     navigate('/enter-name');
   };
 

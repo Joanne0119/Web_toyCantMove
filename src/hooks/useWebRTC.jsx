@@ -44,6 +44,10 @@ export const useWebRTC = (localPeerId, stunServerAddress, uiConfig) => {
       };
 
 
+      manager.onDataChannelDisconnection = (peerId) => {
+        setDataChannelConnections((prev) => prev.filter(id => id !== peerId));
+      };
+
       manager.onDataChannelMessageReceived = (message, peerId) => {
         setLastMessage({ message, peerId, timestamp: Date.now() });
       };

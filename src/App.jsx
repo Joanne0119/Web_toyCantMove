@@ -12,6 +12,7 @@ import Award from './pages/Award';
 import Error from './pages/Error';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import DisconnectModal from './components/DisconnectModal';
 import OfficialSite from './pages/OfficialSite/OfficialSite';
 
 
@@ -24,6 +25,7 @@ function App() {
           <div className="flex flex-col h-screen">
             <Navbar />
             <Footer />
+            <DisconnectModal />
             <div className="flex-1">
               <Routes>
                 <Route path="enter-name" element={<EnterName />} />
