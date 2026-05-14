@@ -59,16 +59,8 @@ export const GameProvider = ({ children }) => {
   const [score, setScore] = useState(0);
   const [hostId, setHostId] = useState(null); 
   const [gameScene, setGameScene] = useState('Lobby');
-  const [peerId] = useState(() => {
-    // 1. 嘗試從 localStorage 讀取
-    // const savedId = localStorage.getItem('myPeerId');
-    // if (savedId) return savedId;
-
-    // 2. 如果沒有，才生成新的，並存起來
-    const newId = 'web-' + Math.random().toString(36).substring(2, 9);
-    // localStorage.setItem('myPeerId', newId);
-    return newId;
-  });
+  const generatePeerId = () => 'web-' + Math.random().toString(36).substring(2, 9);
+  const [peerId, setPeerId] = useState(generatePeerId);
   const [localPlayer, setLocalPlayer] = useState({
     id: peerId,
     name: '',
@@ -328,7 +320,9 @@ export const GameProvider = ({ children }) => {
     setGameScene,
     unityDisconnected,
     resetGameState: () => {
-      setLocalPlayer(prev => ({ ...prev, color: null }));
+      const newPeerId = generatePeerId();
+      setPeerId(newPeerId);
+      setLocalPlayer(prev => ({ ...prev, id: newPeerId, color: null }));
       setGameScene('Lobby');
       setHostId(null);
       setFinalResults([]);
