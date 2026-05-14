@@ -7,10 +7,10 @@ const TAP_COOLDOWN = 50; // 防抖冷卻 (ms)
 
 const TapController = () => {
   const navigate = useNavigate();
-  const { webRTC, connectionStatus, screenWakeLock, unityPeerId } = useGame();
+  const { webRTC, connectionStatus, screenWakeLock, unityPeerId, localPlayer } = useGame();
   const { lastMessage, sendData: sendWebRTCData } = webRTC;
 
-  const [tapCount, setTapCount] = useState(0);
+  const [isEating, setIsEating] = useState(false);
   const [showFlash, setShowFlash] = useState(false);
   const lastTapTimeRef = useRef(0);
   const lastProcessedTimestamp = useRef(0);
@@ -43,7 +43,9 @@ const TapController = () => {
     if (now - lastTapTimeRef.current < TAP_COOLDOWN) return;
     lastTapTimeRef.current = now;
 
-    setTapCount(prev => prev + 1);
+    // 吃東西動畫
+    setIsEating(true);
+    setTimeout(() => setIsEating(false), 150);
 
     // 閃光回饋
     setShowFlash(true);
@@ -66,6 +68,10 @@ const TapController = () => {
       document.removeEventListener('mousedown', handleTap);
     };
   }, [handleTap]);
+
+  const avatarSrc = localPlayer.color
+    ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}.png`
+    : `/images/gray_${localPlayer.avatar || 'wind-up'}.png`;
 
   return (
     <div
@@ -93,20 +99,25 @@ const TapController = () => {
         )}
       </AnimatePresence>
 
-      {/* 計數顯示 */}
-      <div className="relative z-10 flex flex-col items-center gap-4">
-        <motion.div
-          key={tapCount}
-          initial={{ scale: 1.3 }}
-          animate={{ scale: 1 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-          className="text-8xl font-bold text-primary drop-shadow-lg"
-        >
-          {tapCount}
-        </motion.div>
+      {/* 角色 + 盤子 */}
+      <div className="relative z-10 flex flex-col items-center">
+        {/* 角色 */}
+        <motion.img
+          src={avatarSrc}
+          alt="角色"
+          className="w-36 h-36 object-contain drop-shadow-lg"
+          animate={isEating
+            ? { scale: [1, 1.25, 0.9, 1], y: [0, -10, 5, 0] }
+            : { scale: 1, y: 0 }
+          }
+          transition={{ duration: 0.15 }}
+        />
+
+        {/* 盤子 */}
+        <div className="w-48 h-12 bg-white/80 rounded-[50%] shadow-lg -mt-4" />
 
         <motion.p
-          className="text-lg text-base-content/60 drop-shadow-sm"
+          className="text-lg text-base-content/60 drop-shadow-sm mt-8"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
