@@ -353,7 +353,23 @@ const Tutorial = () => {
             </div>
 
             {!isCompleted && (
-              <p className="text-xs text-base-content/30 mt-2">點擊螢幕任意位置練習</p>
+              <>
+                <p className="text-xs text-base-content/30 mt-2">點擊螢幕任意位置練習</p>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!nonGyroCompletedRef.current) {
+                      nonGyroCompletedRef.current = true;
+                      setTapCount(TAP_REQUIRED);
+                      const msg = { type: "tutorial_step_complete", step: "calibrate" };
+                      sendWebRTCData(JSON.stringify(msg), unityPeerId || null);
+                    }
+                  }}
+                  className="btn btn-ghost btn-xs text-base-content/30 mt-1"
+                >
+                  略過教學
+                </button>
+              </>
             )}
           </div>
         </motion.div>
@@ -457,6 +473,17 @@ const Tutorial = () => {
                         '啟用與校正'
                     )}
                 </motion.button>
+                <button
+                  onClick={() => {
+                    setSkippedTutorial(true);
+                    setInstructionText('等待其他玩家...');
+                    const calibratedMsg = { type: "tutorial_step_complete", step: "calibrate" };
+                    sendWebRTCData(JSON.stringify(calibratedMsg), unityPeerId || null);
+                  }}
+                  className="btn btn-ghost btn-xs text-base-content/30 mt-2"
+                >
+                  略過教學
+                </button>
             </div>
         </motion.div>
       </div>
