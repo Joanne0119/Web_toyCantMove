@@ -70,8 +70,8 @@ const TapController = () => {
   }, [handleTap]);
 
   const avatarSrc = localPlayer.color
-    ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}.png`
-    : `/images/gray_${localPlayer.avatar || 'wind-up'}.png`;
+    ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}Pin.png`
+    : `/images/gray_${localPlayer.avatar || 'wind-up'}Pin.png`;
 
   return (
     <div
@@ -99,22 +99,28 @@ const TapController = () => {
         )}
       </AnimatePresence>
 
-      {/* 角色 + 盤子 */}
+      {/* 盤子 + 角色一起縮放 */}
       <div className="relative z-10 flex flex-col items-center">
-        {/* 角色 */}
-        <motion.img
-          src={avatarSrc}
-          alt="角色"
-          className="w-36 h-36 object-contain drop-shadow-lg"
+        <motion.div
+          className="relative flex items-center justify-center"
           animate={isEating
-            ? { scale: [1, 1.25, 0.9, 1], y: [0, -10, 5, 0] }
-            : { scale: 1, y: 0 }
+            ? { scale: [1, 1.15, 0.92, 1] }
+            : { scale: 1 }
           }
           transition={{ duration: 0.15 }}
-        />
-
-        {/* 盤子 */}
-        <div className="w-48 h-12 bg-white/80 rounded-[50%] shadow-lg -mt-4" />
+        >
+          {/* 盤子 */}
+          <div className="w-64 h-64 rounded-full bg-gradient-to-b from-white/90 to-base-300/60 shadow-xl flex items-center justify-center">
+            <div className="w-52 h-52 rounded-full bg-gradient-to-b from-base-200/50 to-base-300/30 flex items-center justify-center">
+              {/* 角色 Pin */}
+              <img
+                src={avatarSrc}
+                alt="角色"
+                className="w-28 h-28 object-contain drop-shadow-lg"
+              />
+            </div>
+          </div>
+        </motion.div>
 
         <motion.p
           className="text-lg text-base-content/60 drop-shadow-sm mt-8"
