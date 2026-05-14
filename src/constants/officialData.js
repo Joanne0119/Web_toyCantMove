@@ -88,6 +88,14 @@ export const levels = [
     description: '在一張巨大的畫紙上奔跑！收集顏料罐，用繽紛的色彩佔領畫紙。每位玩家的力量值會影響顏料的爆炸範圍，策略性十足！',
     bgClass: 'bg-base-300',
   },
+  {
+    id: 2,
+    name: '瘋狂餐桌',
+    engName: 'Tap Eat',
+    image: '/images/foodLevel.png',
+    description: '在擺滿美食的餐桌上比拼手速！快速點擊螢幕來吃掉盤中的食物，看誰能在時間內吃完最多盤！',
+    bgClass: 'bg-base-200',
+  },
 ];
 
 export const gameplaySteps = [
