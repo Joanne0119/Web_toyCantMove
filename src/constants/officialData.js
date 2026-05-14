@@ -75,7 +75,7 @@ export const levels = [
   {
     id: 0,
     name: '玩具紙箱',
-    engName: 'Toybox',
+    engName: 'Toy Box',
     image: '/images/toyboxLevel.png',
     description: '在堆滿玩具的紙箱中展開冒險！各種玩具散落其中，快來收集它們吧。這是一個經典的競技場地，充滿了童年的回憶。',
     bgClass: 'bg-base-200',
@@ -83,7 +83,7 @@ export const levels = [
   {
     id: 1,
     name: '塗鴉畫紙',
-    engName: 'Color Paper',
+    engName: 'Doodle Paper',
     image: '/images/tableLevel.png',
     description: '在一張巨大的畫紙上奔跑！收集顏料罐，用繽紛的色彩佔領畫紙。每位玩家的力量值會影響顏料的爆炸範圍，策略性十足！',
     bgClass: 'bg-base-300',
@@ -91,7 +91,7 @@ export const levels = [
   {
     id: 2,
     name: '瘋狂餐桌',
-    engName: 'Tap Eat',
+    engName: 'Dinning Table',
     image: '/images/foodLevel.png',
     description: '在擺滿美食的餐桌上比拼手速！快速點擊螢幕來吃掉盤中的食物，看誰能在時間內吃完最多盤！',
     bgClass: 'bg-base-200',
@@ -108,19 +108,19 @@ export const gameplaySteps = [
   {
     step: 2,
     title: '手機連線',
-    description: '用手機掃描畫面上的 QR Code，輸入暱稱後即可加入遊戲房間。',
+    description: '用手機掃描畫面上的 QR Code，輸入暱稱並選擇角色後即可加入遊戲房間。',
     icon: 'Smartphone',
   },
   {
     step: 3,
-    title: '體感操控',
-    description: '傾斜你的手機來控制角色移動！向前傾就前進，向左傾就左轉。',
+    title: '多元操控',
+    description: '依據不同關卡，傾斜手機控制移動、點擊螢幕吃東西、按住按鈕繪圖，多種互動方式！',
     icon: 'RotateCcw',
   },
   {
     step: 4,
     title: '競爭得分',
-    description: '與朋友們即時競爭，收集物品累積分數，最後看誰是玩具箱之王！',
+    description: '與朋友們即時競爭，在不同主題關卡中爭奪最高分，最後看誰是玩具王國的英雄！',
     icon: 'Trophy',
   },
 ];
@@ -128,26 +128,26 @@ export const gameplaySteps = [
 export const techStack = [
   {
     id: 'webrtc',
-    name: 'WebRTC P2P',
-    description: '採用 WebRTC 點對點技術實現即時多人連線，無需中間伺服器轉發，確保低延遲的遊戲體驗。',
+    name: 'WebRTC + WebSocket',
+    description: '採用 WebSocket 進行信令傳輸與配對連線，搭配 WebRTC P2P 即時資料傳輸，實現手機與遊戲端的低延遲雙向通訊。支援 STUN/TURN 伺服器確保各種網路環境下皆可連通。',
     icon: 'Wifi',
   },
   {
-    id: 'gyroscope',
-    name: '陀螺儀感測',
-    description: '運用手機內建的陀螺儀與加速度計，將真實的傾斜動作轉化為遊戲中的角色控制。',
+    id: 'sensor',
+    name: '多元感測互動',
+    description: '運用手機內建的陀螺儀與加速度計進行體感操控，同時支援觸控點擊、按壓繪圖等多種輸入方式，依據不同關卡提供最適合的互動體驗。',
     icon: 'Compass',
   },
   {
     id: 'unity',
     name: 'Unity 遊戲引擎',
-    description: '使用 Unity 6 打造精美的 3D 遊戲場景與物理互動，呈現栩栩如生的玩具世界。',
+    description: '使用 Unity 6 打造精美的 3D 遊戲場景與物理互動，搭配自訂 Shader 實現即時繪圖系統與粒子特效，呈現栩栩如生的玩具世界。',
     icon: 'Gamepad2',
   },
   {
     id: 'react',
     name: 'React + Vite',
-    description: '以 React 建構流暢的手機控制器介面，搭配 Vite 實現極速載入與開發體驗。',
+    description: '以 React 建構流暢的手機控制器介面與官方網站，搭配 Vite 實現極速載入，並使用 Framer Motion 打造豐富的 UI 動畫與互動回饋。',
     icon: 'Code',
   },
 ];
@@ -156,23 +156,23 @@ export const teamMembers = [
   {
     id: 1,
     name: '劉丞恩',
-    role: '遊戲企劃 / Unity 開發',
-    avatar: null,
-    description: '負責遊戲機制設計與 Unity 場景開發。',
+    role: '程式設計 / 場景設計',
+    avatar: '/images/liu.png',
+    description: '負責程式設計、場景設計、角色與物件設計、前端工程、感測器測試。',
   },
   {
     id: 2,
     name: '許昀韋',
-    role: '前端開發 / 網路架構',
-    avatar: null,
-    description: '負責 React 控制器、官網與 WebRTC 連線。',
+    role: '程式設計 / 連線開發',
+    avatar: '/images/hsu.png',
+    description: '負責程式設計、WebSocket + WebRTC 連線開發、影片製作。',
   },
   {
     id: 3,
     name: '黃姿云',
-    role: '美術設計 / UI 設計',
-    avatar: null,
-    description: '負責角色設計、場景美術與視覺呈現。',
+    role: '美術設計 / 音效',
+    avatar: '/images/huang.png',
+    description: '負責物件設計、音效製作、前端流程設計、影片製作。',
   },
 ];
 

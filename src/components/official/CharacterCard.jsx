@@ -57,7 +57,7 @@ const CharacterCard = ({ character, index }) => {
           <StatBar label="技巧" value={character.skill} delay={index * 0.1 + 0.2} />
         </div>
 
-        <p className="text-xs text-base-content/60 mt-3 line-clamp-2">
+        <p className="text-xs text-base-content/60 mt-3 line-clamp-3">
           {character.description}
         </p>
       </div>

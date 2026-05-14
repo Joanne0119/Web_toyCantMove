@@ -6,7 +6,7 @@
 /* @supports not (color: oklch(0 0 0)) { */
   :root {
     /* Bumblebee 主題對應的 HEX */
-    --primary: #e0a82e;        
+    --primary: #e0a82e;
     --primary-content: #18181b; 
     --secondary: #f9d72f;      
     --secondary-content: #18181b;

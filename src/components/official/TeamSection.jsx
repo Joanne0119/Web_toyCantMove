@@ -14,15 +14,15 @@ const TeamCard = ({ member, index }) => {
     >
       <div className="card-body items-center text-center">
         {/* Avatar */}
-        <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-3 overflow-hidden">
+        <div className="w-24 h-28 rounded-2xl bg-primary/10 flex items-center justify-center mb-3 overflow-hidden">
           {member.avatar ? (
-            <img src={member.avatar} alt={member.name} className="w-full h-full object-cover" />
+            <img src={member.avatar} alt={member.name} className="w-full h-full object-cover object-top" />
           ) : (
             <span className="text-3xl">👤</span>
           )}
         </div>
         <h3 className="card-title text-base">{member.name}</h3>
-        <p className="text-xs text-primary font-medium">{member.role}</p>
+        <p className="text-xs official-role font-medium">{member.role}</p>
         <p className="text-xs text-base-content/60 mt-1">{member.description}</p>
       </div>
     </motion.div>

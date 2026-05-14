@@ -13,3 +13,23 @@ body.official-page #root {
 body.official-page {
   scroll-behavior: smooth;
 }
+
+/* Light mode (bumblebee): navbar 選中和 role 文字用深色 */
+[data-theme="bumblebee"] .nav-active,
+[data-theme="bumblebee"] .official-role {
+  color: #8B6914;
+}
+
+/* Dark mode (halloween): 維持 primary 橘色 */
+[data-theme="halloween"] .nav-active,
+[data-theme="halloween"] .official-role {
+  color: #f28c18;
+}
+
+/* 預設（跟隨系統偏好） */
+.nav-active { color: #8B6914; }
+.official-role { color: #8B6914; }
+@media (prefers-color-scheme: dark) {
+  .nav-active { color: #f28c18; }
+  .official-role { color: #f28c18; }
+}
