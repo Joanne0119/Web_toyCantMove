@@ -109,9 +109,8 @@ const WaitingRoom = () => {
   };
 
   const handleLeave = () => {
+    hasAttemptedConnection.current = true; // 防止 disconnect 後 useEffect 又觸發 connect
     webRTC.disconnect();
-    hasAttemptedConnection.current = false;
-    hasSentIdentify.current = false;
     resetGameState();
     navigate('/enter-name');
   };
@@ -209,7 +208,7 @@ const WaitingRoom = () => {
                 </p>
                 <div className="card-actions mt-4 w-full">
                   <button
-                    onClick={() => { webRTC.disconnect(); hasAttemptedConnection.current = false; hasSentIdentify.current = false; resetGameState(); navigate('/enter-name'); }}
+                    onClick={() => { hasAttemptedConnection.current = true; webRTC.disconnect(); resetGameState(); navigate('/enter-name'); }}
                     className="btn btn-primary btn-block"
                   >
                     返回首頁
@@ -256,7 +255,7 @@ const WaitingRoom = () => {
                     重新連線
                   </button>
                   <button
-                    onClick={() => { webRTC.disconnect(); hasAttemptedConnection.current = false; hasSentIdentify.current = false; resetGameState(); navigate('/enter-name'); }}
+                    onClick={() => { hasAttemptedConnection.current = true; webRTC.disconnect(); resetGameState(); navigate('/enter-name'); }}
                     className="btn btn-ghost btn-block"
                   >
                     返回首頁
