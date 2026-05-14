@@ -81,15 +81,24 @@ export const GameProvider = ({ children }) => {
   const [unityPeerId, setUnityPeerId] = useState(null);
   const [unityDisconnected, setUnityDisconnected] = useState(false);
   const wasConnectedRef = useRef(false);
+  const identifiedUnityRef = useRef(null); // 記錄已 identify 的 unityPeerId
 
+  // 每次 URL 變化時重新讀取 unityPeerId（支援離開後重新掃 QR code）
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const urlUnityPeerId = params.get('peerId'); 
-    
-    if (urlUnityPeerId) {
-      console.log("Found Unity Peer ID in URL:", urlUnityPeerId);
-      setUnityPeerId(urlUnityPeerId);
-    }
+    const checkUrlPeerId = () => {
+      const params = new URLSearchParams(window.location.search);
+      const urlUnityPeerId = params.get('peerId');
+      if (urlUnityPeerId) {
+        console.log("Found Unity Peer ID in URL:", urlUnityPeerId);
+        setUnityPeerId(urlUnityPeerId);
+      }
+    };
+
+    checkUrlPeerId();
+
+    // 監聽 popstate（瀏覽器上一頁/下一頁）和自訂事件
+    window.addEventListener('popstate', checkUrlPeerId);
+    return () => window.removeEventListener('popstate', checkUrlPeerId);
   }, []);
 
   // WebRTC integration（使用 STUN + TURN servers）
@@ -130,8 +139,8 @@ export const GameProvider = ({ children }) => {
     const isConnectedToUnity = unityPeerId && webRTC.dataChannelConnections.includes(unityPeerId);
     let retryTimer = null;
 
-    // 已連線，尚未發送過身分資料
-    if (isConnectedToUnity && !localPlayer.color) {
+    // 已連線，尚未發送過身分資料（或換了新的 unityPeerId）
+    if (isConnectedToUnity && identifiedUnityRef.current !== unityPeerId) {
       console.log(`🔗 Connected to Unity (${unityPeerId})! Sending P2P Identify...`);
       const sendIdentify = () => {
         const identifyMsg = {
@@ -148,6 +157,12 @@ export const GameProvider = ({ children }) => {
 
       // 每秒重試，直到收到顏色
       retryTimer = setInterval(() => {
+        if (localPlayer.color) {
+          clearInterval(retryTimer);
+          retryTimer = null;
+          identifiedUnityRef.current = unityPeerId;
+          return;
+        }
         console.log("[GameContext] 1秒...還沒收到顏色，重試發送");
         sendIdentify();
       }, 1000);
@@ -164,7 +179,7 @@ export const GameProvider = ({ children }) => {
         retryTimer = null;
       }
     };
-  }, [webRTC.dataChannelConnections, localPlayer.color, peerId, webRTC, unityPeerId]);
+  }, [webRTC.dataChannelConnections, localPlayer.color, localPlayer.name, localPlayer.avatar, peerId, webRTC, unityPeerId]);
 
   useEffect(() => {
     if (lastMessage) {
@@ -312,6 +327,16 @@ export const GameProvider = ({ children }) => {
     setUnityPeerId,
     setGameScene,
     unityDisconnected,
+    resetGameState: () => {
+      setLocalPlayer(prev => ({ ...prev, color: null }));
+      setGameScene('Lobby');
+      setHostId(null);
+      setFinalResults([]);
+      setTerminateImageLink(null);
+      setUnityDisconnected(false);
+      wasConnectedRef.current = false;
+      identifiedUnityRef.current = null;
+    },
   }), [
     peerId, hostId, gameScene, localPlayer, otherPlayers, level, score,
     webRTC, gyroscope, screenWakeLockValue, gyroscopeStatus, finalResults, terminateImageLink, unityPeerId, setGameScene, unityDisconnected

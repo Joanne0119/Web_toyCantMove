@@ -17,7 +17,8 @@ const WaitingRoom = () => {
     gyroscope,
     connectionStatus,
     screenWakeLock,
-    unityPeerId
+    unityPeerId,
+    resetGameState
   } = useGame();
 
   const { dataChannelConnections, sendData } = webRTC;
@@ -109,6 +110,9 @@ const WaitingRoom = () => {
 
   const handleLeave = () => {
     webRTC.disconnect();
+    hasAttemptedConnection.current = false;
+    hasSentIdentify.current = false;
+    resetGameState();
     navigate('/enter-name');
   };
 
@@ -205,7 +209,7 @@ const WaitingRoom = () => {
                 </p>
                 <div className="card-actions mt-4 w-full">
                   <button
-                    onClick={() => { webRTC.disconnect(); navigate('/enter-name'); }}
+                    onClick={() => { webRTC.disconnect(); hasAttemptedConnection.current = false; hasSentIdentify.current = false; resetGameState(); navigate('/enter-name'); }}
                     className="btn btn-primary btn-block"
                   >
                     返回首頁
@@ -252,7 +256,7 @@ const WaitingRoom = () => {
                     重新連線
                   </button>
                   <button
-                    onClick={() => { webRTC.disconnect(); navigate('/enter-name'); }}
+                    onClick={() => { webRTC.disconnect(); hasAttemptedConnection.current = false; hasSentIdentify.current = false; resetGameState(); navigate('/enter-name'); }}
                     className="btn btn-ghost btn-block"
                   >
                     返回首頁
