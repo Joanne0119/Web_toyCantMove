@@ -3,12 +3,14 @@ import { useGame } from '../context/GameContext';
 import { motion, useSpring, useTransform, useMotionValue } from "framer-motion";
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
+import TapController from '@/components/controllers/TapController';
 
 
 const Playing = () => {
     const navigate = useNavigate();
-    
+
     const { localPlayer, webRTC, connectionStatus, gyroscope, gyroscopeStatus, screenWakeLock, unityPeerId, level } = useGame();
+    const inputType = level?.inputType || 'gyro';
 
     // 判斷是否為 Toybox 關卡
     const isToybox = level?.sceneName?.includes('Toybox') || level?.sceneName?.includes('toybox');
@@ -286,6 +288,7 @@ const Playing = () => {
         setIsPressing(true);
         isPressingRef.current = true;
 
+        // 短暫觸發後自動恢復
         setTimeout(() => {
             setIsPressing(false);
             isPressingRef.current = false;
@@ -293,6 +296,12 @@ const Playing = () => {
         }, 300);
     }, []);
 
+    // 非陀螺儀關卡渲染對應控制器
+    if (inputType === 'tap') {
+        return <TapController />;
+    }
+
+    // 陀螺儀關卡（原有邏輯）
     return (
         <div className="relative w-screen min-h-screen flex flex-col safe-area-bottom" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}>
             <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
