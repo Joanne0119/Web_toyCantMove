@@ -12,63 +12,55 @@ export const useWebRTC = (localPeerId, stunServerAddress, uiConfig) => {
 
   useEffect(() => {
     if (localPeerId) {
-      if (!managerRef.current) {
-        managerRef.current = new WebRTCManager(localPeerId, stunServerAddress, uiConfig);
-      }
+      setupManager();
 
-      const manager = managerRef.current;
-
-      manager.onWebSocketConnection = (state) => {
-        setIsConnected(state === 'open');
-        if (state === 'error' || state === 'closed') {
-          setError({ type: 'websocket', message: `WebSocket connection ${state}` });
+      return () => {
+        if (managerRef.current) {
+          managerRef.current.closeWebRTC();
+          managerRef.current.closeWebSocket();
+          managerRef.current = null;
         }
       };
-
-      manager.onWebRTCConnection = (peerId) => {
-        setWebRTCConnections((prev) => {
-          if (!prev.includes(peerId)) {
-            return [...prev, peerId];
-          }
-          return prev;
-        });
-      };
-
-      manager.onDataChannelConnection = (peerId) => {
-        setDataChannelConnections((prev) => {
-          if (!prev.includes(peerId)) {
-            return [...prev, peerId];
-          }
-          return prev;
-        });
-      };
-
-
-      manager.onDataChannelDisconnection = (peerId) => {
-        setDataChannelConnections((prev) => prev.filter(id => id !== peerId));
-      };
-
-      manager.onDataChannelMessageReceived = (message, peerId) => {
-        setLastMessage({ message, peerId, timestamp: Date.now() });
-      };
-
-      manager.onPeerListChange = (peerIds) => {
-        setPeers(peerIds);
-      };
-
-      // Cleanup on unmount
-      return () => {
-        manager.closeWebRTC();
-        manager.closeWebSocket();
-        managerRef.current = null;
-      };
     }
+  }, [localPeerId, setupManager]);
+
+  const setupManager = useCallback(() => {
+    if (managerRef.current) return managerRef.current;
+    if (!localPeerId) return null;
+
+    const manager = new WebRTCManager(localPeerId, stunServerAddress, uiConfig);
+
+    manager.onWebSocketConnection = (state) => {
+      setIsConnected(state === 'open');
+      if (state === 'error' || state === 'closed') {
+        setError({ type: 'websocket', message: `WebSocket connection ${state}` });
+      }
+    };
+    manager.onWebRTCConnection = (peerId) => {
+      setWebRTCConnections((prev) => prev.includes(peerId) ? prev : [...prev, peerId]);
+    };
+    manager.onDataChannelConnection = (peerId) => {
+      setDataChannelConnections((prev) => prev.includes(peerId) ? prev : [...prev, peerId]);
+    };
+    manager.onDataChannelDisconnection = (peerId) => {
+      setDataChannelConnections((prev) => prev.filter(id => id !== peerId));
+    };
+    manager.onDataChannelMessageReceived = (message, peerId) => {
+      setLastMessage({ message, peerId, timestamp: Date.now() });
+    };
+    manager.onPeerListChange = (peerIds) => {
+      setPeers(peerIds);
+    };
+
+    managerRef.current = manager;
+    return manager;
   }, [localPeerId, stunServerAddress, uiConfig]);
 
   const connect = useCallback(async (webSocketUrl, isVideoAudioSender, isVideoAudioReceiver) => {
-    if (managerRef.current) {
+    const manager = setupManager();
+    if (manager) {
       try {
-        await managerRef.current.connect(webSocketUrl, isVideoAudioSender, isVideoAudioReceiver);
+        await manager.connect(webSocketUrl, isVideoAudioSender, isVideoAudioReceiver);
         return true;
       } catch (e) {
         setError({ type: 'connect', message: 'Failed to connect to WebSocket', obj: e });
@@ -76,15 +68,19 @@ export const useWebRTC = (localPeerId, stunServerAddress, uiConfig) => {
       }
     }
     return false;
-  }, []);
+  }, [setupManager]);
 
   const disconnect = useCallback(() => {
     if (managerRef.current) {
       managerRef.current.closeWebRTC();
       managerRef.current.closeWebSocket();
+      managerRef.current = null; // 銷毀 manager，下次 connect 時重建
       setIsConnected(false);
       setWebRTCConnections([]);
       setDataChannelConnections([]);
+      setPeers([]);
+      setLastMessage(null);
+      setError(null);
     }
   }, []);
 
