@@ -385,6 +385,28 @@ const Award = () => {
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ type: "spring", stiffness: 200, damping: 20 }}
             >
+              {/* 圓環倒數動畫 */}
+              {(() => {
+                const CIRCLE_SIZE = 80;
+                const STROKE_WIDTH = 5;
+                const RADIUS = (CIRCLE_SIZE - STROKE_WIDTH) / 2;
+                const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+                const progress = replayCountdown / 10;
+                const strokeDashoffset = CIRCUMFERENCE * (1 - progress);
+                return (
+                  <div className="flex justify-center mb-4">
+                    <div className="relative" style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}>
+                      <svg width={CIRCLE_SIZE} height={CIRCLE_SIZE} className="transform -rotate-90">
+                        <circle cx={CIRCLE_SIZE / 2} cy={CIRCLE_SIZE / 2} r={RADIUS} fill="none" stroke="currentColor" strokeWidth={STROKE_WIDTH} className="text-base-300" />
+                        <circle cx={CIRCLE_SIZE / 2} cy={CIRCLE_SIZE / 2} r={RADIUS} fill="none" stroke="currentColor" strokeWidth={STROKE_WIDTH} strokeLinecap="round" strokeDasharray={CIRCUMFERENCE} strokeDashoffset={strokeDashoffset} className="text-primary" style={{ transition: 'stroke-dashoffset 1s linear' }} />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-2xl font-bold">{replayCountdown}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
               <h3 className="text-lg font-bold mb-2">即將開始下一局</h3>
               <p className="text-base-content/70 mb-4">
                 {replayCountdown} 秒後自動返回選關畫面
