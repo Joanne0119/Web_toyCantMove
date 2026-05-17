@@ -244,6 +244,13 @@ export const GameProvider = ({ children }) => {
           // ACK 回傳給 Unity，確認收到跳轉指令
           webRTC.sendData(JSON.stringify({ type: "navigate_ack", target: "playing" }), null);
         }
+        if (msg.type === "navigate_to_lobby") {
+          console.log("Received navigate_to_lobby from Unity, returning to choose-level.");
+          setGameScene('Lobby');
+          setLocalPlayer(prev => ({ ...prev, color: null }));
+          setFinalResults([]);
+          setTerminateImageLink(null);
+        }
         if (msg.type === "terminate") {
           console.log("Received terminate message from Unity:", msg.finalPlayerDatas);
           console.log("Terminate image link:", msg.link);

@@ -18,12 +18,44 @@ const Award = () => {
   // const finalResults = MOCK_FINAL_RESULTS;
   // const localPlayer = MOCK_LOCAL_PLAYER;
   // const terminateImageLink = MOCK_TERMINATE_IMAGE;
-  const { finalResults, localPlayer, terminateImageLink, setGameScene, webRTC, resetGameState } = useGame();
+  const { finalResults, localPlayer, terminateImageLink, setGameScene, webRTC, resetGameState, gameScene } = useGame();
 
   const navigate = useNavigate();
   const [isGenerating, setIsGenerating] = useState(false);
   const [postcardDataUrl, setPostcardDataUrl] = useState(null);
   const [showPostcardModal, setShowPostcardModal] = useState(false);
+  const [showReplayModal, setShowReplayModal] = useState(false);
+  const [replayCountdown, setReplayCountdown] = useState(10);
+
+  // Unity 按重玩時會收到 navigate_to_lobby，gameScene 變回 Lobby → 顯示倒數 modal
+  useEffect(() => {
+    if (gameScene === 'Lobby' && !showReplayModal) {
+      setShowReplayModal(true);
+      setReplayCountdown(10);
+    }
+  }, [gameScene]);
+
+  // 倒數計時
+  useEffect(() => {
+    if (!showReplayModal) return;
+    if (replayCountdown <= 0) {
+      handleContinuePlay();
+      return;
+    }
+    const timer = setTimeout(() => setReplayCountdown(prev => prev - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [showReplayModal, replayCountdown]);
+
+  const handleContinuePlay = () => {
+    setShowReplayModal(false);
+    navigate('/choose-level');
+  };
+
+  const handleLeaveGame = () => {
+    setShowReplayModal(false);
+    webRTC.disconnect();
+    resetGameState();
+  };
 
   // 載入單張圖片的 helper
   const loadImage = useCallback((src, crossOrigin = false) => {
@@ -189,16 +221,6 @@ const Award = () => {
   // 取前四名顯示在頒獎台
   const top4 = results
 
-  const handlePlayAgain = () => {
-    setGameScene('Lobby');
-    navigate('/choose-level');
-  };
-
-  const handleLeave = () => {
-    webRTC.disconnect();
-    resetGameState();
-    navigate('/enter-name');
-  };
 
   const compact = top4.length > 3;
 
@@ -341,6 +363,39 @@ const Award = () => {
                   alt="明信片預覽"
                   className="w-full rounded-lg"
                 />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 重玩倒數 Modal */}
+      <AnimatePresence>
+        {showReplayModal && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-base-100 rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 200, damping: 20 }}
+            >
+              <h3 className="text-lg font-bold mb-2">即將開始下一局</h3>
+              <p className="text-base-content/70 mb-4">
+                {replayCountdown} 秒後自動返回選關畫面
+              </p>
+              <div className="flex flex-col gap-2">
+                <button onClick={handleContinuePlay} className="btn btn-primary w-full">
+                  繼續玩
+                </button>
+                <button onClick={handleLeaveGame} className="btn btn-ghost w-full">
+                  離開房間
+                </button>
               </div>
             </motion.div>
           </motion.div>
