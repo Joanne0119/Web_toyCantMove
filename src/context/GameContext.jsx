@@ -252,7 +252,6 @@ export const GameProvider = ({ children }) => {
           setFinalResults(msg.finalPlayerDatas || []);
           setTerminateImageLink(msg.link || null);
           setGameScene('Awards');
-          webRTC.disconnect();
         }
       } catch (e) {
         console.error(e);

@@ -18,7 +18,7 @@ const Award = () => {
   // const finalResults = MOCK_FINAL_RESULTS;
   // const localPlayer = MOCK_LOCAL_PLAYER;
   // const terminateImageLink = MOCK_TERMINATE_IMAGE;
-  const { finalResults, localPlayer, terminateImageLink, setGameScene } = useGame();
+  const { finalResults, localPlayer, terminateImageLink, setGameScene, webRTC, resetGameState } = useGame();
 
   const navigate = useNavigate();
   const [isGenerating, setIsGenerating] = useState(false);
@@ -195,7 +195,8 @@ const Award = () => {
   };
 
   const handleLeave = () => {
-    setGameScene('Lobby');
+    webRTC.disconnect();
+    resetGameState();
     navigate('/enter-name');
   };
 
