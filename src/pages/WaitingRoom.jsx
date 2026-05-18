@@ -18,7 +18,8 @@ const WaitingRoom = () => {
     connectionStatus,
     screenWakeLock,
     unityPeerId,
-    resetGameState
+    resetGameState,
+    setGameScene
   } = useGame();
 
   const { dataChannelConnections, sendData } = webRTC;
@@ -73,12 +74,12 @@ const WaitingRoom = () => {
     }
   }, [gameScene, isHost, navigate]);
 
-  // Unity 按 ESC 或重玩回到大廳
+  // Unity 按 ESC 或重玩回到大廳 → 已經在 WaitingRoom，重置 gameScene
   useEffect(() => {
     if (gameScene === 'ReturnToLobby') {
-      navigate('/waiting-room');
+      setGameScene('Lobby');
     }
-  }, [gameScene, navigate]);
+  }, [gameScene]);
 
 
   useEffect(() => {
