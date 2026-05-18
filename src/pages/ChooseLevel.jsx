@@ -36,6 +36,12 @@ const ChooseLevel = () => {
     }
   }, [gameScene, isHost, navigate]);
 
+  useEffect(() => {
+      if (gameScene === 'Lobby') {
+          navigate('/choose-level');
+      }
+  }, [gameScene, navigate]);
+
   // 取得容器寬度
   useEffect(() => {
     if (!scrollRef.current) return;
