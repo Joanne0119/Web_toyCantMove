@@ -9,7 +9,7 @@ import TapController from '@/components/controllers/TapController';
 const Playing = () => {
     const navigate = useNavigate();
 
-    const { localPlayer, webRTC, connectionStatus, gyroscope, gyroscopeStatus, screenWakeLock, unityPeerId, level } = useGame();
+    const { localPlayer, webRTC, connectionStatus, gyroscope, gyroscopeStatus, screenWakeLock, unityPeerId, level, gameScene } = useGame();
     const inputType = level?.inputType || 'gyro';
 
     // 判斷是否為 Toybox 關卡
@@ -48,6 +48,12 @@ const Playing = () => {
             screenWakeLock.request();
         }
     }, [screenWakeLock]);
+
+    useEffect(() => {
+      if (gameScene === 'Lobby') {
+          navigate('/choose-level');
+      }
+    }, [gameScene, navigate]);
 
     useEffect(() => {
         const updateRotation = () => {
