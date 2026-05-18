@@ -250,6 +250,8 @@ export const GameProvider = ({ children }) => {
           setLocalPlayer(prev => ({ ...prev, color: null }));
           setFinalResults([]);
           setTerminateImageLink(null);
+          // 重置 identify 狀態，讓重新連上時會重送 identify
+          identifiedUnityRef.current = null;
         }
         if (msg.type === "terminate") {
           console.log("Received terminate message from Unity:", msg.finalPlayerDatas);
