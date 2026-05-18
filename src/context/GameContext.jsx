@@ -245,8 +245,8 @@ export const GameProvider = ({ children }) => {
           webRTC.sendData(JSON.stringify({ type: "navigate_ack", target: "playing" }), null);
         }
         if (msg.type === "navigate_to_lobby") {
-          console.log("Received navigate_to_lobby from Unity, returning to choose-level.");
-          setGameScene('Lobby');
+          console.log("Received navigate_to_lobby from Unity, returning to waiting-room.");
+          setGameScene('ReturnToLobby');
           setLocalPlayer(prev => ({ ...prev, color: null }));
           setFinalResults([]);
           setTerminateImageLink(null);

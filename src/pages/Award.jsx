@@ -29,7 +29,7 @@ const Award = () => {
 
   // Unity 按重玩時會收到 navigate_to_lobby，gameScene 變回 Lobby → 顯示倒數 modal
   useEffect(() => {
-    if (gameScene === 'Lobby' && !showReplayModal) {
+    if (gameScene === 'ReturnToLobby' && !showReplayModal) {
       setShowReplayModal(true);
       setReplayCountdown(10);
     }
@@ -48,7 +48,7 @@ const Award = () => {
 
   const handleContinuePlay = () => {
     setShowReplayModal(false);
-    navigate('/choose-level');
+    navigate('/waiting-room');
   };
 
   const handleLeaveGame = () => {

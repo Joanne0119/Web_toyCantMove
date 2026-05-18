@@ -73,11 +73,13 @@ const WaitingRoom = () => {
     }
   }, [gameScene, isHost, navigate]);
 
+  // Unity 按 ESC 或重玩回到大廳
   useEffect(() => {
-      if (gameScene === 'Lobby') {
-          navigate('/choose-level');
-      }
+    if (gameScene === 'ReturnToLobby') {
+      navigate('/waiting-room');
+    }
   }, [gameScene, navigate]);
+
 
   useEffect(() => {
     const connectAll = async () => {

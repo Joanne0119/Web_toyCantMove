@@ -130,18 +130,16 @@ const Tutorial = () => {
         }
     }, [screenWakeLock]); 
 
-  // 監聽 gameScene 變化，確保跳轉到 Playing
+  // 監聽 gameScene 變化
   useEffect(() => {
     if (gameScene === 'Playing') {
       navigate('/playing');
     }
+    if (gameScene === 'ReturnToLobby') {
+      navigate('/waiting-room');
+    }
   }, [gameScene, navigate]);
 
-  useEffect(() => {
-      if (gameScene === 'Lobby') {
-          navigate('/choose-level');
-      }
-  }, [gameScene, navigate]);
 
   // 監聽 Unity 發來的訊息
   useEffect(() => {

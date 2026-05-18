@@ -50,8 +50,8 @@ const Playing = () => {
     }, [screenWakeLock]);
 
     useEffect(() => {
-      if (gameScene === 'Lobby') {
-          navigate('/choose-level');
+      if (gameScene === 'ReturnToLobby') {
+          navigate('/waiting-room');
       }
     }, [gameScene, navigate]);
 
