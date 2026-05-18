@@ -137,6 +137,12 @@ const Tutorial = () => {
     }
   }, [gameScene, navigate]);
 
+  useEffect(() => {
+      if (gameScene === 'Lobby') {
+          navigate('/choose-level');
+      }
+  }, [gameScene, navigate]);
+
   // 監聽 Unity 發來的訊息
   useEffect(() => {
     if (lastMessage && lastMessage.timestamp > lastProcessedTimestamp.current) {
