@@ -74,6 +74,12 @@ const WaitingRoom = () => {
   }, [gameScene, isHost, navigate]);
 
   useEffect(() => {
+      if (gameScene === 'Lobby') {
+          navigate('/choose-level');
+      }
+  }, [gameScene, navigate]);
+
+  useEffect(() => {
     const connectAll = async () => {
       try {
         const websocketUrl = 'wss://server-for-toy-cant-move.onrender.com';
