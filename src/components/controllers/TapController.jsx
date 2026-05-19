@@ -3,7 +3,9 @@ import { useGame } from '@/context/GameContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const TAP_COOLDOWN = 50; // 防抖冷卻 (ms)
+const TAP_THRESHOLD = 10;    // 移動距離 < 10px 算點擊
+const SWIPE_THRESHOLD = 50;  // 移動距離 > 50px 算滑動丟棄
+const TAP_COOLDOWN = 50;
 
 const TapController = () => {
   const navigate = useNavigate();
@@ -11,9 +13,13 @@ const TapController = () => {
   const { lastMessage, sendData: sendWebRTCData } = webRTC;
 
   const [isEating, setIsEating] = useState(false);
+  const [isDiscarding, setIsDiscarding] = useState(false);
   const [showFlash, setShowFlash] = useState(false);
   const lastTapTimeRef = useRef(0);
   const lastProcessedTimestamp = useRef(0);
+
+  // 觸控追蹤
+  const touchStartRef = useRef(null);
 
   // Screen wake lock
   useEffect(() => {
@@ -35,39 +41,74 @@ const TapController = () => {
     }
   }, [lastMessage, navigate]);
 
-  // 處理點擊
-  const handleTap = useCallback((e) => {
-    e.preventDefault();
-
+  // 發送吃東西
+  const sendTap = useCallback(() => {
     const now = Date.now();
     if (now - lastTapTimeRef.current < TAP_COOLDOWN) return;
     lastTapTimeRef.current = now;
 
-    // 吃東西動畫
     setIsEating(true);
     setTimeout(() => setIsEating(false), 150);
 
-    // 閃光回饋
     setShowFlash(true);
     setTimeout(() => setShowFlash(false), 80);
 
-    // 發送給 Unity
     if (connectionStatus) {
-      const msg = JSON.stringify({ type: 'tap_action' });
-      sendWebRTCData(msg, unityPeerId || null);
+      sendWebRTCData(JSON.stringify({ type: 'tap_action' }), unityPeerId || null);
     }
   }, [connectionStatus, sendWebRTCData, unityPeerId]);
 
-  // 綁定全螢幕點擊
+  // 發送丟棄
+  const sendDiscard = useCallback(() => {
+    setIsDiscarding(true);
+    setTimeout(() => setIsDiscarding(false), 300);
+
+    if (connectionStatus) {
+      sendWebRTCData(JSON.stringify({ type: 'discard_action' }), unityPeerId || null);
+    }
+  }, [connectionStatus, sendWebRTCData, unityPeerId]);
+
+  // 觸控/滑鼠事件處理
+  const handlePointerDown = useCallback((e) => {
+    e.preventDefault();
+    const point = e.touches ? e.touches[0] : e;
+    touchStartRef.current = { x: point.clientX, y: point.clientY };
+  }, []);
+
+  const handlePointerUp = useCallback((e) => {
+    e.preventDefault();
+    if (!touchStartRef.current) return;
+
+    const point = e.changedTouches ? e.changedTouches[0] : e;
+    const dx = point.clientX - touchStartRef.current.x;
+    const dy = point.clientY - touchStartRef.current.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance < TAP_THRESHOLD) {
+      // 點擊 → 吃一口
+      sendTap();
+    } else if (distance > SWIPE_THRESHOLD) {
+      // 滑動 → 丟棄食物
+      sendDiscard();
+    }
+
+    touchStartRef.current = null;
+  }, [sendTap, sendDiscard]);
+
+  // 綁定事件
   useEffect(() => {
-    document.addEventListener('touchstart', handleTap, { passive: false });
-    document.addEventListener('mousedown', handleTap);
+    document.addEventListener('touchstart', handlePointerDown, { passive: false });
+    document.addEventListener('touchend', handlePointerUp, { passive: false });
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('mouseup', handlePointerUp);
 
     return () => {
-      document.removeEventListener('touchstart', handleTap);
-      document.removeEventListener('mousedown', handleTap);
+      document.removeEventListener('touchstart', handlePointerDown);
+      document.removeEventListener('touchend', handlePointerUp);
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('mouseup', handlePointerUp);
     };
-  }, [handleTap]);
+  }, [handlePointerDown, handlePointerUp]);
 
   const avatarSrc = localPlayer.color
     ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}Pin.png`
@@ -99,19 +140,35 @@ const TapController = () => {
         )}
       </AnimatePresence>
 
-      {/* 盤子 + 角色一起縮放 */}
+      {/* 丟棄回饋（紅色閃光） */}
+      <AnimatePresence>
+        {isDiscarding && (
+          <motion.div
+            className="absolute inset-0 bg-red-500/20 z-20 pointer-events-none"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* 盤子 + 角色 */}
       <div className="relative z-10 flex flex-col items-center">
         <motion.div
           className="relative flex items-center justify-center"
-          animate={isEating
-            ? { scale: [1, 1.15, 0.92, 1] }
-            : { scale: 1 }
+          animate={
+            isDiscarding
+              ? { x: [0, -20, 20, -10, 10, 0], rotate: [0, -5, 5, -3, 3, 0] }
+              : isEating
+                ? { scale: [1, 1.15, 0.92, 1] }
+                : { scale: 1, x: 0, rotate: 0 }
           }
-          transition={{ duration: 0.15 }}
+          transition={{ duration: isDiscarding ? 0.3 : 0.15 }}
         >
           {/* 盤子 */}
-          <div className="w-64 h-64 rounded-full bg-gradient-to-b from-white/90 to-base-300/60 shadow-xl flex items-center justify-center">
-            <div className="w-52 h-52 rounded-full bg-gradient-to-b from-base-200/50 to-base-300/30 flex items-center justify-center">
+          <div className="w-64 h-64 rounded-full bg-white shadow-[0_4px_20px_rgba(0,0,0,0.15)] flex items-center justify-center border-4 border-base-300/30">
+            <div className="w-48 h-48 rounded-full bg-base-200/40 flex items-center justify-center">
               {/* 角色 Pin */}
               <img
                 src={avatarSrc}
@@ -122,14 +179,16 @@ const TapController = () => {
           </div>
         </motion.div>
 
-        <motion.p
-          className="text-lg text-base-content/60 drop-shadow-sm mt-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          點擊螢幕吃東西！
-        </motion.p>
+        <div className="mt-6 text-center">
+          <motion.p
+            className="text-lg text-base-content/60 drop-shadow-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            點擊吃東西 · 滑動丟棄
+          </motion.p>
+        </div>
       </div>
     </div>
   );

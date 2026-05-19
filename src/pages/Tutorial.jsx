@@ -39,7 +39,12 @@ const Tutorial = () => {
   const [nonGyroCountdown, setNonGyroCountdown] = useState(3);
   const nonGyroCompletedRef = useRef(false);
   const [tapCount, setTapCount] = useState(0);
-  const TAP_REQUIRED = 5;
+  const [swipeCount, setSwipeCount] = useState(0);
+  const TAP_REQUIRED = 4;
+  const SWIPE_REQUIRED = 1;
+  const touchStartRef = useRef(null);
+  const TAP_THRESHOLD = 10;
+  const SWIPE_THRESHOLD = 50;
 
   const hasSentCalibratedRef = useRef(false);
 
@@ -242,19 +247,87 @@ const Tutorial = () => {
     return () => clearInterval(timer);
   }, [inputType, sendWebRTCData, unityPeerId]);
 
-  // tap 類型：點擊夠了就完成
+  // tap 類型：點擊 + 滑動都完成才送完成訊息
+  const tapDoneRef = useRef(false);
+  const swipeDoneRef = useRef(false);
+
   const handleTapPractice = useCallback(() => {
-    if (nonGyroCompletedRef.current) return;
+    if (tapDoneRef.current) return;
     setTapCount(prev => {
       const next = prev + 1;
-      if (next >= TAP_REQUIRED && !nonGyroCompletedRef.current) {
-        nonGyroCompletedRef.current = true;
-        const msg = { type: "tutorial_step_complete", step: "calibrate" };
+      if (next >= TAP_REQUIRED) {
+        tapDoneRef.current = true;
+        // 點擊完成 → 送 right
+        const msg = { type: "tutorial_step_complete", step: "right" };
         sendWebRTCData(JSON.stringify(msg), unityPeerId || null);
       }
       return next;
     });
   }, [sendWebRTCData, unityPeerId]);
+
+  const handleSwipePractice = useCallback(() => {
+    if (swipeDoneRef.current || !tapDoneRef.current) return; // 要先完成點擊
+    setSwipeCount(prev => {
+      const next = prev + 1;
+      if (next >= SWIPE_REQUIRED) {
+        swipeDoneRef.current = true;
+        nonGyroCompletedRef.current = true;
+        // 滑動完成 → 送 backward
+        const msg = { type: "tutorial_step_complete", step: "backward" };
+        sendWebRTCData(JSON.stringify(msg), unityPeerId || null);
+      }
+      return next;
+    });
+  }, [sendWebRTCData, unityPeerId]);
+
+  // 教學用 pointer 事件偵測點擊/滑動
+  const tutorialTouchStartRef = useRef(null);
+
+  const handleTutorialPointerDown = useCallback((e) => {
+    e.preventDefault();
+    const point = e.touches ? e.touches[0] : e;
+    tutorialTouchStartRef.current = { x: point.clientX, y: point.clientY };
+  }, []);
+
+  const handleTutorialTouchMove = useCallback((e) => {
+    e.preventDefault(); // 阻止頁面滾動
+  }, []);
+
+  const handleTutorialPointerUp = useCallback((e) => {
+    e.preventDefault();
+    if (!tutorialTouchStartRef.current) return;
+    const point = e.changedTouches ? e.changedTouches[0] : e;
+    const dx = point.clientX - tutorialTouchStartRef.current.x;
+    const dy = point.clientY - tutorialTouchStartRef.current.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance < TAP_THRESHOLD) {
+      handleTapPractice();
+    } else if (distance > SWIPE_THRESHOLD) {
+      handleSwipePractice();
+    }
+    tutorialTouchStartRef.current = null;
+  }, [handleTapPractice, handleSwipePractice]);
+
+  // 用 document 綁定事件（跟 TapController 一樣，避免被 overlay 擋住）
+  useEffect(() => {
+    if (inputType !== 'tap') return;
+    if (tapDoneRef.current && swipeDoneRef.current) return;
+
+    document.addEventListener('touchstart', handleTutorialPointerDown, { passive: false });
+    document.addEventListener('touchmove', handleTutorialTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTutorialPointerUp, { passive: false });
+    document.addEventListener('mousedown', handleTutorialPointerDown);
+    document.addEventListener('mouseup', handleTutorialPointerUp);
+
+    return () => {
+      document.removeEventListener('touchstart', handleTutorialPointerDown);
+      document.removeEventListener('touchmove', handleTutorialTouchMove);
+      document.removeEventListener('touchend', handleTutorialPointerUp);
+      document.removeEventListener('mousedown', handleTutorialPointerDown);
+      document.removeEventListener('mouseup', handleTutorialPointerUp);
+    };
+  }, [inputType, handleTutorialPointerDown, handleTutorialPointerUp]);
 
   // 非陀螺儀關卡也要監聽 navigate 訊息
   useEffect(() => {
@@ -271,80 +344,97 @@ const Tutorial = () => {
     }
   }, [inputType, lastMessage, navigate, sendWebRTCData, unityPeerId]);
 
-  // tap 教學：點擊練習（layout 對齊陀螺儀教學）
+  // tap 教學：點擊 + 滑動練習
   if (inputType === 'tap') {
-    const isCompleted = tapCount >= TAP_REQUIRED;
+    const tapDone = tapCount >= TAP_REQUIRED;
+    const swipeDone = swipeCount >= SWIPE_REQUIRED;
+    const isCompleted = tapDone && swipeDone;
     return (
       <div
-        className="hero min-h-screen bg-base-200 safe-area-bottom overflow-x-hidden select-none"
-        style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}
-        onClick={!isCompleted ? handleTapPractice : undefined}
+        className="relative w-screen h-screen flex flex-col items-center justify-center bg-base-200 safe-area-bottom select-none overflow-hidden"
+        style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', touchAction: 'none' }}
       >
         <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
 
         <motion.div
           className="card bg-base-100 shadow-xl mt-4 mb-4 z-10"
-          animate={tapCount > 0 ? { scale: [0.95, 1] } : {}}
+          animate={(tapCount + swipeCount) > 0 ? { scale: [0.95, 1] } : {}}
           transition={{ type: "spring", stiffness: 400, damping: 15 }}
-          key={tapCount}
+          key={tapCount + swipeCount}
         >
           <div className="card-body items-center text-center p-4">
             <motion.div
-              key={isCompleted ? 'done' : 'tap'}
+              key={isCompleted ? 'done' : 'practice'}
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               className="text-center mb-3"
             >
               <h1 className="text-2xl font-bold text-base mb-1">
-                {isCompleted ? '完成！等待其他玩家...' : '快速點擊螢幕來吃東西！'}
+                {isCompleted ? '完成！等待其他玩家...' : '點擊吃東西 · 滑動丟棄！'}
               </h1>
             </motion.div>
 
-            {/* 影片區（跟陀螺儀教學一樣大小） */}
+            {/* 操作示意動畫 */}
             <motion.div
-              className="w-48 aspect-square bg-base-200/50 rounded-2xl overflow-hidden mb-2 shadow-inner flex items-center justify-center"
+              className="w-48 aspect-square bg-base-200/50 rounded-2xl overflow-hidden mb-2 shadow-inner flex items-center justify-center relative"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
             >
-              {/* 點擊示意動畫（之後可換成影片） */}
               <motion.div
-                className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center"
-                animate={{ scale: [1, 0.8, 1] }}
-                transition={{ duration: 0.5, repeat: Infinity }}
+                className="w-14 h-14 rounded-full bg-primary/30 flex items-center justify-center absolute"
+                animate={{
+                  scale: [1, 0.7, 1, 0.7, 1, 1, 1, 1],
+                  x:     [0, 0,   0, 0,   0, 0, 50, 0],
+                }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
               >
-                <motion.div className="w-12 h-12 rounded-full bg-primary/40 flex items-center justify-center">
-                  <motion.div
-                    className="w-6 h-6 rounded-full bg-primary"
-                    animate={{ scale: [1, 0.6, 1] }}
-                    transition={{ duration: 0.5, repeat: Infinity, delay: 0.1 }}
-                  />
-                </motion.div>
+                <motion.div className="w-8 h-8 rounded-full bg-primary/60" />
               </motion.div>
+              <span className="absolute bottom-3 text-xs text-base-content/40">
+                點擊 · 滑動丟棄
+              </span>
             </motion.div>
 
-            {/* 進度圈（跟陀螺儀的 4 步驟進度圈對齊） */}
-            <div className="flex gap-3 mb-4">
-              {Array.from({ length: TAP_REQUIRED }).map((_, i) => (
-                <div key={i} className="flex flex-col items-center">
+            {/* 點擊進度 */}
+            <div className="w-full mb-2">
+              <p className="text-xs text-base-content/50 mb-1">點擊練習 {tapDone ? '✓' : `${tapCount}/${TAP_REQUIRED}`}</p>
+              <div className="flex gap-2 justify-center">
+                {Array.from({ length: TAP_REQUIRED }).map((_, i) => (
                   <motion.div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      i < tapCount ? 'bg-green-500' : 'bg-base-300/50'
+                    key={`tap-${i}`}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                      i < tapCount ? 'bg-green-500 text-white' : 'bg-base-300/50'
                     }`}
                     animate={i === tapCount - 1 && tapCount > 0 ? { scale: [1.3, 1] } : {}}
                     transition={{ duration: 0.2 }}
                   >
-                    {i < tapCount ? (
-                      <span className="text-lg">✓</span>
-                    ) : (
-                      <span className="text-sm font-bold">{i + 1}</span>
-                    )}
+                    {i < tapCount ? '✓' : i + 1}
                   </motion.div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
 
-            {/* 狀態指示（跟陀螺儀教學對齊） */}
+            {/* 滑動進度 */}
+            <div className="w-full mb-3">
+              <p className="text-xs text-base-content/50 mb-1">滑動練習 {swipeDone ? '✓' : `${swipeCount}/${SWIPE_REQUIRED}`}</p>
+              <div className="flex gap-2 justify-center">
+                {Array.from({ length: SWIPE_REQUIRED }).map((_, i) => (
+                  <motion.div
+                    key={`swipe-${i}`}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                      i < swipeCount ? 'bg-blue-500 text-white' : 'bg-base-300/50'
+                    }`}
+                    animate={i === swipeCount - 1 && swipeCount > 0 ? { scale: [1.3, 1] } : {}}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {i < swipeCount ? '✓' : i + 1}
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            {/* 狀態指示 */}
             <div className="flex items-center gap-3 text-xs text-base-content/50">
               <div className="flex items-center gap-1">
                 {connectionStatus
@@ -352,28 +442,24 @@ const Tutorial = () => {
                   : <WifiOff className="w-3.5 h-3.5 text-error" />}
                 <span>{connectionStatus ? '已連線' : '未連線'}</span>
               </div>
-              <span className="text-base-content/20">|</span>
-              <span>{isCompleted ? '已完成' : `${tapCount}/${TAP_REQUIRED}`}</span>
             </div>
 
             {!isCompleted && (
-              <>
-                <p className="text-xs text-base-content/30 mt-2">點擊螢幕任意位置練習</p>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!nonGyroCompletedRef.current) {
-                      nonGyroCompletedRef.current = true;
-                      setTapCount(TAP_REQUIRED);
-                      const msg = { type: "tutorial_step_complete", step: "calibrate" };
-                      sendWebRTCData(JSON.stringify(msg), unityPeerId || null);
-                    }
-                  }}
-                  className="btn btn-ghost btn-xs text-base-content/30 mt-1"
-                >
-                  略過教學
-                </button>
-              </>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!nonGyroCompletedRef.current) {
+                    nonGyroCompletedRef.current = true;
+                    setTapCount(TAP_REQUIRED);
+                    setSwipeCount(SWIPE_REQUIRED);
+                    const msg = { type: "tutorial_step_complete", step: "calibrate" };
+                    sendWebRTCData(JSON.stringify(msg), unityPeerId || null);
+                  }
+                }}
+                className="btn btn-ghost btn-xs text-base-content/30 mt-1"
+              >
+                略過教學
+              </button>
             )}
           </div>
         </motion.div>
