@@ -257,8 +257,8 @@ const Tutorial = () => {
       const next = prev + 1;
       if (next >= TAP_REQUIRED) {
         tapDoneRef.current = true;
-        // 點擊完成 → 送 calibrate
-        const msg = { type: "tutorial_step_complete", step: "calibrate" };
+        // 點擊完成 → 送 right
+        const msg = { type: "tutorial_step_complete", step: "right" };
         sendWebRTCData(JSON.stringify(msg), unityPeerId || null);
       }
       return next;
@@ -272,8 +272,8 @@ const Tutorial = () => {
       if (next >= SWIPE_REQUIRED) {
         swipeDoneRef.current = true;
         nonGyroCompletedRef.current = true;
-        // 滑動完成 → 送 forward（借用當第二步）
-        const msg = { type: "tutorial_step_complete", step: "forward" };
+        // 滑動完成 → 送 backward
+        const msg = { type: "tutorial_step_complete", step: "backward" };
         sendWebRTCData(JSON.stringify(msg), unityPeerId || null);
       }
       return next;
