@@ -289,6 +289,7 @@ const Tutorial = () => {
   }, []);
 
   const handleTutorialPointerUp = useCallback((e) => {
+    e.preventDefault();
     if (!tutorialTouchStartRef.current) return;
     const point = e.changedTouches ? e.changedTouches[0] : e;
     const dx = point.clientX - tutorialTouchStartRef.current.x;
@@ -302,6 +303,24 @@ const Tutorial = () => {
     }
     tutorialTouchStartRef.current = null;
   }, [handleTapPractice, handleSwipePractice]);
+
+  // 用 document 綁定事件（跟 TapController 一樣，避免被 overlay 擋住）
+  useEffect(() => {
+    if (inputType !== 'tap') return;
+    if (tapDoneRef.current && swipeDoneRef.current) return;
+
+    document.addEventListener('touchstart', handleTutorialPointerDown, { passive: false });
+    document.addEventListener('touchend', handleTutorialPointerUp, { passive: false });
+    document.addEventListener('mousedown', handleTutorialPointerDown);
+    document.addEventListener('mouseup', handleTutorialPointerUp);
+
+    return () => {
+      document.removeEventListener('touchstart', handleTutorialPointerDown);
+      document.removeEventListener('touchend', handleTutorialPointerUp);
+      document.removeEventListener('mousedown', handleTutorialPointerDown);
+      document.removeEventListener('mouseup', handleTutorialPointerUp);
+    };
+  }, [inputType, handleTutorialPointerDown, handleTutorialPointerUp]);
 
   // 非陀螺儀關卡也要監聽 navigate 訊息
   useEffect(() => {
@@ -327,10 +346,6 @@ const Tutorial = () => {
       <div
         className="hero min-h-screen bg-base-200 safe-area-bottom overflow-x-hidden select-none"
         style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}
-        onTouchStart={!isCompleted ? handleTutorialPointerDown : undefined}
-        onTouchEnd={!isCompleted ? handleTutorialPointerUp : undefined}
-        onMouseDown={!isCompleted ? handleTutorialPointerDown : undefined}
-        onMouseUp={!isCompleted ? handleTutorialPointerUp : undefined}
       >
         <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
 
