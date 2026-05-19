@@ -167,8 +167,8 @@ const TapController = () => {
           transition={{ duration: isDiscarding ? 0.3 : 0.15 }}
         >
           {/* 盤子 */}
-          <div className="w-64 h-64 rounded-full bg-gradient-to-b from-white/90 to-base-300/60 shadow-xl flex items-center justify-center">
-            <div className="w-52 h-52 rounded-full bg-gradient-to-b from-base-200/50 to-base-300/30 flex items-center justify-center">
+          <div className="w-64 h-64 rounded-full bg-white shadow-[0_4px_20px_rgba(0,0,0,0.15)] flex items-center justify-center border-4 border-base-300/30">
+            <div className="w-48 h-48 rounded-full bg-base-200/40 flex items-center justify-center">
               {/* 角色 Pin */}
               <img
                 src={avatarSrc}

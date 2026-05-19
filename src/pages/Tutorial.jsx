@@ -296,31 +296,46 @@ const Tutorial = () => {
               className="text-center mb-3"
             >
               <h1 className="text-2xl font-bold text-base mb-1">
-                {isCompleted ? '完成！等待其他玩家...' : '快速點擊螢幕來吃東西！'}
+                {isCompleted ? '完成！等待其他玩家...' : '點擊吃東西 · 滑動丟棄！'}
               </h1>
             </motion.div>
 
-            {/* 影片區（跟陀螺儀教學一樣大小） */}
+            {/* 操作示意動畫：點點 → 滑動 → 點點 循環 */}
             <motion.div
-              className="w-48 aspect-square bg-base-200/50 rounded-2xl overflow-hidden mb-2 shadow-inner flex items-center justify-center"
+              className="w-48 aspect-square bg-base-200/50 rounded-2xl overflow-hidden mb-2 shadow-inner flex items-center justify-center relative"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
             >
-              {/* 點擊示意動畫（之後可換成影片） */}
+              {/* 手指圓點 */}
               <motion.div
-                className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center"
-                animate={{ scale: [1, 0.8, 1] }}
-                transition={{ duration: 0.5, repeat: Infinity }}
+                className="w-14 h-14 rounded-full bg-primary/30 flex items-center justify-center absolute"
+                animate={{
+                  scale: [1, 0.7, 1, 0.7, 1, 1, 1, 1, 1, 0.7, 1, 0.7, 1],
+                  x:     [0, 0,   0, 0,   0, 0, 40, 0, 0, 0,   0, 0,   0],
+                  y:     [0, 0,   0, 0,   0, 0, 0,  0, 0, 0,   0, 0,   0],
+                }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
               >
-                <motion.div className="w-12 h-12 rounded-full bg-primary/40 flex items-center justify-center">
-                  <motion.div
-                    className="w-6 h-6 rounded-full bg-primary"
-                    animate={{ scale: [1, 0.6, 1] }}
-                    transition={{ duration: 0.5, repeat: Infinity, delay: 0.1 }}
-                  />
-                </motion.div>
+                <motion.div className="w-8 h-8 rounded-full bg-primary/60" />
               </motion.div>
+              {/* 提示文字 */}
+              <motion.span
+                className="absolute bottom-3 text-xs text-base-content/40"
+                animate={{
+                  opacity: [0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0],
+                }}
+                transition={{ duration: 4, repeat: Infinity }}
+              >
+                <motion.span
+                  animate={{
+                    // 前面是點擊，中間是滑動
+                    content: ['點擊', '點擊', '點擊', '', '滑動丟棄', '滑動丟棄', '', '點擊', '點擊'],
+                  }}
+                >
+                  點擊 · 滑動丟棄
+                </motion.span>
+              </motion.span>
             </motion.div>
 
             {/* 進度圈（跟陀螺儀的 4 步驟進度圈對齊） */}
