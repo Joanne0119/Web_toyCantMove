@@ -284,8 +284,13 @@ const Tutorial = () => {
   const tutorialTouchStartRef = useRef(null);
 
   const handleTutorialPointerDown = useCallback((e) => {
+    e.preventDefault();
     const point = e.touches ? e.touches[0] : e;
     tutorialTouchStartRef.current = { x: point.clientX, y: point.clientY };
+  }, []);
+
+  const handleTutorialTouchMove = useCallback((e) => {
+    e.preventDefault(); // 阻止頁面滾動
   }, []);
 
   const handleTutorialPointerUp = useCallback((e) => {
@@ -310,12 +315,14 @@ const Tutorial = () => {
     if (tapDoneRef.current && swipeDoneRef.current) return;
 
     document.addEventListener('touchstart', handleTutorialPointerDown, { passive: false });
+    document.addEventListener('touchmove', handleTutorialTouchMove, { passive: false });
     document.addEventListener('touchend', handleTutorialPointerUp, { passive: false });
     document.addEventListener('mousedown', handleTutorialPointerDown);
     document.addEventListener('mouseup', handleTutorialPointerUp);
 
     return () => {
       document.removeEventListener('touchstart', handleTutorialPointerDown);
+      document.removeEventListener('touchmove', handleTutorialTouchMove);
       document.removeEventListener('touchend', handleTutorialPointerUp);
       document.removeEventListener('mousedown', handleTutorialPointerDown);
       document.removeEventListener('mouseup', handleTutorialPointerUp);
@@ -344,8 +351,8 @@ const Tutorial = () => {
     const isCompleted = tapDone && swipeDone;
     return (
       <div
-        className="hero min-h-screen bg-base-200 safe-area-bottom overflow-x-hidden select-none"
-        style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}
+        className="relative w-screen h-screen flex flex-col items-center justify-center bg-base-200 safe-area-bottom select-none overflow-hidden"
+        style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', touchAction: 'none' }}
       >
         <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
 
