@@ -294,13 +294,26 @@ const Playing = () => {
         setIsPressing(true);
         isPressingRef.current = true;
 
+        // 立刻送一個帶 is_press: true 的 move 訊息
+        if (connectionStatus) {
+            const vector = { x: 0, y: 0 };
+            const msg = JSON.stringify({ type: 'move', vector, is_press: true });
+            sendWebRTCData(msg, unityPeerId || null);
+        }
+
         // 短暫觸發後自動恢復
         setTimeout(() => {
             setIsPressing(false);
             isPressingRef.current = false;
             skillCooldownRef.current = false;
+            // 送 is_press: false
+            if (connectionStatus) {
+                const vector = { x: 0, y: 0 };
+                const msg = JSON.stringify({ type: 'move', vector, is_press: false });
+                sendWebRTCData(msg, unityPeerId || null);
+            }
         }, 300);
-    }, []);
+    }, [connectionStatus, sendWebRTCData, unityPeerId]);
 
     // 非陀螺儀關卡渲染對應控制器
     if (inputType === 'tap') {
