@@ -374,26 +374,23 @@ const Tutorial = () => {
               </h1>
             </motion.div>
 
-            {/* 操作示意動畫 */}
+            {/* 操作示意影片 */}
             <motion.div
-              className="w-48 aspect-square bg-base-200/50 rounded-2xl overflow-hidden mb-2 shadow-inner flex items-center justify-center relative"
+              className="w-48 aspect-square bg-base-200/50 rounded-2xl overflow-hidden mb-2 shadow-inner"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
             >
-              <motion.div
-                className="w-14 h-14 rounded-full bg-primary/30 flex items-center justify-center absolute"
-                animate={{
-                  scale: [1, 0.7, 1, 0.7, 1, 1, 1, 1],
-                  x:     [0, 0,   0, 0,   0, 0, 50, 0],
-                }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <motion.div className="w-8 h-8 rounded-full bg-primary/60" />
-              </motion.div>
-              <span className="absolute bottom-3 text-xs text-base-content/40">
-                點擊 · 滑動丟棄
-              </span>
+              <video
+                key={tapDone ? 'swipe' : 'tap'}
+                src={tapDone ? '/videos/swipe.mp4' : '/videos/tab.mp4'}
+                autoPlay
+                loop
+                muted
+                playsInline
+                controls={false}
+                className="w-full h-full object-contain"
+              />
             </motion.div>
 
             {/* 點擊進度 */}
