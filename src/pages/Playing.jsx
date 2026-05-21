@@ -12,6 +12,12 @@ const Playing = () => {
     const { localPlayer, webRTC, connectionStatus, gyroscope, gyroscopeStatus, screenWakeLock, unityPeerId, level, gameScene, spyData } = useGame();
     const inputType = level?.inputType || 'gyro';
 
+    // 判斷是否為 Toybox 關卡
+    const isToybox = level?.sceneName?.includes('Toybox') || level?.sceneName?.includes('toybox');
+    const { lastMessage, sendData: sendWebRTCData, dataChannelConnections } = webRTC;
+    const { isCalibrated, coordinates, isInitialized } = gyroscopeStatus;
+    const { calibrate: calibrateGyroscope } = gyroscope;
+
     // 抓內鬼專用的防呆狀態
     const [hasSubmittedNumber, setHasSubmittedNumber] = useState(false);
     const [hasSubmittedVote, setHasSubmittedVote] = useState(false);
@@ -37,12 +43,6 @@ const Playing = () => {
         const msg = JSON.stringify({ type: "submit_vote", votedTargetId: pid });
         sendWebRTCData(msg, unityPeerId || null);
     }, [hasSubmittedVote, connectionStatus, sendWebRTCData, unityPeerId]);
-
-    // 判斷是否為 Toybox 關卡
-    const isToybox = level?.sceneName?.includes('Toybox') || level?.sceneName?.includes('toybox');
-    const { lastMessage, sendData: sendWebRTCData, dataChannelConnections } = webRTC;
-    const { isCalibrated, coordinates, isInitialized } = gyroscopeStatus;
-    const { calibrate: calibrateGyroscope } = gyroscope;
 
     // --- Game State ---
     const GAME_SPEED = 4;
