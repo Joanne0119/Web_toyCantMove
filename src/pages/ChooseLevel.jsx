@@ -15,7 +15,7 @@ const CARD_WIDTH_PERCENT = 65; // 卡片佔容器寬度的百分比
 const GAP = 12;
 
 const ChooseLevel = () => {
-  const { nickname, level, setLevel, webRTC, peerId, hostId, gameScene, totalPlayerCount } = useGame();
+  const { nickname, players, level, setLevel, webRTC, peerId, hostId, gameScene, screenWakeLock, totalPlayerCount } = useGame();
   const navigate = useNavigate();
   const isHost = peerId === hostId;
   const [currentIndex, setCurrentIndex] = useState(0);
