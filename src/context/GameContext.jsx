@@ -74,6 +74,7 @@ export const GameProvider = ({ children }) => {
   const [unityDisconnected, setUnityDisconnected] = useState(false);
   const wasConnectedRef = useRef(false);
   const identifiedUnityRef = useRef(null); // 記錄已 identify 的 unityPeerId
+  const [totalPlayerCount, setTotalPlayerCount] = useState(1);
 
 
   const [spyData, setSpyData] = useState({
@@ -83,7 +84,8 @@ export const GameProvider = ({ children }) => {
     minTarget: 0,
     maxTarget: 0,
     phase: 'waiting', // waiting, selecting, voting
-    statusText: '等待遊戲開始...'
+    statusText: '等待遊戲開始...',
+    playerNames: []
   });
 
   // 每次 URL 變化時重新讀取 unityPeerId（支援離開後重新掃 QR code）
@@ -224,6 +226,11 @@ export const GameProvider = ({ children }) => {
           setHostId(msg.hostId);
         }
 
+        if (msg.type === "player_count_update") {
+          console.log("收到 Unity 更新人數：", msg.count);
+          setTotalPlayerCount(msg.count);
+        }
+
         if (msg.type === "level_selected") {
           console.log("Received level_selected from Unity:", msg.level);
           // 更新選擇的關卡（讓非房主也能看到）
@@ -279,6 +286,7 @@ export const GameProvider = ({ children }) => {
             ...prev,
             role: msg.role,
             myPlayerId: msg.myPlayerId,
+            playerNames: msg.playerNames || [],
             phase: 'waiting',
             statusText: '等待回合開始...'
           }));
@@ -369,6 +377,7 @@ export const GameProvider = ({ children }) => {
     setGameScene,
     unityDisconnected,
     spyData,
+    totalPlayerCount,
     resetGameState: () => {
       const newPeerId = generatePeerId();
       setPeerId(newPeerId);
@@ -385,7 +394,7 @@ export const GameProvider = ({ children }) => {
   }), [
     peerId, hostId, gameScene, localPlayer, otherPlayers, level, score,
     webRTC, gyroscope, screenWakeLockValue, gyroscopeStatus, finalResults, terminateImageLink, unityPeerId, setGameScene, unityDisconnected,
-    unityDisconnected, spyData
+    unityDisconnected, spyData, totalPlayerCount
   ]);
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

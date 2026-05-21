@@ -460,8 +460,13 @@ const Playing = () => {
                                         >
                                             <div className="flex flex-col">
                                                 <span className="text-sm">投給</span>
-                                                <span className="text-xl font-bold">Player {pid}</span>
-                                                {pid === spyData?.myPlayerId && <span className="text-xs mt-1 text-base-content/40">(你)</span>}
+
+                                                {/*  利用陣列索引 pid 去撈取對應的暱稱 */}
+                                                <span className="text-xl font-bold">
+                                                    {spyData?.playerNames?.[pid] || `Player ${pid}`}
+                                                </span>
+
+                                                {pid === spyData.myPlayerId && <span className="text-xs mt-1 text-base-content/40">(你)</span>}
                                             </div>
                                         </motion.button>
                                     ))}
