@@ -347,7 +347,7 @@ const Playing = () => {
     }
 
     if (inputType === 'spy') {
-        const isBadGuy = spyData.role === 'BadGuy';
+        const isBadGuy = spyData?.role === 'BadGuy';
 
         return (
             <div className="relative w-screen min-h-screen flex flex-col safe-area-bottom select-none overflow-hidden" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
@@ -364,7 +364,7 @@ const Playing = () => {
                             {/* 身分顯示區 */}
                             <div className="mb-4">
                                 <h2 className="text-sm text-base-content/60 font-bold mb-1">你的身分</h2>
-                                {spyData.role ? (
+                                {spyData?.role ? (
                                     <h1 className={`text-3xl font-extrabold ${isBadGuy ? 'text-error' : 'text-info'}`}>
                                         {isBadGuy ? '【我是壞人】' : '我是好人'}
                                     </h1>
@@ -377,17 +377,17 @@ const Playing = () => {
 
                             {/* 狀態提示文字 */}
                             <p className="text-lg font-bold my-4">
-                                {hasSubmittedNumber && spyData.phase === 'selecting'
+                                {hasSubmittedNumber && spyData?.phase === 'selecting'
                                     ? '已選擇，等待其他人...'
-                                    : hasSubmittedVote && spyData.phase === 'voting'
+                                    : hasSubmittedVote && spyData?.phase === 'voting'
                                         ? '已投票，等待開票...'
-                                        : spyData.statusText}
+                                        : spyData?.statusText}
                             </p>
 
                             {/* 階段 1：選數字 (5顆按鈕) */}
-                            {spyData.phase === 'selecting' && !hasSubmittedNumber && (
+                            {spyData?.phase === 'selecting' && !hasSubmittedNumber && (
                                 <div className="w-full">
-                                    <p className="text-sm mb-3">目標區間: {spyData.minTarget} ~ {spyData.maxTarget}</p>
+                                    <p className="text-sm mb-3">目標區間: {spyData?.minTarget} ~ {spyData?.maxTarget}</p>
                                     <div className="grid grid-cols-3 gap-3">
                                         {[1, 2, 3, 4, 5].map(num => (
                                             <motion.button
@@ -404,7 +404,7 @@ const Playing = () => {
                             )}
 
                             {/* 階段 2：最後投票 (4顆按鈕) */}
-                            {spyData.phase === 'voting' && !hasSubmittedVote && (
+                            {spyData?.phase === 'voting' && !hasSubmittedVote && (
                                 <div className="w-full grid grid-cols-2 gap-3">
                                     {[0, 1, 2, 3].map(pid => (
                                         <motion.button
@@ -412,12 +412,12 @@ const Playing = () => {
                                             whileTap={{ scale: 0.9 }}
                                             onClick={() => handleSubmitVote(pid)}
                                             className="btn btn-outline border-2 h-auto py-3"
-                                            disabled={pid === spyData.myPlayerId} // 可選：不讓玩家投給自己
+                                            disabled={pid === spyData?.myPlayerId} // 可選：不讓玩家投給自己
                                         >
                                             <div className="flex flex-col">
                                                 <span className="text-sm">投給</span>
                                                 <span className="text-xl font-bold">Player {pid}</span>
-                                                {pid === spyData.myPlayerId && <span className="text-xs mt-1 text-base-content/40">(你)</span>}
+                                                {pid === spyData?.myPlayerId && <span className="text-xs mt-1 text-base-content/40">(你)</span>}
                                             </div>
                                         </motion.button>
                                     ))}
