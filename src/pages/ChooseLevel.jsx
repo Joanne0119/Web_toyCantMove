@@ -8,6 +8,7 @@ const levels = [
   { name: "玩具紙箱", sceneName: "4_Toybox", image: "/images/toyboxLevel.png", inputType: "gyro", disable: false },
   { name: "塗鴉畫紙", sceneName: "4_ColorPaper", image: "/images/tableLevel.png", inputType: "gyro", disable: false },
   { name: "瘋狂餐桌", sceneName: "4_TapEat", image: "/images/foodLevel.png", inputType: "tap", disable: false },
+  { name: "瘋狂餐桌", sceneName: "4_SpyGame", image: "/images/foodLevel.png", inputType: "spy", disable: false },
 ];
 
 const CARD_WIDTH_PERCENT = 65; // 卡片佔容器寬度的百分比
@@ -194,9 +195,8 @@ const ChooseLevel = () => {
                     opacity: i === currentIndex ? 1 : 0.4,
                   }}
                 >
-                  <div className={`card bg-base-200 shadow-md rounded-xl overflow-hidden relative ${
-                    level?.name === l.name ? 'ring-2 ring-primary' : ''
-                  }`}>
+                  <div className={`card bg-base-200 shadow-md rounded-xl overflow-hidden relative ${level?.name === l.name ? 'ring-2 ring-primary' : ''
+                    }`}>
                     <figure>
                       <LazyImage
                         src={l.image}
@@ -210,7 +210,7 @@ const ChooseLevel = () => {
                     </div>
                     {l.disable && (
                       <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-xl">
-                        <img src="/images/ComingSoon.png" alt="coming soon" className="h-18" style={{ rotate: '-20deg', filter: 'grayscale(100%) brightness(200%)' }}/>
+                        <img src="/images/ComingSoon.png" alt="coming soon" className="h-18" style={{ rotate: '-20deg', filter: 'grayscale(100%) brightness(200%)' }} />
                       </div>
                     )}
                   </div>
@@ -234,9 +234,8 @@ const ChooseLevel = () => {
                   <button
                     key={i}
                     onClick={() => handleCardClick(i)}
-                    className={`rounded-full transition-all duration-300 ${
-                      i === currentIndex ? 'bg-primary w-5 h-2' : 'bg-base-300 w-2 h-2'
-                    }`}
+                    className={`rounded-full transition-all duration-300 ${i === currentIndex ? 'bg-primary w-5 h-2' : 'bg-base-300 w-2 h-2'
+                      }`}
                   />
                 ))}
               </div>

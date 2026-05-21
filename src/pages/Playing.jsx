@@ -9,8 +9,34 @@ import TapController from '@/components/controllers/TapController';
 const Playing = () => {
     const navigate = useNavigate();
 
-    const { localPlayer, webRTC, connectionStatus, gyroscope, gyroscopeStatus, screenWakeLock, unityPeerId, level, gameScene } = useGame();
+    const { localPlayer, webRTC, connectionStatus, gyroscope, gyroscopeStatus, screenWakeLock, unityPeerId, level, gameScene, spyData } = useGame();
     const inputType = level?.inputType || 'gyro';
+
+    // 抓內鬼專用的防呆狀態
+    const [hasSubmittedNumber, setHasSubmittedNumber] = useState(false);
+    const [hasSubmittedVote, setHasSubmittedVote] = useState(false);
+
+    // 當回合或階段改變時，重置按鈕狀態
+    useEffect(() => {
+        if (spyData?.phase === 'selecting') setHasSubmittedNumber(false);
+        if (spyData?.phase === 'voting') setHasSubmittedVote(false);
+    }, [spyData?.roundIndex, spyData?.phase]);
+
+    // 發送數字的函式
+    const handleSubmitNumber = useCallback((num) => {
+        if (hasSubmittedNumber || !connectionStatus) return;
+        setHasSubmittedNumber(true);
+        const msg = JSON.stringify({ type: "submit_number", number: num });
+        sendWebRTCData(msg, unityPeerId || null);
+    }, [hasSubmittedNumber, connectionStatus, sendWebRTCData, unityPeerId]);
+
+    // 發送投票的函式
+    const handleSubmitVote = useCallback((pid) => {
+        if (hasSubmittedVote || !connectionStatus) return;
+        setHasSubmittedVote(true);
+        const msg = JSON.stringify({ type: "submit_vote", votedTargetId: pid });
+        sendWebRTCData(msg, unityPeerId || null);
+    }, [hasSubmittedVote, connectionStatus, sendWebRTCData, unityPeerId]);
 
     // 判斷是否為 Toybox 關卡
     const isToybox = level?.sceneName?.includes('Toybox') || level?.sceneName?.includes('toybox');
@@ -50,9 +76,9 @@ const Playing = () => {
     }, [screenWakeLock]);
 
     useEffect(() => {
-      if (gameScene === 'ReturnToLobby') {
-          navigate('/waiting-room');
-      }
+        if (gameScene === 'ReturnToLobby') {
+            navigate('/waiting-room');
+        }
     }, [gameScene, navigate]);
 
     useEffect(() => {
@@ -110,7 +136,7 @@ const Playing = () => {
             console.log(`Gyro Effect: Running. Coords: { x: ${coordinates.x}, y: ${coordinates.y} }`);
             const vector = { x: coordinates.x, y: -coordinates.y };
             const magnitude = Math.sqrt(vector.x ** 2 + vector.y ** 2);
-            
+
             let finalVector = vector;
             if (magnitude < 0.08) {
                 finalVector = { x: 0, y: 0 };
@@ -119,7 +145,7 @@ const Playing = () => {
             if (joystickBaseRef.current) {
                 const baseRect = joystickBaseRef.current.getBoundingClientRect();
                 const baseRadius = baseRect.width / 2;
-                
+
                 const knobRadius = baseRect.width / 3 / 2;
                 const maxDistance = baseRadius - knobRadius;
 
@@ -127,7 +153,7 @@ const Playing = () => {
                 const visualKnobY = -finalVector.y * maxDistance;
 
                 console.log(`Gyro Effect: Setting Knobs -> { x: ${visualKnobX}, y: ${visualKnobY} }`);
-                
+
                 knobX.set(visualKnobX);
                 knobY.set(visualKnobY);
             }
@@ -137,7 +163,7 @@ const Playing = () => {
             if (!connectionStatus || !isCalibrated) return;
 
             const now = Date.now();
-            if (now - lastSentTimeRef.current < 50) { 
+            if (now - lastSentTimeRef.current < 50) {
                 console.log("Gyro Effect: Throttled (too fast).");
                 return;
             }
@@ -162,7 +188,7 @@ const Playing = () => {
         GAME_SPEED,
         smoothX,
         smoothY,
-        knobX, 
+        knobX,
         knobY,
         unityPeerId
     ]);
@@ -176,7 +202,7 @@ const Playing = () => {
 
     const startSendingLoop = useCallback(() => {
         if (sendIntervalRef.current) return;
-        
+
         sendIntervalRef.current = setInterval(() => {
             const vector = currentVectorRef.current;
             sendManualMove(vector);
@@ -185,7 +211,7 @@ const Playing = () => {
             smoothX.set(Math.max(0, Math.min(100, newX)));
             smoothY.set(Math.max(0, Math.min(100, newY)));
 
-        }, 100); 
+        }, 100);
     }, [sendManualMove, smoothX, smoothY, GAME_SPEED]);
 
     const stopSendingLoop = useCallback(() => {
@@ -203,7 +229,7 @@ const Playing = () => {
         const baseRect = joystickBaseRef.current.getBoundingClientRect();
         const baseRadius = baseRect.width / 2;
         const knobRadius = baseRect.width / 3 / 2;
-        
+
         // 滾球中心點能移動的最大距離
         const maxDistance = baseRadius - knobRadius;
 
@@ -225,7 +251,7 @@ const Playing = () => {
             clampedX = Math.cos(angle) * maxDistance;
             clampedY = Math.sin(angle) * maxDistance;
         }
-        
+
         // 更新 UI
         knobX.set(clampedX);
         knobY.set(clampedY);
@@ -234,7 +260,7 @@ const Playing = () => {
         // 上為正
         currentVectorRef.current = {
             x: clampedX / maxDistance,
-            y: -(clampedY / maxDistance) 
+            y: -(clampedY / maxDistance)
         };
 
     }, [knobX, knobY]);
@@ -320,6 +346,91 @@ const Playing = () => {
         return <TapController />;
     }
 
+    if (inputType === 'spy') {
+        const isBadGuy = spyData.role === 'BadGuy';
+
+        return (
+            <div className="relative w-screen min-h-screen flex flex-col safe-area-bottom select-none overflow-hidden" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
+                <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(3px) saturate(80%)' }}></div>
+
+                <div className="flex-1 flex flex-col items-center justify-center px-4 z-10">
+                    <motion.div
+                        className="card bg-base-100 shadow-xl w-full max-w-sm"
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                    >
+                        <div className="card-body items-center text-center p-6">
+
+                            {/* 身分顯示區 */}
+                            <div className="mb-4">
+                                <h2 className="text-sm text-base-content/60 font-bold mb-1">你的身分</h2>
+                                {spyData.role ? (
+                                    <h1 className={`text-3xl font-extrabold ${isBadGuy ? 'text-error' : 'text-info'}`}>
+                                        {isBadGuy ? '【我是壞人】' : '我是好人'}
+                                    </h1>
+                                ) : (
+                                    <h1 className="text-xl font-bold text-base-content/50">分配中...</h1>
+                                )}
+                            </div>
+
+                            <div className="divider my-0"></div>
+
+                            {/* 狀態提示文字 */}
+                            <p className="text-lg font-bold my-4">
+                                {hasSubmittedNumber && spyData.phase === 'selecting'
+                                    ? '已選擇，等待其他人...'
+                                    : hasSubmittedVote && spyData.phase === 'voting'
+                                        ? '已投票，等待開票...'
+                                        : spyData.statusText}
+                            </p>
+
+                            {/* 階段 1：選數字 (5顆按鈕) */}
+                            {spyData.phase === 'selecting' && !hasSubmittedNumber && (
+                                <div className="w-full">
+                                    <p className="text-sm mb-3">目標區間: {spyData.minTarget} ~ {spyData.maxTarget}</p>
+                                    <div className="grid grid-cols-3 gap-3">
+                                        {[1, 2, 3, 4, 5].map(num => (
+                                            <motion.button
+                                                key={`num-${num}`}
+                                                whileTap={{ scale: 0.9 }}
+                                                onClick={() => handleSubmitNumber(num)}
+                                                className={`btn btn-lg ${isBadGuy ? 'btn-error' : 'btn-info'} ${num === 4 || num === 5 ? 'col-span-1' : ''}`}
+                                            >
+                                                <span className="text-2xl">{num}</span>
+                                            </motion.button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* 階段 2：最後投票 (4顆按鈕) */}
+                            {spyData.phase === 'voting' && !hasSubmittedVote && (
+                                <div className="w-full grid grid-cols-2 gap-3">
+                                    {[0, 1, 2, 3].map(pid => (
+                                        <motion.button
+                                            key={`vote-${pid}`}
+                                            whileTap={{ scale: 0.9 }}
+                                            onClick={() => handleSubmitVote(pid)}
+                                            className="btn btn-outline border-2 h-auto py-3"
+                                            disabled={pid === spyData.myPlayerId} // 可選：不讓玩家投給自己
+                                        >
+                                            <div className="flex flex-col">
+                                                <span className="text-sm">投給</span>
+                                                <span className="text-xl font-bold">Player {pid}</span>
+                                                {pid === spyData.myPlayerId && <span className="text-xs mt-1 text-base-content/40">(你)</span>}
+                                            </div>
+                                        </motion.button>
+                                    ))}
+                                </div>
+                            )}
+
+                        </div>
+                    </motion.div>
+                </div>
+            </div>
+        );
+    }
+
     // 陀螺儀關卡（原有邏輯）
     return (
         <div className="relative w-screen min-h-screen flex flex-col safe-area-bottom" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}>
@@ -376,11 +487,10 @@ const Playing = () => {
                                     style={{
                                         x: knobX,
                                         y: knobY,
-                                        backgroundImage: `url(${
-                                                                localPlayer.color
-                                                                    ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}Pin.png`
-                                                                    : `/images/gray_${localPlayer.avatar || 'wind-up'}Pin.png`
-                                                                })`,
+                                        backgroundImage: `url(${localPlayer.color
+                                            ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}Pin.png`
+                                            : `/images/gray_${localPlayer.avatar || 'wind-up'}Pin.png`
+                                            })`,
                                         backgroundSize: 'contain',
                                         backgroundPosition: 'center',
                                         backgroundRepeat: 'no-repeat'
@@ -422,11 +532,11 @@ const Playing = () => {
                 <div className="flex items-center gap-3 text-white">
                     {isToybox ? (
                         <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M13 10h7l-9 13v-9H4l9-13v9z"/>
+                            <path d="M13 10h7l-9 13v-9H4l9-13v9z" />
                         </svg>
                     ) : (
                         <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M19.228 18.732l1.768-1.768 1.767 1.768a2.5 2.5 0 1 1-3.535 0zM8.878 1.08l11.314 11.313a1 1 0 0 1 0 1.415l-8.485 8.485a1 1 0 0 1-1.414 0l-8.485-8.485a1 1 0 0 1 0-1.415l7.778-7.778-2.122-2.121L8.88 1.08zM11 6.03L3.929 13.1 11 20.173l7.071-7.071L11 6.029z"/>
+                            <path d="M19.228 18.732l1.768-1.768 1.767 1.768a2.5 2.5 0 1 1-3.535 0zM8.878 1.08l11.314 11.313a1 1 0 0 1 0 1.415l-8.485 8.485a1 1 0 0 1-1.414 0l-8.485-8.485a1 1 0 0 1 0-1.415l7.778-7.778-2.122-2.121L8.88 1.08zM11 6.03L3.929 13.1 11 20.173l7.071-7.071L11 6.029z" />
                         </svg>
                     )}
                     <span className="text-lg font-bold">

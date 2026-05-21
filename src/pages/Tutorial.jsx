@@ -11,7 +11,7 @@ const stepVideos = {
   left: '/videos/left.mp4',
   right: '/videos/right.mp4',
   backward: '/videos/backward.mp4',
-  default: '/videos/idle.mp4' 
+  default: '/videos/idle.mp4'
 };
 
 const Tutorial = () => {
@@ -24,8 +24,8 @@ const Tutorial = () => {
   const { coordinates, isCalibrated, isInitialized } = gyroscopeStatus;
 
   // Tutorial 狀態
-  const [currentStep, setCurrentStep] = useState(''); 
-  const [instructionText, setInstructionText] = useState('正在檢查設備...'); 
+  const [currentStep, setCurrentStep] = useState('');
+  const [instructionText, setInstructionText] = useState('正在檢查設備...');
   const [completedSteps, setCompletedSteps] = useState({
     forward: false,
     left: false,
@@ -60,7 +60,7 @@ const Tutorial = () => {
   };
 
   const cheatVectors = {
-    forward: { x: 0, y: -1 },  
+    forward: { x: 0, y: -1 },
     backward: { x: 0, y: 1 },
     left: { x: -1, y: 0 },
     right: { x: 1, y: 0 },
@@ -71,7 +71,7 @@ const Tutorial = () => {
     setInstructionText('正在允許感測器權限...');
     try {
       const initSuccess = await initGyroscope();
-      
+
       if (initSuccess) {
         setInstructionText('請平放手機，校正中...');
         await calibrateGyroscope();
@@ -89,12 +89,12 @@ const Tutorial = () => {
 
   useEffect(() => {
     const checkSupport = () => {
-      const supported = isSupported(); 
+      const supported = isSupported();
       setGyroSupported(supported);
 
       if (!supported) {
         setInstructionText('設備不支援陀螺儀，等待其他玩家...');
-        
+
         // fake calibrated message to skip tutorial
         // const calibratedMessage = { type: "calibrated" };
         // sendWebRTCData(JSON.stringify(calibratedMessage), null);
@@ -129,11 +129,11 @@ const Tutorial = () => {
   }, [inputType, gyroSupported, dataChannelConnections, sendWebRTCData, unityPeerId]);
 
   // screen wake lock
-    useEffect(() => {
-        if (screenWakeLock) {
-        screenWakeLock.request();
-        }
-    }, [screenWakeLock]); 
+  useEffect(() => {
+    if (screenWakeLock) {
+      screenWakeLock.request();
+    }
+  }, [screenWakeLock]);
 
   // 監聽 gameScene 變化
   useEffect(() => {
@@ -152,7 +152,7 @@ const Tutorial = () => {
       lastProcessedTimestamp.current = lastMessage.timestamp;
       try {
         const msg = JSON.parse(lastMessage.message);
-        
+
         // 如果收到教學指示
         if (msg.type === 'tutorial_instruction') {
           const stepName = msg.step;
@@ -175,7 +175,7 @@ const Tutorial = () => {
             setInstructionText(msg.message || stepInstructions[msg.step]);
           }
         }
-        
+
         // 如果收到「進入遊戲」的指令
         if (msg.type === 'navigate_to_game') {
           sendWebRTCData(JSON.stringify({ type: "navigate_ack", target: "tutorial" }), unityPeerId || null);
@@ -203,12 +203,12 @@ const Tutorial = () => {
 
   useEffect(() => {
     const videoElement = videoRef.current;
-    
+
     if (videoElement) {
       videoElement.muted = true;
-      
+
       const playPromise = videoElement.play();
-      
+
       if (playPromise !== undefined) {
         playPromise.catch((error) => {
           console.log("自動播放被瀏覽器阻擋:", error);
@@ -224,6 +224,7 @@ const Tutorial = () => {
     tap: { title: '瘋狂餐桌', desc: '快速點擊螢幕來吃東西！' },
     shake: { title: '搖動賽跑', desc: '上下搖動手機來前進！' },
     count: { title: '數數挑戰', desc: '數數看有幾隻角色跑過去！' },
+    spy: { title: '抓出內鬼', desc: '考驗你的演技與推理能力！' }
   };
 
   // 非陀螺儀關卡的完成邏輯
@@ -340,7 +341,7 @@ const Tutorial = () => {
           sendWebRTCData(JSON.stringify({ type: "navigate_ack", target: "playing" }), unityPeerId || null);
           navigate('/playing');
         }
-      } catch (e) {}
+      } catch (e) { }
     }
   }, [inputType, lastMessage, navigate, sendWebRTCData, unityPeerId]);
 
@@ -400,9 +401,8 @@ const Tutorial = () => {
                 {Array.from({ length: TAP_REQUIRED }).map((_, i) => (
                   <motion.div
                     key={`tap-${i}`}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                      i < tapCount ? 'bg-green-500 text-white' : 'bg-base-300/50'
-                    }`}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${i < tapCount ? 'bg-green-500 text-white' : 'bg-base-300/50'
+                      }`}
                     animate={i === tapCount - 1 && tapCount > 0 ? { scale: [1.3, 1] } : {}}
                     transition={{ duration: 0.2 }}
                   >
@@ -419,9 +419,8 @@ const Tutorial = () => {
                 {Array.from({ length: SWIPE_REQUIRED }).map((_, i) => (
                   <motion.div
                     key={`swipe-${i}`}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                      i < swipeCount ? 'bg-blue-500 text-white' : 'bg-base-300/50'
-                    }`}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${i < swipeCount ? 'bg-blue-500 text-white' : 'bg-base-300/50'
+                      }`}
                     animate={i === swipeCount - 1 && swipeCount > 0 ? { scale: [1.3, 1] } : {}}
                     transition={{ duration: 0.2 }}
                   >
@@ -529,49 +528,49 @@ const Tutorial = () => {
       <div className="hero min-h-screen bg-base-200 safe-area-bottom" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
         <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
         <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="text-center z-10 card bg-base-100 shadow-xl mt-4">
-            <div className="card-body p-4">
-                <h1 className="text-2xl font-bold text-base mb-2">控制器教學</h1>
-                <p className="text-sm mb-4">{instructionText}</p>
-                <motion.div
-                    className="w-48 aspect-square bg-base/10 rounded-2xl overflow-hidden mb-2 shadow-inner mx-auto"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5 }}
-                >
-                    <video
-                        src={stepVideos.calibrate || stepVideos.default}
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        controls={false}
-                        className="w-full h-full object-contain"
-                    />
-                </motion.div>
-                <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleSetupSensors}
-                    className="btn btn-primary"
-                    disabled={isSensorSetupInProgress}
-                >
-                    {isSensorSetupInProgress ? (
-                        <span className="loading loading-spinner loading-sm"></span>
-                    ) : (
-                        '啟用與校正'
-                    )}
-                </motion.button>
-                <button
-                  onClick={() => {
-                    setSkippedTutorial(true);
-                    setInstructionText('等待其他玩家...');
-                    const calibratedMsg = { type: "tutorial_step_complete", step: "calibrate" };
-                    sendWebRTCData(JSON.stringify(calibratedMsg), unityPeerId || null);
-                  }}
-                  className="btn btn-ghost btn-xs text-base-content/30 mt-2"
-                >
-                  略過教學
-                </button>
-            </div>
+          <div className="card-body p-4">
+            <h1 className="text-2xl font-bold text-base mb-2">控制器教學</h1>
+            <p className="text-sm mb-4">{instructionText}</p>
+            <motion.div
+              className="w-48 aspect-square bg-base/10 rounded-2xl overflow-hidden mb-2 shadow-inner mx-auto"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              <video
+                src={stepVideos.calibrate || stepVideos.default}
+                autoPlay
+                loop
+                muted
+                playsInline
+                controls={false}
+                className="w-full h-full object-contain"
+              />
+            </motion.div>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={handleSetupSensors}
+              className="btn btn-primary"
+              disabled={isSensorSetupInProgress}
+            >
+              {isSensorSetupInProgress ? (
+                <span className="loading loading-spinner loading-sm"></span>
+              ) : (
+                '啟用與校正'
+              )}
+            </motion.button>
+            <button
+              onClick={() => {
+                setSkippedTutorial(true);
+                setInstructionText('等待其他玩家...');
+                const calibratedMsg = { type: "tutorial_step_complete", step: "calibrate" };
+                sendWebRTCData(JSON.stringify(calibratedMsg), unityPeerId || null);
+              }}
+              className="btn btn-ghost btn-xs text-base-content/30 mt-2"
+            >
+              略過教學
+            </button>
+          </div>
         </motion.div>
       </div>
     );
@@ -582,9 +581,9 @@ const Tutorial = () => {
     return (
       <div className="hero min-h-screen bg-base-200 safe-area-bottom" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
         <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
-        <motion.div 
-          initial={{ scale: 0.8, opacity: 0 }} 
-          animate={{ scale: 1, opacity: 1 }} 
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
           className="text-center z-10 card bg-base-100 shadow-xl p-8 w-full px-4 max-w-md"
         >
           <h1 className="text-3xl font-bold text-base mb-4">
@@ -606,77 +605,77 @@ const Tutorial = () => {
     return (
       <div className="hero min-h-screen bg-base-200 safe-area-bottom overflow-x-hidden select-none" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}>
         <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
-        
+
         <div className="card bg-base-100 shadow-xl mt-4 mb-4 z-10">
-        <div className="card-body items-center text-center p-4">
+          <div className="card-body items-center text-center p-4">
             <motion.div
-                key={instructionText}
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="text-center mb-3"
+              key={instructionText}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="text-center mb-3"
             >
-                <h1 className="text-2xl font-bold text-base mb-1">
+              <h1 className="text-2xl font-bold text-base mb-1">
                 {instructionText}
-                </h1>
+              </h1>
             </motion.div>
 
             <motion.div
-                className="w-48 aspect-square bg-base/10 rounded-2xl overflow-hidden mb-2 shadow-inner"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
+              className="w-48 aspect-square bg-base/10 rounded-2xl overflow-hidden mb-2 shadow-inner"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
             >
-                <video
-                    ref={videoRef}
-                    key={currentStep}
-                    src={videoSrc}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    controls={false}
-                    className="w-full h-full object-contain"
-                />
+              <video
+                ref={videoRef}
+                key={currentStep}
+                src={videoSrc}
+                autoPlay
+                loop
+                muted
+                playsInline
+                controls={false}
+                className="w-full h-full object-contain"
+              />
             </motion.div>
 
             <div className="flex gap-3 mb-4">
-                {['forward', 'left', 'right', 'backward'].map((step, index) => (
+              {['forward', 'left', 'right', 'backward'].map((step, index) => (
                 <div key={step} className="flex flex-col items-center">
-                    <div className={`
+                  <div className={`
                     w-10 h-10 rounded-full flex items-center justify-center
                     ${currentStep === step ? 'ring-4 ring-gray-100' : ''}
                     ${completedSteps[step] ? 'bg-green-500' : 'bg-base/30'}
                     `}>
                     {completedSteps[step] ? (
-                        <span className="text-lg">✓</span>
+                      <span className="text-lg">✓</span>
                     ) : (
-                        <span className="text-sm font-bold">{index + 1}</span>
+                      <span className="text-sm font-bold">{index + 1}</span>
                     )}
-                    </div>
-                    <span className="text-xs mt-1">
+                  </div>
+                  <span className="text-xs mt-1">
                     {step === 'forward' ? '向前' :
-                    step === 'left' ? '向左' :
-                    step === 'right' ? '向右' : '向後'}
-                    </span>
+                      step === 'left' ? '向左' :
+                        step === 'right' ? '向右' : '向後'}
+                  </span>
                 </div>
-                ))}
+              ))}
             </div>
 
             {/* 狀態指示 */}
             <div className="flex items-center gap-3 text-xs text-base-content/50">
-                <div className="flex items-center gap-1">
-                    {connectionStatus
-                      ? <Wifi className="w-3.5 h-3.5 text-success" />
-                      : <WifiOff className="w-3.5 h-3.5 text-error" />}
-                    <span>{connectionStatus ? '已連線' : '未連線'}</span>
-                </div>
-                <span className="text-base-content/20">|</span>
-                <div className="flex items-center gap-1">
-                    {isCalibrated
-                      ? <CheckCircle className="w-3.5 h-3.5 text-success" />
-                      : <XCircle className="w-3.5 h-3.5 text-error" />}
-                    <span>{isCalibrated ? '已校正' : '未校正'}</span>
-                </div>
+              <div className="flex items-center gap-1">
+                {connectionStatus
+                  ? <Wifi className="w-3.5 h-3.5 text-success" />
+                  : <WifiOff className="w-3.5 h-3.5 text-error" />}
+                <span>{connectionStatus ? '已連線' : '未連線'}</span>
+              </div>
+              <span className="text-base-content/20">|</span>
+              <div className="flex items-center gap-1">
+                {isCalibrated
+                  ? <CheckCircle className="w-3.5 h-3.5 text-success" />
+                  : <XCircle className="w-3.5 h-3.5 text-error" />}
+                <span>{isCalibrated ? '已校正' : '未校正'}</span>
+              </div>
             </div>
 
             {/* 略過教學 */}
@@ -694,14 +693,14 @@ const Tutorial = () => {
                 略過教學
               </button>
             )}
+          </div>
         </div>
-      </div>
       </div>
     );
   }
 
   // Fallback (理論上不應該執行到這裡)
-  return null; 
-};  
+  return null;
+};
 
 export default Tutorial;

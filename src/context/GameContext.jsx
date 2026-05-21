@@ -15,14 +15,14 @@ const STABLE_UI_CONFIG = {
 
 const STABLE_GYRO_CONFIG = {
   movementThreshold: 12,
-    calibrationTime: 1000,
-    smoothingFactor: 0.3,
-    deadZone: 5,
-    maxThreshold: 60,
-    enableAudio: false,
-    enableVibration: false,
-    debugMode: true,
-    autoCalibrate: false,
+  calibrationTime: 1000,
+  smoothingFactor: 0.3,
+  deadZone: 5,
+  maxThreshold: 60,
+  enableAudio: false,
+  enableVibration: false,
+  debugMode: true,
+  autoCalibrate: false,
 }
 
 // ICE Servers 設定（包含 STUN 和 TURN）
@@ -57,7 +57,7 @@ const ICE_SERVERS = [
 export const GameProvider = ({ children }) => {
   const [level, setLevel] = useState(null);
   const [score, setScore] = useState(0);
-  const [hostId, setHostId] = useState(null); 
+  const [hostId, setHostId] = useState(null);
   const [gameScene, setGameScene] = useState('Lobby');
   const generatePeerId = () => 'web-' + Math.random().toString(36).substring(2, 9);
   const [peerId, setPeerId] = useState(generatePeerId);
@@ -74,6 +74,17 @@ export const GameProvider = ({ children }) => {
   const [unityDisconnected, setUnityDisconnected] = useState(false);
   const wasConnectedRef = useRef(false);
   const identifiedUnityRef = useRef(null); // 記錄已 identify 的 unityPeerId
+
+
+  const [spyData, setSpyData] = useState({
+    role: null,
+    myPlayerId: null,
+    roundIndex: 0,
+    minTarget: 0,
+    maxTarget: 0,
+    phase: 'waiting', // waiting, selecting, voting
+    statusText: '等待遊戲開始...'
+  });
 
   // 每次 URL 變化時重新讀取 unityPeerId（支援離開後重新掃 QR code）
   useEffect(() => {
@@ -108,20 +119,20 @@ export const GameProvider = ({ children }) => {
   });
 
   const { isConnected: webRTCIsConnected, peers: peerIds, lastMessage } = webRTC;
-  
-  const { 
-    isSupported: gyroIsSupported, 
-    isCalibrated: gyroIsCalibrated, 
-    isInitialized: gyroIsInitialized, 
-    direction: gyroDirection, 
-    coordinates: gyroCoordinates, 
-    error: gyroError 
+
+  const {
+    isSupported: gyroIsSupported,
+    isCalibrated: gyroIsCalibrated,
+    isInitialized: gyroIsInitialized,
+    direction: gyroDirection,
+    coordinates: gyroCoordinates,
+    error: gyroError
   } = gyroscope;
 
   useEffect(() => {
-    setOtherPlayers(currentOtherPlayers => { 
+    setOtherPlayers(currentOtherPlayers => {
       const updatedPlayers = currentOtherPlayers.filter(p =>
-        peerIds.includes(p.id) 
+        peerIds.includes(p.id)
       );
       return updatedPlayers;
     });
@@ -177,21 +188,21 @@ export const GameProvider = ({ children }) => {
     if (lastMessage) {
       try {
         const msg = JSON.parse(lastMessage.message);
-        const senderPeerId = lastMessage.peerId; 
+        const senderPeerId = lastMessage.peerId;
 
         if (msg.type === "identify") {
           const newPlayerInfo = {
-            id: senderPeerId, 
+            id: senderPeerId,
             name: msg.nickname,
             avatar: msg.characterName
           };
 
-          setOtherPlayers(currentOtherPlayers => { 
+          setOtherPlayers(currentOtherPlayers => {
             const playerExists = currentOtherPlayers.some(p => p.id === senderPeerId);
-            
+
             if (playerExists) {
               return currentOtherPlayers.map(p =>
-                p.id === senderPeerId ? newPlayerInfo : p 
+                p.id === senderPeerId ? newPlayerInfo : p
               );
             } else {
               return [...currentOtherPlayers, newPlayerInfo];
@@ -209,7 +220,7 @@ export const GameProvider = ({ children }) => {
         }
 
         if (msg.type === "host_update") {
-          console.log("New host is:", msg.hostId); 
+          console.log("New host is:", msg.hostId);
           setHostId(msg.hostId);
         }
 
@@ -223,6 +234,7 @@ export const GameProvider = ({ children }) => {
             '4_TapEat': 'tap',
             '4_ShakeRace': 'shake',
             '4_CountChallenge': 'count',
+            '4_SpyGame': 'spy',
           };
           setLevel(prevLevel => ({
             ...prevLevel,
@@ -230,7 +242,6 @@ export const GameProvider = ({ children }) => {
             inputType: inputTypeMap[msg.level] || 'gyro',
           }));
         }
-
         if (msg.type === "navigate_to_game") {
           console.log("Received navigate command from Unity, changing scene to Tutorial.");
           setGameScene('Tutorial');
@@ -262,6 +273,36 @@ export const GameProvider = ({ children }) => {
           setTerminateImageLink(msg.link || null);
           setGameScene('Awards');
         }
+
+        if (msg.type === "spy_game_init") {
+          setSpyData(prev => ({
+            ...prev,
+            role: msg.role,
+            myPlayerId: msg.myPlayerId,
+            phase: 'waiting',
+            statusText: '等待回合開始...'
+          }));
+        }
+
+        if (msg.type === "spy_round_start") {
+          setSpyData(prev => ({
+            ...prev,
+            roundIndex: msg.roundIndex,
+            minTarget: msg.minTarget,
+            maxTarget: msg.maxTarget,
+            phase: 'selecting',
+            statusText: '請選擇數字'
+          }));
+        }
+
+        if (msg.type === "spy_voting_start") {
+          setSpyData(prev => ({
+            ...prev,
+            phase: 'voting',
+            statusText: msg.message || '請投票抓出內鬼！'
+          }));
+        }
+
       } catch (e) {
         console.error(e);
       }
@@ -306,8 +347,8 @@ export const GameProvider = ({ children }) => {
   ]);
 
   const value = useMemo(() => ({
-    peerId: peerId,     
-    hostId: hostId, 
+    peerId: peerId,
+    hostId: hostId,
     gameScene: gameScene,
     localPlayer,
     setLocalPlayer,
@@ -316,17 +357,18 @@ export const GameProvider = ({ children }) => {
     setLevel,
     score,
     setScore,
-    webRTC, 
+    webRTC,
     gyroscope,
     screenWakeLock: screenWakeLockValue,
     connectionStatus: webRTC.isConnected,
-    gyroscopeStatus: gyroscopeStatus, 
+    gyroscopeStatus: gyroscopeStatus,
     finalResults,
     terminateImageLink,
     unityPeerId,
     setUnityPeerId,
     setGameScene,
     unityDisconnected,
+    spyData,
     resetGameState: () => {
       const newPeerId = generatePeerId();
       setPeerId(newPeerId);
@@ -336,12 +378,14 @@ export const GameProvider = ({ children }) => {
       setFinalResults([]);
       setTerminateImageLink(null);
       setUnityDisconnected(false);
+      setSpyData({ role: null, myPlayerId: null, roundIndex: 0, minTarget: 0, maxTarget: 0, phase: 'waiting', statusText: '等待遊戲開始...' });
       wasConnectedRef.current = false;
       identifiedUnityRef.current = null;
     },
   }), [
     peerId, hostId, gameScene, localPlayer, otherPlayers, level, score,
-    webRTC, gyroscope, screenWakeLockValue, gyroscopeStatus, finalResults, terminateImageLink, unityPeerId, setGameScene, unityDisconnected
+    webRTC, gyroscope, screenWakeLockValue, gyroscopeStatus, finalResults, terminateImageLink, unityPeerId, setGameScene, unityDisconnected,
+    unityDisconnected, spyData
   ]);
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
