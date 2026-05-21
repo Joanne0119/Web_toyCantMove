@@ -25,6 +25,9 @@ const ChooseLevel = () => {
   const cardWidth = containerWidth * (CARD_WIDTH_PERCENT / 100);
   const sidePadding = (containerWidth - cardWidth) / 2;
 
+  const currentSelectedLevel = levels[currentIndex];
+  const isSpyLocked = currentSelectedLevel.inputType === 'spy' && totalPlayerCount < 4;
+
   useEffect(() => {
     if (screenWakeLock) {
       screenWakeLock.request();
