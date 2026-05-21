@@ -230,7 +230,7 @@ const Tutorial = () => {
   // 非陀螺儀關卡的完成邏輯
   // tap 類型：點擊 N 下完成；其他類型：3 秒倒數自動完成
   useEffect(() => {
-    if (inputType === 'gyro' || inputType === 'tap' || nonGyroCompletedRef.current) return;
+    if (inputType === 'gyro' || inputType === 'tap' || inputType === 'spy' || nonGyroCompletedRef.current) return;
     const timer = setInterval(() => {
       setNonGyroCountdown(prev => {
         if (prev <= 1) {
@@ -457,6 +457,39 @@ const Tutorial = () => {
                 略過教學
               </button>
             )}
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (inputType === 'spy') {
+    const info = tutorialInfo[inputType];
+    return (
+      <div className="hero min-h-screen bg-base-200 safe-area-bottom select-none" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}>
+        <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="text-center z-10 card bg-base-100 shadow-xl mt-4 w-11/12 max-w-sm"
+        >
+          <div className="card-body p-6 items-center">
+            <h1 className="text-2xl font-bold mb-2">{info.title}</h1>
+            <p className="text-base mb-6 text-base-content/80">請看大螢幕的規則說明</p>
+
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                // 發送切換下一頁的訊號給 Unity
+                const msg = { type: "tutorial_spy_next" };
+                sendWebRTCData(JSON.stringify(msg), unityPeerId || null);
+              }}
+              className="btn btn-primary w-full h-20 text-xl rounded-2xl shadow-lg"
+            >
+              下一頁 ❯
+            </motion.button>
+            <p className="text-xs text-base-content/40 mt-4">任何玩家點擊皆可切換投影片</p>
           </div>
         </motion.div>
       </div>
