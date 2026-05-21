@@ -307,7 +307,7 @@ export const GameProvider = ({ children }) => {
           setSpyData(prev => ({
             ...prev,
             phase: 'voting',
-            statusText: msg.message || '請投票抓出內鬼！'
+            statusText: msg.message || '請投票抓出壞人！'
           }));
         }
 

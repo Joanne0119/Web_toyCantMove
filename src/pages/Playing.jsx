@@ -18,7 +18,7 @@ const Playing = () => {
     const { isCalibrated, coordinates, isInitialized } = gyroscopeStatus;
     const { calibrate: calibrateGyroscope } = gyroscope;
 
-    // 抓內鬼專用的防呆狀態
+    // 抓壞人專用的防呆狀態
     const [hasSubmittedNumber, setHasSubmittedNumber] = useState(false);
     const [hasSubmittedVote, setHasSubmittedVote] = useState(false);
 
@@ -387,20 +387,20 @@ const Playing = () => {
                             {/* 身分顯示區 */}
                             <div className="mb-4">
                                 <h2 className="text-sm text-base-content/60 font-bold mb-1">你的身分</h2> {/* */}
-                                {spyData.role ? ( //
+                                {spyData.role ? (
                                     <h1 className={`text-3xl font-extrabold ${isBadGuy ? 'text-error' : 'text-info'}`}>
-                                        {isBadGuy ? '【我是內鬼】' : '我是好人'}
+                                        {isBadGuy ? '【我是壞人】' : '我是好人'}
                                     </h1>
                                 ) : (
-                                    <h1 className="text-xl font-bold text-base-content/50">分配中...</h1> //
+                                    <h1 className="text-xl font-bold text-base-content/50">分配中...</h1>
                                 )}
                             </div>
 
-                            {/* 🌟 4. 內鬼秘密任務專屬提示訊息 UI */}
+                            {/* 🌟 4. 壞人秘密任務專屬提示訊息 UI */}
                             {isBadGuy && (
                                 <div className="w-full bg-error/10 border border-error/20 rounded-xl p-3 mb-2 text-left text-xs space-y-1">
-                                    <p className="font-extrabold text-error flex items-center gap-1">😈 內鬼機密任務：</p>
-                                    <p className="text-base-content/80 font-medium">在 5 輪遊戲結束前，你必須選擇過數字 <span className="font-bold text-error">1</span> 與 <span className="font-bold text-error">5</span> 各至少一次！</p>
+                                    <p className="font-extrabold text-error flex items-center gap-1">壞人限制：</p>
+                                    <p className="text-base-content/80 font-medium">在 5 輪遊戲結束前，必須選擇過數字 <span className="font-bold text-error">1</span> 與 <span className="font-bold text-error">5</span> 各至少一次！</p>
                                     <div className="flex gap-4 pt-1 font-bold">
                                         <span className={hasSelectedOne ? "text-success" : "text-base-content/40"}>
                                             {hasSelectedOne ? "✅ 數字 1 (已達成)" : "❌ 數字 1 (未達成)"}
@@ -416,15 +416,15 @@ const Playing = () => {
 
                             {/* 狀態提示文字 */}
                             <p className="text-lg font-bold my-4"> {/* */}
-                                {hasSubmittedNumber && spyData.phase === 'selecting' //
-                                    ? '已選擇，等待其他人...' //
-                                    : hasSubmittedVote && spyData.phase === 'voting' //
-                                        ? '已投票，等待開票...' //
+                                {hasSubmittedNumber && spyData.phase === 'selecting'
+                                    ? '已選擇，等待其他人...'
+                                    : hasSubmittedVote && spyData.phase === 'voting'
+                                        ? '已投票，可查看遊戲螢幕開票結果'
                                         : spyData.statusText} {/* */}
                             </p>
 
                             {/* 階段 1：選數字 (5顆按鈕) */}
-                            {spyData.phase === 'selecting' && !hasSubmittedNumber && ( //
+                            {spyData.phase === 'selecting' && !hasSubmittedNumber && (
                                 <div className="w-full">
                                     <p className="text-sm mb-3">目標區間: {spyData.minTarget} ~ {spyData.maxTarget}</p> {/* */}
                                     <div className="grid grid-cols-3 gap-3"> {/* */}
@@ -437,7 +437,7 @@ const Playing = () => {
                                                     whileTap={!isForcedDisabled ? { scale: 0.9 } : {}}
                                                     onClick={() => handleSubmitNumber(num)}
                                                     className={`btn btn-lg ${isBadGuy ? 'btn-error' : 'btn-info'}`}
-                                                    disabled={isForcedDisabled} // 🌟 6. 綁定禁用狀態
+                                                    disabled={isForcedDisabled}
                                                 >
                                                     <span className="text-2xl">{num}</span>
                                                 </motion.button>
@@ -456,7 +456,7 @@ const Playing = () => {
                                             whileTap={{ scale: 0.9 }}
                                             onClick={() => handleSubmitVote(pid)}
                                             className="btn btn-outline border-2 h-auto py-3"
-                                            disabled={pid === spyData?.myPlayerId} // 可選：不讓玩家投給自己
+                                        // disabled={pid === spyData?.myPlayerId} // 不讓玩家投給自己
                                         >
                                             <div className="flex flex-col">
                                                 <span className="text-sm">投給</span>
