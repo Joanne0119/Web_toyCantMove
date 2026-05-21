@@ -5,10 +5,10 @@ import { motion } from "framer-motion";
 import LazyImage from '@/components/LazyImage';
 
 const levels = [
+  { name: "瘋狂餐桌", sceneName: "4_TapEat", image: "/images/foodLevel.png", inputType: "tap", disable: false },
   { name: "玩具紙箱", sceneName: "4_Toybox", image: "/images/toyboxLevel.png", inputType: "gyro", disable: false },
   { name: "塗鴉畫紙", sceneName: "4_ColorPaper", image: "/images/tableLevel.png", inputType: "gyro", disable: false },
-  { name: "瘋狂餐桌", sceneName: "4_TapEat", image: "/images/foodLevel.png", inputType: "tap", disable: false },
-  { name: "數學考卷", sceneName: "4_SpyGame", image: "/images/foodLevel.png", inputType: "spy", disable: false },
+  { name: "數學作業", sceneName: "4_SpyGame", image: "/images/spyLevel.png", inputType: "spy", disable: false },
 ];
 
 const CARD_WIDTH_PERCENT = 65; // 卡片佔容器寬度的百分比
