@@ -22,6 +22,9 @@ const Playing = () => {
     const [hasSubmittedNumber, setHasSubmittedNumber] = useState(false);
     const [hasSubmittedVote, setHasSubmittedVote] = useState(false);
 
+    const [hasSelectedOne, setHasSelectedOne] = useState(false);
+    const [hasSelectedFive, setHasSelectedFive] = useState(false);
+
     // 當回合或階段改變時，重置按鈕狀態
     useEffect(() => {
         if (spyData?.phase === 'selecting') setHasSubmittedNumber(false);
@@ -32,9 +35,33 @@ const Playing = () => {
     const handleSubmitNumber = useCallback((num) => {
         if (hasSubmittedNumber || !connectionStatus) return;
         setHasSubmittedNumber(true);
+        if (spyData?.role === 'BadGuy') {
+            if (num === 1) setHasSelectedOne(true);
+            if (num === 5) setHasSelectedFive(true);
+        }
+
         const msg = JSON.stringify({ type: "submit_number", number: num });
         sendWebRTCData(msg, unityPeerId || null);
     }, [hasSubmittedNumber, connectionStatus, sendWebRTCData, unityPeerId]);
+
+    const isButtonDisabledBySpyRule = (num) => {
+        if (spyData?.role !== 'BadGuy') return false;
+
+        // 0 到 4 分別代表第 1 到 5 輪
+        const currentRound = spyData?.roundIndex || 0;
+        // 包含本輪還剩幾次機會選擇
+        const roundsLeft = 5 - currentRound;
+
+        let missingTargets = [];
+        if (!hasSelectedOne) missingTargets.push(1);
+        if (!hasSelectedFive) missingTargets.push(5);
+
+        // 如果剩餘的輪數「剛好等於」還沒選的任務目標數量，且此按鈕不在未完成名單中，就必須禁用它
+        if (roundsLeft === missingTargets.length && !missingTargets.includes(num)) {
+            return true;
+        }
+        return false;
+    };
 
     // 發送投票的函式
     const handleSubmitVote = useCallback((pid) => {
@@ -351,54 +378,71 @@ const Playing = () => {
 
         return (
             <div className="relative w-screen min-h-screen flex flex-col safe-area-bottom select-none overflow-hidden" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
-                <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(3px) saturate(80%)' }}></div>
+                <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(3px) saturate(80%)' }}></div> {/* */}
 
                 <div className="flex-1 flex flex-col items-center justify-center px-4 z-10">
-                    <motion.div
-                        className="card bg-base-100 shadow-xl w-full max-w-sm"
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                    >
-                        <div className="card-body items-center text-center p-6">
+                    <motion.div className="card bg-base-100 shadow-xl w-full max-w-sm" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+                        <div className="card-body items-center text-center p-6"> {/* */}
 
                             {/* 身分顯示區 */}
                             <div className="mb-4">
-                                <h2 className="text-sm text-base-content/60 font-bold mb-1">你的身分</h2>
-                                {spyData?.role ? (
+                                <h2 className="text-sm text-base-content/60 font-bold mb-1">你的身分</h2> {/* */}
+                                {spyData.role ? ( //
                                     <h1 className={`text-3xl font-extrabold ${isBadGuy ? 'text-error' : 'text-info'}`}>
-                                        {isBadGuy ? '【我是壞人】' : '我是好人'}
+                                        {isBadGuy ? '【我是內鬼】' : '我是好人'}
                                     </h1>
                                 ) : (
-                                    <h1 className="text-xl font-bold text-base-content/50">分配中...</h1>
+                                    <h1 className="text-xl font-bold text-base-content/50">分配中...</h1> //
                                 )}
                             </div>
 
-                            <div className="divider my-0"></div>
+                            {/* 🌟 4. 內鬼秘密任務專屬提示訊息 UI */}
+                            {isBadGuy && (
+                                <div className="w-full bg-error/10 border border-error/20 rounded-xl p-3 mb-2 text-left text-xs space-y-1">
+                                    <p className="font-extrabold text-error flex items-center gap-1">😈 內鬼機密任務：</p>
+                                    <p className="text-base-content/80 font-medium">在 5 輪遊戲結束前，你必須選擇過數字 <span className="font-bold text-error">1</span> 與 <span className="font-bold text-error">5</span> 各至少一次！</p>
+                                    <div className="flex gap-4 pt-1 font-bold">
+                                        <span className={hasSelectedOne ? "text-success" : "text-base-content/40"}>
+                                            {hasSelectedOne ? "✅ 數字 1 (已達成)" : "❌ 數字 1 (未達成)"}
+                                        </span>
+                                        <span className={hasSelectedFive ? "text-success" : "text-base-content/40"}>
+                                            {hasSelectedFive ? "✅ 數字 5 (已達成)" : "❌ 數字 5 (未達成)"}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="divider my-0"></div> {/* */}
 
                             {/* 狀態提示文字 */}
-                            <p className="text-lg font-bold my-4">
-                                {hasSubmittedNumber && spyData?.phase === 'selecting'
-                                    ? '已選擇，等待其他人...'
-                                    : hasSubmittedVote && spyData?.phase === 'voting'
-                                        ? '已投票，等待開票...'
-                                        : spyData?.statusText}
+                            <p className="text-lg font-bold my-4"> {/* */}
+                                {hasSubmittedNumber && spyData.phase === 'selecting' //
+                                    ? '已選擇，等待其他人...' //
+                                    : hasSubmittedVote && spyData.phase === 'voting' //
+                                        ? '已投票，等待開票...' //
+                                        : spyData.statusText} {/* */}
                             </p>
 
                             {/* 階段 1：選數字 (5顆按鈕) */}
-                            {spyData?.phase === 'selecting' && !hasSubmittedNumber && (
+                            {spyData.phase === 'selecting' && !hasSubmittedNumber && ( //
                                 <div className="w-full">
-                                    <p className="text-sm mb-3">目標區間: {spyData?.minTarget} ~ {spyData?.maxTarget}</p>
-                                    <div className="grid grid-cols-3 gap-3">
-                                        {[1, 2, 3, 4, 5].map(num => (
-                                            <motion.button
-                                                key={`num-${num}`}
-                                                whileTap={{ scale: 0.9 }}
-                                                onClick={() => handleSubmitNumber(num)}
-                                                className={`btn btn-lg ${isBadGuy ? 'btn-error' : 'btn-info'} ${num === 4 || num === 5 ? 'col-span-1' : ''}`}
-                                            >
-                                                <span className="text-2xl">{num}</span>
-                                            </motion.button>
-                                        ))}
+                                    <p className="text-sm mb-3">目標區間: {spyData.minTarget} ~ {spyData.maxTarget}</p> {/* */}
+                                    <div className="grid grid-cols-3 gap-3"> {/* */}
+                                        {[1, 2, 3, 4, 5].map(num => {
+                                            // 🌟 5. 計算此按鈕是否該被規則強制鎖定
+                                            const isForcedDisabled = isButtonDisabledBySpyRule(num);
+                                            return (
+                                                <motion.button
+                                                    key={`num-${num}`}
+                                                    whileTap={!isForcedDisabled ? { scale: 0.9 } : {}}
+                                                    onClick={() => handleSubmitNumber(num)}
+                                                    className={`btn btn-lg ${isBadGuy ? 'btn-error' : 'btn-info'}`}
+                                                    disabled={isForcedDisabled} // 🌟 6. 綁定禁用狀態
+                                                >
+                                                    <span className="text-2xl">{num}</span>
+                                                </motion.button>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             )}

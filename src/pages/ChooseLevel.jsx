@@ -15,12 +15,17 @@ const CARD_WIDTH_PERCENT = 65; // 卡片佔容器寬度的百分比
 const GAP = 12;
 
 const ChooseLevel = () => {
-  const { nickname, players, level, setLevel, webRTC, peerId, hostId, gameScene, screenWakeLock } = useGame();
+  const { nickname, players, otherPlayers, level, setLevel, webRTC, peerId, hostId, gameScene, screenWakeLock } = useGame();
   const navigate = useNavigate();
   const isHost = peerId === hostId;
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollRef = useRef(null);
   const [containerWidth, setContainerWidth] = useState(0);
+
+  // 判斷是否因為人數不足而需要鎖定第四關
+  const totalPlayers = (otherPlayers?.length || 0) + 1;
+  const currentSelectedLevel = levels[currentIndex];
+  const isSpyLocked = currentSelectedLevel.inputType === 'spy' && totalPlayers < 4;
 
   const cardWidth = containerWidth * (CARD_WIDTH_PERCENT / 100);
   const sidePadding = (containerWidth - cardWidth) / 2;
@@ -249,11 +254,17 @@ const ChooseLevel = () => {
             </div>
 
             {/* 按鈕區 */}
+
             <div className="card-actions justify-center">
               <div className="flex flex-col space-y-2 w-full">
                 {isHost ? (
-                  <motion.button whileTap={{ scale: 0.9 }} onClick={handleStartGame} className="btn btn-primary btn-sm">
-                    開始遊戲
+                  <motion.button
+                    whileTap={!isSpyLocked ? { scale: 0.9 } : {}}
+                    onClick={handleStartGame}
+                    className="btn btn-primary btn-sm w-full"
+                    disabled={isSpyLocked} // 人數不足 4 人且選到第四關時，禁用按鈕
+                  >
+                    {isSpyLocked ? `人數不足 (目前:${totalPlayers}/4人)` : '開始遊戲'}
                   </motion.button>
                 ) : null}
                 <motion.button whileTap={{ scale: 0.9 }} onClick={handleLeave} className="btn btn-ghost btn-sm">
@@ -261,6 +272,7 @@ const ChooseLevel = () => {
                 </motion.button>
               </div>
             </div>
+
           </div>
         </motion.div>
       </div>
