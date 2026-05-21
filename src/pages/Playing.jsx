@@ -346,11 +346,13 @@ const Playing = () => {
         return <TapController />;
     }
 
+    // ▼ 新增這整塊：抓內鬼的 UI ▼
     if (inputType === 'spy') {
-        const isBadGuy = spyData.role === 'BadGuy';
+        // 使用 ?. 確保即使 spyData 是 undefined 也不會當機
+        const isBadGuy = spyData?.role === 'BadGuy';
 
         return (
-            <div className="relative w-screen min-h-screen flex flex-col safe-area-bottom select-none overflow-hidden" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
+            <div className="relative w-screen min-h-screen flex flex-col safe-area-bottom select-none overflow-hidden bg-base-200" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
                 <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(3px) saturate(80%)' }}></div>
 
                 <div className="flex-1 flex flex-col items-center justify-center px-4 z-10">
@@ -364,12 +366,12 @@ const Playing = () => {
                             {/* 身分顯示區 */}
                             <div className="mb-4">
                                 <h2 className="text-sm text-base-content/60 font-bold mb-1">你的身分</h2>
-                                {spyData.role ? (
+                                {spyData?.role ? (
                                     <h1 className={`text-3xl font-extrabold ${isBadGuy ? 'text-error' : 'text-info'}`}>
                                         {isBadGuy ? '【我是壞人】' : '我是好人'}
                                     </h1>
                                 ) : (
-                                    <h1 className="text-xl font-bold text-base-content/50">分配中...</h1>
+                                    <h1 className="text-xl font-bold text-base-content/50">等待 Unity 分配中...</h1>
                                 )}
                             </div>
 
@@ -377,17 +379,17 @@ const Playing = () => {
 
                             {/* 狀態提示文字 */}
                             <p className="text-lg font-bold my-4">
-                                {hasSubmittedNumber && spyData.phase === 'selecting'
+                                {hasSubmittedNumber && spyData?.phase === 'selecting'
                                     ? '已選擇，等待其他人...'
-                                    : hasSubmittedVote && spyData.phase === 'voting'
+                                    : hasSubmittedVote && spyData?.phase === 'voting'
                                         ? '已投票，等待開票...'
-                                        : spyData.statusText}
+                                        : (spyData?.statusText || '等待遊戲開始...')}
                             </p>
 
                             {/* 階段 1：選數字 (5顆按鈕) */}
-                            {spyData.phase === 'selecting' && !hasSubmittedNumber && (
+                            {spyData?.phase === 'selecting' && !hasSubmittedNumber && (
                                 <div className="w-full">
-                                    <p className="text-sm mb-3">目標區間: {spyData.minTarget} ~ {spyData.maxTarget}</p>
+                                    <p className="text-sm mb-3">目標區間: {spyData?.minTarget} ~ {spyData?.maxTarget}</p>
                                     <div className="grid grid-cols-3 gap-3">
                                         {[1, 2, 3, 4, 5].map(num => (
                                             <motion.button
@@ -404,7 +406,7 @@ const Playing = () => {
                             )}
 
                             {/* 階段 2：最後投票 (4顆按鈕) */}
-                            {spyData.phase === 'voting' && !hasSubmittedVote && (
+                            {spyData?.phase === 'voting' && !hasSubmittedVote && (
                                 <div className="w-full grid grid-cols-2 gap-3">
                                     {[0, 1, 2, 3].map(pid => (
                                         <motion.button
@@ -412,12 +414,12 @@ const Playing = () => {
                                             whileTap={{ scale: 0.9 }}
                                             onClick={() => handleSubmitVote(pid)}
                                             className="btn btn-outline border-2 h-auto py-3"
-                                            disabled={pid === spyData.myPlayerId} // 可選：不讓玩家投給自己
+                                            disabled={pid === spyData?.myPlayerId}
                                         >
                                             <div className="flex flex-col">
                                                 <span className="text-sm">投給</span>
                                                 <span className="text-xl font-bold">Player {pid}</span>
-                                                {pid === spyData.myPlayerId && <span className="text-xs mt-1 text-base-content/40">(你)</span>}
+                                                {pid === spyData?.myPlayerId && <span className="text-xs mt-1 text-base-content/40">(你)</span>}
                                             </div>
                                         </motion.button>
                                     ))}
@@ -431,124 +433,127 @@ const Playing = () => {
         );
     }
 
-    // 陀螺儀關卡（原有邏輯）
-    return (
-        <div className="relative w-screen min-h-screen flex flex-col safe-area-bottom" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}>
-            <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
 
-            {/* 上方區域：搖桿 */}
-            <div className="flex-1 flex flex-col items-center justify-center px-6 z-10">
-                <motion.button
-                    whileTap={{ scale: 0.9 }}
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{
-                        type: "spring",
-                        stiffness: 120,
-                        damping: 15,
-                        duration: 0.8
-                    }}
-                    className={`btn btn-sm btn-primary text-base mb-4 ${isInitialized ? 'visible' : 'invisible'}`}
-                    onClick={calibrateGyroscope}
-                    disabled={!isInitialized}
-                >
-                    重新校正
-                </motion.button>
+}
 
-                <motion.div
-                    className="card bg-base-100 shadow-xl px-6 py-2"
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{
-                        type: "spring",
-                        stiffness: 120,
-                        damping: 15,
-                        duration: 0.8,
-                        delay: 0.3
-                    }}
-                >
-                    <div className="card-body items-center text-center py-4">
-                        <h2 className="card-title">控制器</h2>
+// 陀螺儀關卡（原有邏輯）
+return (
+    <div className="relative w-screen min-h-screen flex flex-col safe-area-bottom" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}>
+        <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
 
-                        <div className="flex flex-col justify-center items-center w-full select-none mt-4">
-                            {/* 搖桿 */}
-                            <div
-                                ref={joystickBaseRef}
-                                className="relative w-52 h-52 bg-primary/20 rounded-full flex items-center justify-center text-primary-content/40"
-                                style={{ touchAction: 'none' }}
-                                onPointerDown={handlePointerDown}
-                            >
-                                <svg className="w-6 h-6 absolute top-5 left-1/2 -translate-x-1/2" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
-                                <svg className="w-6 h-6 absolute right-5 top-1/2 -translate-y-1/2 rotate-90" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
-                                <svg className="w-6 h-6 absolute bottom-5 left-1/2 -translate-x-1/2 rotate-180" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
-                                <svg className="w-6 h-6 absolute left-5 top-1/2 -translate-y-1/2 -rotate-90" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
+        {/* 上方區域：搖桿 */}
+        <div className="flex-1 flex flex-col items-center justify-center px-6 z-10">
+            <motion.button
+                whileTap={{ scale: 0.9 }}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{
+                    type: "spring",
+                    stiffness: 120,
+                    damping: 15,
+                    duration: 0.8
+                }}
+                className={`btn btn-sm btn-primary text-base mb-4 ${isInitialized ? 'visible' : 'invisible'}`}
+                onClick={calibrateGyroscope}
+                disabled={!isInitialized}
+            >
+                重新校正
+            </motion.button>
 
-                                <motion.div
-                                    className="w-20 h-20 cursor-grab"
-                                    style={{
-                                        x: knobX,
-                                        y: knobY,
-                                        backgroundImage: `url(${localPlayer.color
-                                            ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}Pin.png`
-                                            : `/images/gray_${localPlayer.avatar || 'wind-up'}Pin.png`
-                                            })`,
-                                        backgroundSize: 'contain',
-                                        backgroundPosition: 'center',
-                                        backgroundRepeat: 'no-repeat'
-                                    }}
-                                    whileTap={{ cursor: 'grabbing' }}
-                                    rotate={rotation}
-                                />
-                            </div>
+            <motion.div
+                className="card bg-base-100 shadow-xl px-6 py-2"
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{
+                    type: "spring",
+                    stiffness: 120,
+                    damping: 15,
+                    duration: 0.8,
+                    delay: 0.3
+                }}
+            >
+                <div className="card-body items-center text-center py-4">
+                    <h2 className="card-title">控制器</h2>
+
+                    <div className="flex flex-col justify-center items-center w-full select-none mt-4">
+                        {/* 搖桿 */}
+                        <div
+                            ref={joystickBaseRef}
+                            className="relative w-52 h-52 bg-primary/20 rounded-full flex items-center justify-center text-primary-content/40"
+                            style={{ touchAction: 'none' }}
+                            onPointerDown={handlePointerDown}
+                        >
+                            <svg className="w-6 h-6 absolute top-5 left-1/2 -translate-x-1/2" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
+                            <svg className="w-6 h-6 absolute right-5 top-1/2 -translate-y-1/2 rotate-90" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
+                            <svg className="w-6 h-6 absolute bottom-5 left-1/2 -translate-x-1/2 rotate-180" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
+                            <svg className="w-6 h-6 absolute left-5 top-1/2 -translate-y-1/2 -rotate-90" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
+
+                            <motion.div
+                                className="w-20 h-20 cursor-grab"
+                                style={{
+                                    x: knobX,
+                                    y: knobY,
+                                    backgroundImage: `url(${localPlayer.color
+                                        ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}Pin.png`
+                                        : `/images/gray_${localPlayer.avatar || 'wind-up'}Pin.png`
+                                        })`,
+                                    backgroundSize: 'contain',
+                                    backgroundPosition: 'center',
+                                    backgroundRepeat: 'no-repeat'
+                                }}
+                                whileTap={{ cursor: 'grabbing' }}
+                                rotate={rotation}
+                            />
                         </div>
                     </div>
-                </motion.div>
-            </div>
-
-            {/* 下方獨立區塊：技能/繪圖按鈕 */}
-            <motion.div
-                className="w-full px-4 z-20 flex items-center justify-center transition-all duration-150"
-                style={{
-                    touchAction: 'none',
-                    backdropFilter: 'blur(10px)',
-                    borderTopLeftRadius: '1.5rem',
-                    borderTopRightRadius: '1.5rem',
-                    minHeight: '30vh',
-                    paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))',
-                    paddingTop: '1.5rem',
-                    backgroundColor: isPressing
-                        ? ({ red: 'rgba(239,68,68,0.8)', blue: 'rgba(59,130,246,0.8)', green: 'rgba(34,197,94,0.8)', yellow: 'rgba(234,179,8,0.8)' }[localPlayer.color] || 'rgba(0,0,0,0.6)')
-                        : 'rgba(0,0,0,0.4)',
-                }}
-                {...(isToybox
-                    ? { onClick: handleSkillTap }
-                    : {
-                        onPointerDown: handlePressStart,
-                        onPointerUp: handlePressEnd,
-                        onPointerLeave: handlePressEnd,
-                        onPointerCancel: handlePressEnd,
-                    }
-                )}
-            >
-                <div className="flex items-center gap-3 text-white">
-                    {isToybox ? (
-                        <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M13 10h7l-9 13v-9H4l9-13v9z" />
-                        </svg>
-                    ) : (
-                        <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M19.228 18.732l1.768-1.768 1.767 1.768a2.5 2.5 0 1 1-3.535 0zM8.878 1.08l11.314 11.313a1 1 0 0 1 0 1.415l-8.485 8.485a1 1 0 0 1-1.414 0l-8.485-8.485a1 1 0 0 1 0-1.415l7.778-7.778-2.122-2.121L8.88 1.08zM11 6.03L3.929 13.1 11 20.173l7.071-7.071L11 6.029z" />
-                        </svg>
-                    )}
-                    <span className="text-lg font-bold">
-                        {isToybox
-                            ? (isPressing ? '使用中...' : '點擊使用技能')
-                            : (isPressing ? '繪圖中...' : '按住繪圖')
-                        }
-                    </span>
                 </div>
             </motion.div>
         </div>
-    )
+
+        {/* 下方獨立區塊：技能/繪圖按鈕 */}
+        <motion.div
+            className="w-full px-4 z-20 flex items-center justify-center transition-all duration-150"
+            style={{
+                touchAction: 'none',
+                backdropFilter: 'blur(10px)',
+                borderTopLeftRadius: '1.5rem',
+                borderTopRightRadius: '1.5rem',
+                minHeight: '30vh',
+                paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))',
+                paddingTop: '1.5rem',
+                backgroundColor: isPressing
+                    ? ({ red: 'rgba(239,68,68,0.8)', blue: 'rgba(59,130,246,0.8)', green: 'rgba(34,197,94,0.8)', yellow: 'rgba(234,179,8,0.8)' }[localPlayer.color] || 'rgba(0,0,0,0.6)')
+                    : 'rgba(0,0,0,0.4)',
+            }}
+            {...(isToybox
+                ? { onClick: handleSkillTap }
+                : {
+                    onPointerDown: handlePressStart,
+                    onPointerUp: handlePressEnd,
+                    onPointerLeave: handlePressEnd,
+                    onPointerCancel: handlePressEnd,
+                }
+            )}
+        >
+            <div className="flex items-center gap-3 text-white">
+                {isToybox ? (
+                    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13 10h7l-9 13v-9H4l9-13v9z" />
+                    </svg>
+                ) : (
+                    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19.228 18.732l1.768-1.768 1.767 1.768a2.5 2.5 0 1 1-3.535 0zM8.878 1.08l11.314 11.313a1 1 0 0 1 0 1.415l-8.485 8.485a1 1 0 0 1-1.414 0l-8.485-8.485a1 1 0 0 1 0-1.415l7.778-7.778-2.122-2.121L8.88 1.08zM11 6.03L3.929 13.1 11 20.173l7.071-7.071L11 6.029z" />
+                    </svg>
+                )}
+                <span className="text-lg font-bold">
+                    {isToybox
+                        ? (isPressing ? '使用中...' : '點擊使用技能')
+                        : (isPressing ? '繪圖中...' : '按住繪圖')
+                    }
+                </span>
+            </div>
+        </motion.div>
+    </div>
+)
 }
 
 export default Playing;
