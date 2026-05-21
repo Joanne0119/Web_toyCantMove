@@ -463,8 +463,13 @@ const Tutorial = () => {
     );
   }
 
+  // ▼ 這是 Spy 教學介面 ▼
   if (inputType === 'spy') {
     const info = tutorialInfo[inputType];
+
+    // 檢查是否已經收到 Unity 傳來的 complete 結束訊號
+    const isCompleted = currentStep === 'complete';
+
     return (
       <div className="hero min-h-screen bg-base-200 safe-area-bottom select-none" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}>
         <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
@@ -475,26 +480,36 @@ const Tutorial = () => {
         >
           <div className="card-body p-6 items-center">
             <h1 className="text-2xl font-bold mb-2">{info.title}</h1>
-            <p className="text-base mb-6 text-base-content/80">請看大螢幕的規則說明</p>
+
+            {/* 根據狀態改變提示文字 */}
+            <p className="text-base mb-6 text-base-content/80">
+              {isCompleted ? '教學結束，即將載入關卡...' : '請看大螢幕的規則說明'}
+            </p>
 
             <motion.button
-              whileTap={{ scale: 0.95 }}
+              whileTap={!isCompleted ? { scale: 0.95 } : {}}
+              disabled={isCompleted} // 👈 核心修改：收到 complete 就鎖住按鈕
               onClick={(e) => {
                 e.stopPropagation();
+                if (isCompleted) return; // 雙重防呆
+
                 // 發送切換下一頁的訊號給 Unity
                 const msg = { type: "tutorial_spy_next" };
                 sendWebRTCData(JSON.stringify(msg), unityPeerId || null);
               }}
-              className="btn btn-primary w-full h-20 text-xl rounded-2xl shadow-lg"
+              // 鎖住時套用半透明與 disabled 的樣式
+              className={`btn btn-primary w-full h-20 text-xl rounded-2xl shadow-lg ${isCompleted ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              下一頁 ❯
+              {isCompleted ? '準備開始遊戲' : '下一頁 ❯'}
             </motion.button>
-            <p className="text-xs text-base-content/40 mt-4">任何玩家點擊皆可切換投影片</p>
+
+            <p className="text-xs text-base-content/40 mt-4">閱讀完規則，點擊下一步</p>
           </div>
         </motion.div>
       </div>
     );
   }
+
 
   // 其他非陀螺儀關卡（shake、count 等）：倒數自動完成
   if (inputType !== 'gyro') {
