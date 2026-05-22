@@ -270,6 +270,11 @@ export const GameProvider = ({ children }) => {
           setTerminateImageLink(null);
           // 重置 identify 狀態，讓重新連上時會重送 identify
           identifiedUnityRef.current = null;
+          // 重置房主，等 Unity 重新發送 host_update
+          setHostId(null);
+          // 重置斷線偵測狀態，避免重連時誤判為斷線
+          wasConnectedRef.current = false;
+          setUnityDisconnected(false);
         }
         if (msg.type === "terminate") {
           console.log("Received terminate message from Unity:", msg.finalPlayerDatas);
@@ -325,8 +330,8 @@ export const GameProvider = ({ children }) => {
       wasConnectedRef.current = true;
     }
 
-    // 曾經連上但現在斷了，且不是正常結束（Awards 時會主動斷線）
-    if (wasConnectedRef.current && !isConnectedToUnity && unityPeerId && gameScene !== 'Awards') {
+    // 曾經連上但現在斷了，且不是正常結束（Awards / ReturnToLobby 時會主動斷線）
+    if (wasConnectedRef.current && !isConnectedToUnity && unityPeerId && gameScene !== 'Awards' && gameScene !== 'ReturnToLobby') {
       console.log("⚠️ [GameContext] Unity 連線中斷！");
       setUnityDisconnected(true);
     }
