@@ -113,7 +113,14 @@ const WaitingRoom = () => {
   }, [localPlayer.avatar, webRTC, connectionStatus, navigate, gyroscope]);
 
 
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+
   const handleNext = () => {
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmNext = () => {
+    setShowConfirmModal(false);
     navigate('/choose-level');
   };
 
@@ -190,6 +197,43 @@ const WaitingRoom = () => {
           </motion.div>
         </div>
       </div>
+
+      {/* Modal: 確認所有人都加入了 */}
+      <AnimatePresence>
+        {showConfirmModal && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowConfirmModal(false)}
+          >
+            <motion.div
+              className="card bg-base-100 shadow-2xl mx-4 max-w-sm"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 120, damping: 15 }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="card-body items-center text-center">
+                <h3 className="card-title text-lg">確認開始</h3>
+                <p className="text-sm text-base-content/70 mt-2">
+                  所有人都加入了嗎？開始後無法再加入新玩家。
+                </p>
+                <div className="card-actions mt-4 w-full flex flex-col gap-2">
+                  <button onClick={handleConfirmNext} className="btn btn-primary w-full">
+                    確定，開始遊戲
+                  </button>
+                  <button onClick={() => setShowConfirmModal(false)} className="btn btn-ghost w-full">
+                    再等一下
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Modal: No Unity game detected */}
       <AnimatePresence>
