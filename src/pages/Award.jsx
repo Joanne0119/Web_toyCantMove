@@ -316,8 +316,8 @@ const Award = () => {
                 </table>
               </div>
 
-              {terminateImageLink && (
-                <div className="card-actions justify-center mt-6">
+              <div className="card-actions justify-center mt-6 gap-2">
+                {terminateImageLink && (
                   <button
                     onClick={() => setShowPostcardModal(true)}
                     disabled={isGenerating || !postcardDataUrl}
@@ -332,8 +332,14 @@ const Award = () => {
                       '查看明信片'
                     )}
                   </button>
-                </div>
-              )}
+                )}
+                <button
+                  onClick={() => navigate('/leaderboard')}
+                  className="btn btn-outline"
+                >
+                  排行榜
+                </button>
+              </div>
             </div>
           </motion.div>
         </div>

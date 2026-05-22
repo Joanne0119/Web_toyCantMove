@@ -136,9 +136,12 @@ const EnterName = () => {
               className="input input-bordered mt-3 text-base"
             />
           </div>
-          <div className="form-control mt-6 flex justify-center text-base">
+          <div className="form-control mt-6 flex justify-center text-base gap-2">
             <button onClick={handleSubmit} className="btn btn-primary">
               確定
+            </button>
+            <button onClick={() => navigate('/leaderboard')} className="btn btn-ghost btn-sm">
+              排行榜
             </button>
           </div>
         </div>

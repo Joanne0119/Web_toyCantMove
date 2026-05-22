@@ -9,6 +9,7 @@ import ControllerTest from './pages/ControllerTest';
 import Tutorial from './pages/Tutorial';
 import Playing from './pages/Playing';
 import Award from './pages/Award';
+import Leaderboard from './pages/Leaderboard';
 import Error from './pages/Error';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -36,6 +37,7 @@ function App() {
                 <Route path="tutorial" element={<Tutorial />} />
                 <Route path="playing" element={<Playing />} />
                 <Route path="award" element={<Award />} />
+                <Route path="leaderboard" element={<Leaderboard />} />
                 <Route path="error" element={<Error />} />
               </Routes>
             </div>

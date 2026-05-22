@@ -284,6 +284,28 @@ export const GameProvider = ({ children }) => {
           setFinalResults(msg.finalPlayerDatas || []);
           setTerminateImageLink(msg.link || null);
           setGameScene('Awards');
+
+          // 存排行榜到 Firebase
+          try {
+            const levelName = msg.levelName || 'unknown';
+            const date = new Date().toISOString().slice(0, 10);
+            const newRecords = (msg.finalPlayerDatas || []).map(p => ({
+              name: p.name,
+              score: p.point,
+              skin: p.skin,
+              color: p.color,
+              levelName,
+              date,
+            }));
+            for (const record of newRecords) {
+              fetch(`${import.meta.env.VITE_FIREBASE_DB_URL}/leaderboard/${levelName}.json`, {
+                method: 'POST',
+                body: JSON.stringify(record),
+              }).catch(err => console.warn('Firebase write failed:', err));
+            }
+          } catch (e) {
+            console.warn('Failed to save leaderboard:', e);
+          }
         }
 
         if (msg.type === "spy_game_init") {
