@@ -251,6 +251,7 @@ const Tutorial = () => {
   // tap 類型：點擊 + 滑動都完成才送完成訊息
   const tapDoneRef = useRef(false);
   const swipeDoneRef = useRef(false);
+  const [unityRequestedSwipe, setUnityRequestedSwipe] = useState(false); // 等 Unity 發 backward 指令才進入滑動步驟
 
   const handleTapPractice = useCallback(() => {
     if (tapDoneRef.current) return;
@@ -267,7 +268,7 @@ const Tutorial = () => {
   }, [sendWebRTCData, unityPeerId]);
 
   const handleSwipePractice = useCallback(() => {
-    if (swipeDoneRef.current || !tapDoneRef.current) return; // 要先完成點擊
+    if (swipeDoneRef.current || !tapDoneRef.current || !unityRequestedSwipe) return; // 要先完成點擊且收到 Unity 指令
     setSwipeCount(prev => {
       const next = prev + 1;
       if (next >= SWIPE_REQUIRED) {
@@ -279,7 +280,7 @@ const Tutorial = () => {
       }
       return next;
     });
-  }, [sendWebRTCData, unityPeerId]);
+  }, [sendWebRTCData, unityPeerId, unityRequestedSwipe]);
 
   // 教學用 pointer 事件偵測點擊/滑動
   const tutorialTouchStartRef = useRef(null);
@@ -302,13 +303,15 @@ const Tutorial = () => {
     const dy = point.clientY - tutorialTouchStartRef.current.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    if (distance < TAP_THRESHOLD) {
+    if (!tapDoneRef.current || !unityRequestedSwipe) {
+      // 步驟 1：任何觸碰都算點擊（避免滑動手勢被浪費）
       handleTapPractice();
     } else if (distance > SWIPE_THRESHOLD) {
+      // 步驟 2：只有滑動才算
       handleSwipePractice();
     }
     tutorialTouchStartRef.current = null;
-  }, [handleTapPractice, handleSwipePractice]);
+  }, [handleTapPractice, handleSwipePractice, unityRequestedSwipe]);
 
   // 用 document 綁定事件（跟 TapController 一樣，避免被 overlay 擋住）
   useEffect(() => {
@@ -330,7 +333,7 @@ const Tutorial = () => {
     };
   }, [inputType, handleTutorialPointerDown, handleTutorialPointerUp]);
 
-  // 非陀螺儀關卡也要監聽 navigate 訊息
+  // 非陀螺儀關卡監聽 Unity 的教學步驟指令和 navigate 訊息
   useEffect(() => {
     if (inputType === 'gyro') return;
     if (lastMessage && lastMessage.timestamp > lastProcessedTimestamp.current) {
@@ -341,6 +344,10 @@ const Tutorial = () => {
           sendWebRTCData(JSON.stringify({ type: "navigate_ack", target: "playing" }), unityPeerId || null);
           navigate('/playing');
         }
+        // 收到 Unity 的步驟指令，切換到滑動步驟
+        if (msg.type === 'tutorial_instruction' && msg.step === 'backward' && inputType === 'tap') {
+          setUnityRequestedSwipe(true);
+        }
       } catch (e) { }
     }
   }, [inputType, lastMessage, navigate, sendWebRTCData, unityPeerId]);
@@ -350,8 +357,8 @@ const Tutorial = () => {
     const tapDone = tapCount >= TAP_REQUIRED;
     const swipeDone = swipeCount >= SWIPE_REQUIRED;
     const isCompleted = tapDone && swipeDone;
-    // 目前步驟：先點擊，完成後才進入滑動
-    const currentTapStep = tapDone ? 'swipe' : 'tap';
+    // 目前步驟：先點擊，完成後等 Unity 指令才進入滑動
+    const currentTapStep = (tapDone && unityRequestedSwipe) ? 'swipe' : 'tap';
     return (
       <div
         className="relative w-screen h-screen flex flex-col items-center justify-center bg-base-200 safe-area-bottom select-none overflow-hidden"
@@ -373,7 +380,7 @@ const Tutorial = () => {
               className="text-center mb-3"
             >
               <h1 className="text-2xl font-bold text-base mb-1">
-                {isCompleted ? '完成！等待其他玩家...' : currentTapStep === 'tap' ? '步驟 1：點擊吃東西！' : '步驟 2：滑動丟棄！'}
+                {isCompleted ? '完成！等待其他玩家...' : currentTapStep === 'swipe' ? '步驟 2：滑動丟棄！' : tapDone ? '等待其他玩家...' : '步驟 1：點擊吃東西！'}
               </h1>
             </motion.div>
 
@@ -397,7 +404,7 @@ const Tutorial = () => {
             </motion.div>
 
             {/* 根據步驟只顯示當前的練習進度 */}
-            {currentTapStep === 'tap' ? (
+            {currentTapStep === 'tap' && !tapDone ? (
               <div className="w-full mb-3">
                 <p className="text-xs text-base-content/50 mb-1">點擊練習 {`${tapCount}/${TAP_REQUIRED}`}</p>
                 <div className="flex gap-2 justify-center">

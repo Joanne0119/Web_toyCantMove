@@ -30,6 +30,7 @@ const Award = () => {
   // Unity 按重玩時會收到 navigate_to_lobby，gameScene 變回 Lobby → 顯示倒數 modal
   useEffect(() => {
     if (gameScene === 'ReturnToLobby' && !showReplayModal) {
+      setShowPostcardModal(false); // 先關掉明信片 modal，避免擋住重玩 modal
       setShowReplayModal(true);
       setReplayCountdown(10);
     }
