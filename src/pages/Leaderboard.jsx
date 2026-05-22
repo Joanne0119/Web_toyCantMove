@@ -60,11 +60,11 @@ const Leaderboard = () => {
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 120, damping: 15 }}
         >
-          <div className="card-body p-4">
-            <h2 className="card-title justify-center text-lg">排行榜</h2>
+          <div className="card-body p-4 max-h-[80dvh] flex flex-col">
+            <h2 className="card-title justify-center text-lg shrink-0">排行榜</h2>
 
             {/* 關卡分頁 */}
-            <div className="tabs tabs-boxed bg-base-200 justify-center">
+            <div className="tabs tabs-boxed bg-base-200 justify-center shrink-0">
               {LEVEL_TABS.map(tab => (
                 <button
                   key={tab.key}
@@ -86,7 +86,7 @@ const Leaderboard = () => {
                 <p>尚無紀錄</p>
               </div>
             ) : (
-              <div className="overflow-x-auto w-full mt-2">
+              <div className="overflow-auto w-full mt-2 flex-1">
                 <table className="table w-full">
                   <thead>
                     <tr className="text-center">
