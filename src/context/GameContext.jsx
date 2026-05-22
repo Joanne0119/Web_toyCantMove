@@ -287,14 +287,19 @@ export const GameProvider = ({ children }) => {
         }
 
         if (msg.type === "spy_game_init") {
-          setSpyData(prev => ({
-            ...prev,
-            role: msg.role,
-            myPlayerId: msg.myPlayerId,
-            playerNames: msg.playerNames || [],
-            phase: 'waiting',
-            statusText: '等待回合開始...'
-          }));
+          setSpyData(prev => {
+            const alreadyStarted = prev.phase === 'selecting' || prev.phase === 'voting';
+            return {
+              ...prev,
+              role: msg.role,
+              myPlayerId: msg.myPlayerId,
+              playerNames: msg.playerNames || [],
+              ...(alreadyStarted ? {} : {
+                phase: 'waiting',
+                statusText: '等待回合開始...',
+              }),
+            };
+          });
         }
 
         if (msg.type === "spy_round_start") {
