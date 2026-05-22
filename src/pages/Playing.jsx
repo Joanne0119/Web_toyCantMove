@@ -32,8 +32,6 @@ const Playing = () => {
         if (spyData?.phase === 'waiting') {
             setHasSubmittedNumber(false);
             setHasSubmittedVote(false);
-            setHasSelectedOne(false);
-            setHasSelectedFive(false);
         }
 
     }, [spyData?.roundIndex, spyData?.phase]);
