@@ -429,7 +429,7 @@ const Playing = () => {
                                 </div>
                                 {/* 牌面（翻轉後顯示） */}
                                 <div
-                                  className={`absolute inset-0 w-full rounded-xl py-[5vw] sm:py-8 flex flex-col items-center justify-center ${isBadGuy ? 'bg-error/10 border-2 border-error/30' : 'bg-info/10 border-2 border-info/30'}`}
+                                  className="absolute inset-0 w-full rounded-xl py-[5vw] sm:py-8 flex flex-col items-center justify-center bg-base-200 border-2 border-base-300"
                                   style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
                                 >
                                   <div className="relative w-[18vw] h-[18vw] max-w-[80px] max-h-[80px] mb-2">
