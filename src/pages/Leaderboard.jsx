@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Maximize2, Minimize2 } from 'lucide-react';
+import { Maximize2, Minimize2, RefreshCw } from 'lucide-react';
 import LazyImage from '@/components/LazyImage';
 
 const FIREBASE_URL = import.meta.env.VITE_FIREBASE_DB_URL;
@@ -42,6 +42,9 @@ const Leaderboard = () => {
 
   useEffect(() => {
     fetchRecords(activeTab);
+    // 每 60 秒自動刷新
+    const interval = setInterval(() => fetchRecords(activeTab), 60000);
+    return () => clearInterval(interval);
   }, [activeTab, fetchRecords]);
 
   return (
@@ -65,8 +68,14 @@ const Leaderboard = () => {
         >
           <div className={`card-body p-4 flex flex-col ${isFullscreen ? 'h-full' : 'max-h-[80dvh]'}`}>
             <div className="flex items-center justify-between shrink-0">
-              <div className="w-8" />
-              <h2 className="card-title justify-center text-lg">排行榜</h2>
+              <button
+                onClick={() => fetchRecords(activeTab)}
+                className="btn btn-ghost btn-sm btn-circle"
+                disabled={loading}
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              </button>
+              <h2 className={`card-title justify-center ${isFullscreen ? 'text-2xl' : 'text-lg'}`}>排行榜</h2>
               <button
                 onClick={() => setIsFullscreen(prev => !prev)}
                 className="btn btn-ghost btn-sm btn-circle"
@@ -99,36 +108,36 @@ const Leaderboard = () => {
               </div>
             ) : (
               <div className="overflow-auto w-full mt-2 flex-1">
-                <table className="table w-full">
+                <table className={`table w-full ${isFullscreen ? 'table-lg' : ''}`}>
                   <thead>
                     <tr className="text-center">
-                      <th className="bg-base-200/50 w-12">#</th>
-                      <th className="bg-base-200/50">玩家</th>
-                      <th className="bg-base-200/50 w-16">分數</th>
-                      <th className="bg-base-200/50 w-24">日期</th>
+                      <th className={`bg-base-200/50 w-12 ${isFullscreen ? 'text-lg' : ''}`}>#</th>
+                      <th className={`bg-base-200/50 ${isFullscreen ? 'text-lg' : ''}`}>玩家</th>
+                      <th className={`bg-base-200/50 w-16 ${isFullscreen ? 'text-lg' : ''}`}>分數</th>
+                      <th className={`bg-base-200/50 w-24 ${isFullscreen ? 'text-lg' : ''}`}>日期</th>
                     </tr>
                   </thead>
                   <tbody>
                     {records.map((r, i) => (
                       <tr key={i} className="text-center hover">
-                        <th className="text-base-content/60">
+                        <th className={`text-base-content/60 ${isFullscreen ? 'text-lg' : ''}`}>
                           {i < 3 ? ['\u{1F947}', '\u{1F948}', '\u{1F949}'][i] : i + 1}
                         </th>
                         <td>
                           <div className="flex items-center justify-center gap-2">
                             <div className="avatar">
-                              <div className="w-8 rounded-full">
+                              <div className={`${isFullscreen ? 'w-12' : 'w-8'} rounded-full`}>
                                 <LazyImage
                                   src={`/images/${r.color}_${r.skin}.png`}
                                   alt={r.name}
                                 />
                               </div>
                             </div>
-                            <span>{r.name}</span>
+                            <span className={isFullscreen ? 'text-lg' : ''}>{r.name}</span>
                           </div>
                         </td>
-                        <td className="font-mono text-lg">{r.score}</td>
-                        <td className="text-xs text-base-content/50">{r.date}</td>
+                        <td className={`font-mono ${isFullscreen ? 'text-xl' : 'text-lg'}`}>{r.score}</td>
+                        <td className={`text-base-content/50 ${isFullscreen ? 'text-base' : 'text-xs'}`}>{r.date}</td>
                       </tr>
                     ))}
                   </tbody>
