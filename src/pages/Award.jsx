@@ -181,15 +181,35 @@ const Award = () => {
       .finally(() => setIsGenerating(false));
   }, [terminateImageLink, generatePostcard]);
 
-  // 下載明信片
-  const handleDownloadPostcard = useCallback(() => {
+  // 下載明信片（支援手機儲存）
+  const handleDownloadPostcard = useCallback(async () => {
     if (!postcardDataUrl) return;
     const today = new Date();
-    const dateStr = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
+    const dateStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+    const fileName = `postcard-${dateStr}.png`;
+
+    // 將 data URL 轉為 Blob
+    const res = await fetch(postcardDataUrl);
+    const blob = await res.blob();
+    const file = new File([blob], fileName, { type: 'image/png' });
+
+    // 優先使用 Web Share API（手機可直接儲存到相簿）
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file] });
+        return;
+      } catch (err) {
+        if (err.name === 'AbortError') return; // 使用者取消分享
+      }
+    }
+
+    // Fallback: 用 Blob URL 下載
+    const blobUrl = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.download = `postcard-${dateStr.replace(/\./g, '')}.png`;
-    a.href = postcardDataUrl;
+    a.download = fileName;
+    a.href = blobUrl;
     a.click();
+    URL.revokeObjectURL(blobUrl);
   }, [postcardDataUrl]);
 
   const results = useMemo(() => {
@@ -335,19 +355,8 @@ const Award = () => {
               transition={{ type: "spring", stiffness: 200, damping: 20 }}
               onClick={e => e.stopPropagation()}
             >
-              {/* Header: 下載 icon + 關閉 */}
-              <div className="flex items-center justify-between px-4 py-2">
-                <button
-                  onClick={handleDownloadPostcard}
-                  className="btn btn-sm btn-circle btn-ghost"
-                  title="下載明信片"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
-                </button>
+              {/* Header: 關閉按鈕 */}
+              <div className="flex items-center justify-end px-4 py-2">
                 <button
                   className="btn btn-circle btn-ghost text-xl"
                   onClick={() => setShowPostcardModal(false)}
@@ -357,12 +366,27 @@ const Award = () => {
               </div>
 
               {/* 明信片預覽圖 */}
-              <div className="px-4 pb-4">
+              <div className="px-4 pb-2">
                 <img
                   src={postcardDataUrl}
                   alt="明信片預覽"
                   className="w-full rounded-lg"
                 />
+              </div>
+
+              {/* 儲存按鈕 */}
+              <div className="px-4 pb-4">
+                <button
+                  onClick={handleDownloadPostcard}
+                  className="btn btn-primary w-full"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  儲存明信片
+                </button>
               </div>
             </motion.div>
           </motion.div>
