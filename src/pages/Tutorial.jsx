@@ -350,6 +350,8 @@ const Tutorial = () => {
     const tapDone = tapCount >= TAP_REQUIRED;
     const swipeDone = swipeCount >= SWIPE_REQUIRED;
     const isCompleted = tapDone && swipeDone;
+    // 目前步驟：先點擊，完成後才進入滑動
+    const currentTapStep = tapDone ? 'swipe' : 'tap';
     return (
       <div
         className="relative w-screen h-screen flex flex-col items-center justify-center bg-base-200 safe-area-bottom select-none overflow-hidden"
@@ -365,13 +367,13 @@ const Tutorial = () => {
         >
           <div className="card-body items-center text-center p-4">
             <motion.div
-              key={isCompleted ? 'done' : 'practice'}
+              key={isCompleted ? 'done' : currentTapStep}
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               className="text-center mb-3"
             >
               <h1 className="text-2xl font-bold text-base mb-1">
-                {isCompleted ? '完成！等待其他玩家...' : '點擊吃東西 · 滑動丟棄！'}
+                {isCompleted ? '完成！等待其他玩家...' : currentTapStep === 'tap' ? '步驟 1：點擊吃東西！' : '步驟 2：滑動丟棄！'}
               </h1>
             </motion.div>
 
@@ -383,8 +385,8 @@ const Tutorial = () => {
               transition={{ duration: 0.5 }}
             >
               <video
-                key={tapDone ? 'swipe' : 'tap'}
-                src={tapDone ? '/videos/swipe.mp4' : '/videos/tab.mp4'}
+                key={currentTapStep}
+                src={currentTapStep === 'swipe' ? '/videos/swipe.mp4' : '/videos/tab.mp4'}
                 autoPlay
                 loop
                 muted
@@ -394,40 +396,47 @@ const Tutorial = () => {
               />
             </motion.div>
 
-            {/* 點擊進度 */}
-            <div className="w-full mb-2">
-              <p className="text-xs text-base-content/50 mb-1">點擊練習 {tapDone ? '✓' : `${tapCount}/${TAP_REQUIRED}`}</p>
-              <div className="flex gap-2 justify-center">
-                {Array.from({ length: TAP_REQUIRED }).map((_, i) => (
-                  <motion.div
-                    key={`tap-${i}`}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${i < tapCount ? 'bg-green-500 text-white' : 'bg-base-300/50'
-                      }`}
-                    animate={i === tapCount - 1 && tapCount > 0 ? { scale: [1.3, 1] } : {}}
-                    transition={{ duration: 0.2 }}
-                  >
-                    {i < tapCount ? '✓' : i + 1}
-                  </motion.div>
-                ))}
+            {/* 根據步驟只顯示當前的練習進度 */}
+            {currentTapStep === 'tap' ? (
+              <div className="w-full mb-3">
+                <p className="text-xs text-base-content/50 mb-1">點擊練習 {`${tapCount}/${TAP_REQUIRED}`}</p>
+                <div className="flex gap-2 justify-center">
+                  {Array.from({ length: TAP_REQUIRED }).map((_, i) => (
+                    <motion.div
+                      key={`tap-${i}`}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${i < tapCount ? 'bg-green-500 text-white' : 'bg-base-300/50'
+                        }`}
+                      animate={i === tapCount - 1 && tapCount > 0 ? { scale: [1.3, 1] } : {}}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {i < tapCount ? '✓' : i + 1}
+                    </motion.div>
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : !isCompleted ? (
+              <div className="w-full mb-3">
+                <p className="text-xs text-base-content/50 mb-1">滑動練習 {`${swipeCount}/${SWIPE_REQUIRED}`}</p>
+                <div className="flex gap-2 justify-center">
+                  {Array.from({ length: SWIPE_REQUIRED }).map((_, i) => (
+                    <motion.div
+                      key={`swipe-${i}`}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${i < swipeCount ? 'bg-blue-500 text-white' : 'bg-base-300/50'
+                        }`}
+                      animate={i === swipeCount - 1 && swipeCount > 0 ? { scale: [1.3, 1] } : {}}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {i < swipeCount ? '✓' : i + 1}
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
 
-            {/* 滑動進度 */}
-            <div className="w-full mb-3">
-              <p className="text-xs text-base-content/50 mb-1">滑動練習 {swipeDone ? '✓' : `${swipeCount}/${SWIPE_REQUIRED}`}</p>
-              <div className="flex gap-2 justify-center">
-                {Array.from({ length: SWIPE_REQUIRED }).map((_, i) => (
-                  <motion.div
-                    key={`swipe-${i}`}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${i < swipeCount ? 'bg-blue-500 text-white' : 'bg-base-300/50'
-                      }`}
-                    animate={i === swipeCount - 1 && swipeCount > 0 ? { scale: [1.3, 1] } : {}}
-                    transition={{ duration: 0.2 }}
-                  >
-                    {i < swipeCount ? '✓' : i + 1}
-                  </motion.div>
-                ))}
-              </div>
+            {/* 步驟指示器 */}
+            <div className="flex gap-2 justify-center mb-2">
+              <div className={`w-2 h-2 rounded-full transition-all duration-300 ${currentTapStep === 'tap' && !isCompleted ? 'bg-primary w-5' : 'bg-green-500'}`} />
+              <div className={`w-2 h-2 rounded-full transition-all duration-300 ${currentTapStep === 'swipe' && !isCompleted ? 'bg-primary w-5' : isCompleted ? 'bg-green-500' : 'bg-base-300'}`} />
             </div>
 
             {/* 狀態指示 */}
