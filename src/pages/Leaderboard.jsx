@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Maximize2, Minimize2 } from 'lucide-react';
 import LazyImage from '@/components/LazyImage';
 
 const FIREBASE_URL = import.meta.env.VITE_FIREBASE_DB_URL;
@@ -16,6 +17,7 @@ const Leaderboard = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(LEVEL_TABS[0].key);
   const [records, setRecords] = useState([]);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const fetchRecords = useCallback(async (levelKey) => {
@@ -53,15 +55,25 @@ const Leaderboard = () => {
       }}
     >
       <div className="absolute top-0 left-0 w-full h-full" style={{ backdropFilter: 'blur(1px) saturate(80%)' }} />
-      <div className="hero-content text-center w-full max-w-lg z-10">
+      <div className={`z-10 ${isFullscreen ? 'fixed inset-0' : 'hero-content text-center w-full max-w-lg'}`}>
         <motion.div
-          className="card bg-base-100 shadow-xl w-full"
+          className={`card bg-base-100 shadow-xl w-full ${isFullscreen ? 'h-full rounded-none' : ''}`}
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 120, damping: 15 }}
+          layout
         >
-          <div className="card-body p-4 max-h-[80dvh] flex flex-col">
-            <h2 className="card-title justify-center text-lg shrink-0">排行榜</h2>
+          <div className={`card-body p-4 flex flex-col ${isFullscreen ? 'h-full' : 'max-h-[80dvh]'}`}>
+            <div className="flex items-center justify-between shrink-0">
+              <div className="w-8" />
+              <h2 className="card-title justify-center text-lg">排行榜</h2>
+              <button
+                onClick={() => setIsFullscreen(prev => !prev)}
+                className="btn btn-ghost btn-sm btn-circle"
+              >
+                {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+              </button>
+            </div>
 
             {/* 關卡分頁 */}
             <div className="tabs tabs-boxed bg-base-200 justify-center shrink-0">
