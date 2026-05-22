@@ -4,6 +4,7 @@ import { motion, useSpring, useTransform, useMotionValue } from "framer-motion";
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import TapController from '@/components/controllers/TapController';
+import { Flame, Shield, Eye } from 'lucide-react';
 
 
 const Playing = () => {
@@ -411,19 +412,43 @@ const Playing = () => {
                               >
                                 {/* 牌背（預設顯示） */}
                                 <div
-                                  className="w-full rounded-xl py-[4vw] sm:py-6 bg-base-200 border-2 border-base-300"
+                                  className="w-full rounded-xl py-[5vw] sm:py-8 bg-base-200 border-2 border-base-300 flex flex-col items-center justify-center"
                                   style={{ backfaceVisibility: 'hidden' }}
                                 >
-                                  <p className="text-[clamp(0.7rem,2.5vw,0.9rem)] text-base-content/40 mb-1">按住查看身分</p>
-                                  <p className="text-[clamp(1.5rem,6vw,2.5rem)]">?</p>
+                                  <div className="relative w-[15vw] h-[15vw] max-w-[72px] max-h-[72px] mb-2">
+                                    <img
+                                      src={localPlayer.color ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}.png` : `/images/gray_${localPlayer.avatar || 'wind-up'}.png`}
+                                      alt="avatar"
+                                      className="w-full h-full object-contain opacity-30"
+                                    />
+                                  </div>
+                                  <div className="flex items-center gap-1 text-base-content/40">
+                                    <Eye className="w-[clamp(0.8rem,3vw,1rem)] h-[clamp(0.8rem,3vw,1rem)]" />
+                                    <p className="text-[clamp(0.7rem,2.5vw,0.9rem)]">按住查看身分</p>
+                                  </div>
                                 </div>
                                 {/* 牌面（翻轉後顯示） */}
                                 <div
-                                  className={`absolute inset-0 w-full rounded-xl py-[4vw] sm:py-6 flex flex-col items-center justify-center ${isBadGuy ? 'bg-error/10 border-2 border-error/30' : 'bg-info/10 border-2 border-info/30'}`}
+                                  className={`absolute inset-0 w-full rounded-xl py-[5vw] sm:py-8 flex flex-col items-center justify-center ${isBadGuy ? 'bg-error/10 border-2 border-error/30' : 'bg-info/10 border-2 border-info/30'}`}
                                   style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
                                 >
-                                  <h2 className="text-[clamp(0.8rem,3vw,1.2rem)] text-base-content/60 font-bold mb-1">你的身分</h2>
-                                  <h1 className={`font-extrabold text-[clamp(1.5rem,6vw,2.5rem)] ${isBadGuy ? 'text-error' : 'text-info'}`}>
+                                  <div className="relative w-[18vw] h-[18vw] max-w-[80px] max-h-[80px] mb-2">
+                                    <img
+                                      src={localPlayer.color ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}.png` : `/images/gray_${localPlayer.avatar || 'wind-up'}.png`}
+                                      alt="avatar"
+                                      className="w-full h-full object-contain"
+                                    />
+                                    {isBadGuy ? (
+                                      <div className="absolute -top-2 -right-2 bg-error rounded-full p-1 shadow-md">
+                                        <Flame className="w-[clamp(0.8rem,3vw,1.2rem)] h-[clamp(0.8rem,3vw,1.2rem)] text-white" />
+                                      </div>
+                                    ) : (
+                                      <div className="absolute -top-2 -right-2 bg-info rounded-full p-1 shadow-md">
+                                        <Shield className="w-[clamp(0.8rem,3vw,1.2rem)] h-[clamp(0.8rem,3vw,1.2rem)] text-white" />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <h1 className={`font-extrabold text-[clamp(1.3rem,5vw,2rem)] ${isBadGuy ? 'text-error' : 'text-info'}`}>
                                     {isBadGuy ? '壞人' : '好人'}
                                   </h1>
                                 </div>
