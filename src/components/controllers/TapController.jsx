@@ -18,8 +18,9 @@ const TapController = () => {
   const lastTapTimeRef = useRef(0);
   const lastProcessedTimestamp = useRef(0);
 
-  // 觸控追蹤
-  const touchStartRef = useRef(null);
+  // 觸控追蹤（用 Map 追蹤每隻手指，避免多指快速點擊誤判為滑動）
+  const touchMapRef = useRef(new Map());
+  const mouseStartRef = useRef(null);
 
   // Screen wake lock
   useEffect(() => {
@@ -68,47 +69,66 @@ const TapController = () => {
     }
   }, [connectionStatus, sendWebRTCData, unityPeerId]);
 
-  // 觸控/滑鼠事件處理
-  const handlePointerDown = useCallback((e) => {
+  // 觸控事件：每隻手指各自追蹤
+  const handleTouchStart = useCallback((e) => {
     e.preventDefault();
-    const point = e.touches ? e.touches[0] : e;
-    touchStartRef.current = { x: point.clientX, y: point.clientY };
+    for (const touch of e.changedTouches) {
+      touchMapRef.current.set(touch.identifier, { x: touch.clientX, y: touch.clientY });
+    }
   }, []);
 
-  const handlePointerUp = useCallback((e) => {
+  const handleTouchEnd = useCallback((e) => {
     e.preventDefault();
-    if (!touchStartRef.current) return;
+    for (const touch of e.changedTouches) {
+      const start = touchMapRef.current.get(touch.identifier);
+      touchMapRef.current.delete(touch.identifier);
+      if (!start) continue;
 
-    const point = e.changedTouches ? e.changedTouches[0] : e;
-    const dx = point.clientX - touchStartRef.current.x;
-    const dy = point.clientY - touchStartRef.current.y;
+      const dx = touch.clientX - start.x;
+      const dy = touch.clientY - start.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance < TAP_THRESHOLD) {
+        sendTap();
+      } else if (distance > SWIPE_THRESHOLD) {
+        sendDiscard();
+      }
+    }
+  }, [sendTap, sendDiscard]);
+
+  // 滑鼠事件（桌機測試用）
+  const handleMouseDown = useCallback((e) => {
+    mouseStartRef.current = { x: e.clientX, y: e.clientY };
+  }, []);
+
+  const handleMouseUp = useCallback((e) => {
+    if (!mouseStartRef.current) return;
+    const dx = e.clientX - mouseStartRef.current.x;
+    const dy = e.clientY - mouseStartRef.current.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
     if (distance < TAP_THRESHOLD) {
-      // 點擊 → 吃一口
       sendTap();
     } else if (distance > SWIPE_THRESHOLD) {
-      // 滑動 → 丟棄食物
       sendDiscard();
     }
-
-    touchStartRef.current = null;
+    mouseStartRef.current = null;
   }, [sendTap, sendDiscard]);
 
   // 綁定事件
   useEffect(() => {
-    document.addEventListener('touchstart', handlePointerDown, { passive: false });
-    document.addEventListener('touchend', handlePointerUp, { passive: false });
-    document.addEventListener('mousedown', handlePointerDown);
-    document.addEventListener('mouseup', handlePointerUp);
+    document.addEventListener('touchstart', handleTouchStart, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd, { passive: false });
+    document.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mouseup', handleMouseUp);
 
     return () => {
-      document.removeEventListener('touchstart', handlePointerDown);
-      document.removeEventListener('touchend', handlePointerUp);
-      document.removeEventListener('mousedown', handlePointerDown);
-      document.removeEventListener('mouseup', handlePointerUp);
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchend', handleTouchEnd);
+      document.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [handlePointerDown, handlePointerUp]);
+  }, [handleTouchStart, handleTouchEnd, handleMouseDown, handleMouseUp]);
 
   const avatarSrc = localPlayer.color
     ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}Pin.png`

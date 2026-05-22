@@ -288,56 +288,79 @@ const Tutorial = () => {
     });
   }, [sendWebRTCData, unityPeerId, unityRequestedSwipe]);
 
-  // 教學用 pointer 事件偵測點擊/滑動
-  const tutorialTouchStartRef = useRef(null);
+  // 教學用觸控事件（多指追蹤）
+  const tutorialTouchMapRef = useRef(new Map());
+  const tutorialMouseStartRef = useRef(null);
 
-  const handleTutorialPointerDown = useCallback((e) => {
+  const handleTutorialTouchStart = useCallback((e) => {
     e.preventDefault();
-    const point = e.touches ? e.touches[0] : e;
-    tutorialTouchStartRef.current = { x: point.clientX, y: point.clientY };
+    for (const touch of e.changedTouches) {
+      tutorialTouchMapRef.current.set(touch.identifier, { x: touch.clientX, y: touch.clientY });
+    }
   }, []);
 
   const handleTutorialTouchMove = useCallback((e) => {
     e.preventDefault(); // 阻止頁面滾動
   }, []);
 
-  const handleTutorialPointerUp = useCallback((e) => {
+  const handleTutorialTouchEnd = useCallback((e) => {
     e.preventDefault();
-    if (!tutorialTouchStartRef.current) return;
-    const point = e.changedTouches ? e.changedTouches[0] : e;
-    const dx = point.clientX - tutorialTouchStartRef.current.x;
-    const dy = point.clientY - tutorialTouchStartRef.current.y;
+    for (const touch of e.changedTouches) {
+      const start = tutorialTouchMapRef.current.get(touch.identifier);
+      tutorialTouchMapRef.current.delete(touch.identifier);
+      if (!start) continue;
+
+      const dx = touch.clientX - start.x;
+      const dy = touch.clientY - start.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (!tapDoneRef.current || !unityRequestedSwipe) {
+        // 步驟 1：任何觸碰都算點擊
+        handleTapPractice();
+      } else if (distance > SWIPE_THRESHOLD) {
+        // 步驟 2：只有滑動才算
+        handleSwipePractice();
+      }
+    }
+  }, [handleTapPractice, handleSwipePractice, unityRequestedSwipe]);
+
+  const handleTutorialMouseDown = useCallback((e) => {
+    tutorialMouseStartRef.current = { x: e.clientX, y: e.clientY };
+  }, []);
+
+  const handleTutorialMouseUp = useCallback((e) => {
+    if (!tutorialMouseStartRef.current) return;
+    const dx = e.clientX - tutorialMouseStartRef.current.x;
+    const dy = e.clientY - tutorialMouseStartRef.current.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
     if (!tapDoneRef.current || !unityRequestedSwipe) {
-      // 步驟 1：任何觸碰都算點擊（避免滑動手勢被浪費）
       handleTapPractice();
     } else if (distance > SWIPE_THRESHOLD) {
-      // 步驟 2：只有滑動才算
       handleSwipePractice();
     }
-    tutorialTouchStartRef.current = null;
+    tutorialMouseStartRef.current = null;
   }, [handleTapPractice, handleSwipePractice, unityRequestedSwipe]);
 
-  // 用 document 綁定事件（跟 TapController 一樣，避免被 overlay 擋住）
+  // 用 document 綁定事件
   useEffect(() => {
     if (inputType !== 'tap') return;
     if (tapDoneRef.current && swipeDoneRef.current) return;
 
-    document.addEventListener('touchstart', handleTutorialPointerDown, { passive: false });
+    document.addEventListener('touchstart', handleTutorialTouchStart, { passive: false });
     document.addEventListener('touchmove', handleTutorialTouchMove, { passive: false });
-    document.addEventListener('touchend', handleTutorialPointerUp, { passive: false });
-    document.addEventListener('mousedown', handleTutorialPointerDown);
-    document.addEventListener('mouseup', handleTutorialPointerUp);
+    document.addEventListener('touchend', handleTutorialTouchEnd, { passive: false });
+    document.addEventListener('mousedown', handleTutorialMouseDown);
+    document.addEventListener('mouseup', handleTutorialMouseUp);
 
     return () => {
-      document.removeEventListener('touchstart', handleTutorialPointerDown);
+      document.removeEventListener('touchstart', handleTutorialTouchStart);
       document.removeEventListener('touchmove', handleTutorialTouchMove);
-      document.removeEventListener('touchend', handleTutorialPointerUp);
-      document.removeEventListener('mousedown', handleTutorialPointerDown);
-      document.removeEventListener('mouseup', handleTutorialPointerUp);
+      document.removeEventListener('touchend', handleTutorialTouchEnd);
+      document.removeEventListener('mousedown', handleTutorialMouseDown);
+      document.removeEventListener('mouseup', handleTutorialMouseUp);
     };
-  }, [inputType, handleTutorialPointerDown, handleTutorialPointerUp]);
+  }, [inputType, handleTutorialTouchStart, handleTutorialTouchEnd, handleTutorialMouseDown, handleTutorialMouseUp]);
 
   // 非陀螺儀關卡也要監聯 navigate 訊息
   useEffect(() => {
