@@ -275,6 +275,17 @@ export const GameProvider = ({ children }) => {
           // 重置斷線偵測狀態，避免重連時誤判為斷線
           wasConnectedRef.current = false;
           setUnityDisconnected(false);
+
+          setSpyData({
+            role: null,
+            myPlayerId: null,
+            roundIndex: 0,
+            minTarget: 0,
+            maxTarget: 0,
+            phase: 'waiting',
+            statusText: '等待遊戲開始...',
+            playerNames: []
+          });
         }
         if (msg.type === "terminate") {
           console.log("Received terminate message from Unity:", msg.finalPlayerDatas);
@@ -341,6 +352,19 @@ export const GameProvider = ({ children }) => {
             phase: 'voting',
             statusText: msg.message || '請投票抓出壞人！'
           }));
+        }
+
+        if (msg.type === "spy_game_reset") {
+          setSpyData({
+            role: null,
+            myPlayerId: null,
+            roundIndex: 0,
+            minTarget: 0,
+            maxTarget: 0,
+            phase: 'waiting',
+            statusText: '正在分配玩家身分...',
+            playerNames: []
+          });
         }
 
       } catch (e) {

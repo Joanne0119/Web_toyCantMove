@@ -29,6 +29,14 @@ const Playing = () => {
     useEffect(() => {
         if (spyData?.phase === 'selecting') setHasSubmittedNumber(false);
         if (spyData?.phase === 'voting') setHasSubmittedVote(false);
+
+        if (spyData?.phase === 'waiting') {
+            setHasSubmittedNumber(false);
+            setHasSubmittedVote(false);
+            setHasSelectedOne(false);
+            setHasSelectedFive(false);
+        }
+
     }, [spyData?.roundIndex, spyData?.phase]);
 
     // 發送數字的函式
