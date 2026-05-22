@@ -381,6 +381,8 @@ const Playing = () => {
         return <TapController />;
     }
 
+    const [roleRevealed, setRoleRevealed] = useState(false);
+
     if (inputType === 'spy') {
         const isBadGuy = spyData?.role === 'BadGuy';
 
@@ -393,17 +395,39 @@ const Playing = () => {
                     <motion.div className="card bg-base-100 shadow-xl w-[90vw] max-w-lg" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
                         <div className="card-body items-center text-center p-[6vw] sm:p-8">
 
-                            {/* 身分顯示區 */}
-                            <div className="mb-[4vw] sm:mb-6">
-                                <h2 className="text-[clamp(0.8rem,3vw,1.2rem)] text-base-content/60 font-bold mb-1">你的身分</h2>
-                                {spyData.role ? (
-                                    // 使用 clamp 讓標題字體隨螢幕動態縮放
-                                    <h1 className={`font-extrabold text-[clamp(1.5rem,6vw,2.5rem)] ${isBadGuy ? 'text-error' : 'text-info'}`}>
-                                        {isBadGuy ? '【我是壞人】' : '我是好人'}
-                                    </h1>
-                                ) : (
-                                    <h1 className="font-bold text-base-content/50 text-[clamp(1.2rem,5vw,2rem)]">分配中...</h1>
-                                )}
+                            {/* 身分翻牌區 */}
+                            <div
+                              className="mb-[4vw] sm:mb-6 w-full cursor-pointer"
+                              style={{ perspective: '600px' }}
+                              onPointerDown={() => spyData.role && setRoleRevealed(true)}
+                              onPointerUp={() => setRoleRevealed(false)}
+                              onPointerLeave={() => setRoleRevealed(false)}
+                            >
+                              <motion.div
+                                className="relative w-full"
+                                style={{ transformStyle: 'preserve-3d' }}
+                                animate={{ rotateY: roleRevealed ? 180 : 0 }}
+                                transition={{ duration: 0.3 }}
+                              >
+                                {/* 牌背（預設顯示） */}
+                                <div
+                                  className="w-full rounded-xl py-[4vw] sm:py-6 bg-base-200 border-2 border-base-300"
+                                  style={{ backfaceVisibility: 'hidden' }}
+                                >
+                                  <p className="text-[clamp(0.7rem,2.5vw,0.9rem)] text-base-content/40 mb-1">按住查看身分</p>
+                                  <p className="text-[clamp(1.5rem,6vw,2.5rem)]">?</p>
+                                </div>
+                                {/* 牌面（翻轉後顯示） */}
+                                <div
+                                  className={`absolute inset-0 w-full rounded-xl py-[4vw] sm:py-6 flex flex-col items-center justify-center ${isBadGuy ? 'bg-error/10 border-2 border-error/30' : 'bg-info/10 border-2 border-info/30'}`}
+                                  style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+                                >
+                                  <h2 className="text-[clamp(0.8rem,3vw,1.2rem)] text-base-content/60 font-bold mb-1">你的身分</h2>
+                                  <h1 className={`font-extrabold text-[clamp(1.5rem,6vw,2.5rem)] ${isBadGuy ? 'text-error' : 'text-info'}`}>
+                                    {isBadGuy ? '壞人' : '好人'}
+                                  </h1>
+                                </div>
+                              </motion.div>
                             </div>
 
                             {/* 壞人秘密任務專屬提示訊息 UI */}
