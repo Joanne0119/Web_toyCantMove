@@ -23,8 +23,6 @@ const Playing = () => {
     const [hasSubmittedNumber, setHasSubmittedNumber] = useState(false);
     const [hasSubmittedVote, setHasSubmittedVote] = useState(false);
 
-    const [hasSelectedOne, setHasSelectedOne] = useState(false);
-    const [hasSelectedFive, setHasSelectedFive] = useState(false);
 
     // 當回合或階段改變時，重置按鈕狀態
     useEffect(() => {
@@ -44,33 +42,10 @@ const Playing = () => {
     const handleSubmitNumber = useCallback((num) => {
         if (hasSubmittedNumber || !connectionStatus) return;
         setHasSubmittedNumber(true);
-        if (spyData?.role === 'BadGuy') {
-            if (num === 1) setHasSelectedOne(true);
-            if (num === 5) setHasSelectedFive(true);
-        }
-
         const msg = JSON.stringify({ type: "submit_number", number: num });
         sendWebRTCData(msg, unityPeerId || null);
     }, [hasSubmittedNumber, connectionStatus, sendWebRTCData, unityPeerId]);
 
-    const isButtonDisabledBySpyRule = (num) => {
-        if (spyData?.role !== 'BadGuy') return false;
-
-        // 0 到 4 分別代表第 1 到 5 輪
-        const currentRound = spyData?.roundIndex || 0;
-        // 包含本輪還剩幾次機會選擇
-        const roundsLeft = 5 - currentRound;
-
-        let missingTargets = [];
-        if (!hasSelectedOne) missingTargets.push(1);
-        if (!hasSelectedFive) missingTargets.push(5);
-
-        // 如果剩餘的輪數「剛好等於」還沒選的任務目標數量，且此按鈕不在未完成名單中，就必須禁用它
-        if (roundsLeft === missingTargets.length && !missingTargets.includes(num)) {
-            return true;
-        }
-        return false;
-    };
 
     // 發送投票的函式
     const handleSubmitVote = useCallback((pid) => {
@@ -455,24 +430,6 @@ const Playing = () => {
                               </motion.div>
                             </div>
 
-                            {/* 壞人秘密任務專屬提示訊息 UI */}
-                            {isBadGuy && (
-                                <div className="w-full bg-error/10 border border-error/20 rounded-xl p-[3vw] sm:p-4 mb-[2vw] text-left space-y-1">
-                                    <p className="font-extrabold text-error flex items-center gap-1 text-[clamp(0.8rem,3vw,1.1rem)]">壞人限制：</p>
-                                    <p className="text-base-content/80 font-medium text-[clamp(0.75rem,2.8vw,1rem)]">
-                                        在 5 輪遊戲結束前，必須選擇過數字 <span className="font-bold text-error">1</span> 與 <span className="font-bold text-error">5</span> 各至少一次！
-                                    </p>
-                                    <div className="flex gap-[4vw] sm:gap-6 pt-1 font-bold text-[clamp(0.75rem,2.8vw,1rem)]">
-                                        <span className={hasSelectedOne ? "text-success" : "text-base-content/40"}>
-                                            {hasSelectedOne ? "✅ 數字 1 (已達成)" : "❌ 數字 1 (未達成)"}
-                                        </span>
-                                        <span className={hasSelectedFive ? "text-success" : "text-base-content/40"}>
-                                            {hasSelectedFive ? "✅ 數字 5 (已達成)" : "❌ 數字 5 (未達成)"}
-                                        </span>
-                                    </div>
-                                </div>
-                            )}
-
                             <div className="divider my-0"></div>
 
                             {/* 狀態提示文字 */}
@@ -492,22 +449,16 @@ const Playing = () => {
                                     </p>
                                     {/* 2. 按鈕間距隨螢幕比例變化 gap-[3vw] */}
                                     <div className="grid grid-cols-3 gap-[3vw] sm:gap-4">
-                                        {[1, 2, 3, 4, 5].map(num => {
-                                            const isForcedDisabled = isButtonDisabledBySpyRule(num);
-                                            return (
+                                        {[1, 2, 3, 4, 5].map(num => (
                                                 <motion.button
                                                     key={`num-${num}`}
-                                                    whileTap={!isForcedDisabled ? { scale: 0.9 } : {}}
+                                                    whileTap={{ scale: 0.9 }}
                                                     onClick={() => handleSubmitNumber(num)}
-                                                    // 3. 移除 btn-lg，加入 h-auto 與 aspect-square，讓按鈕永遠保持完美的正方形
-                                                    className={`btn h-auto aspect-square p-0 flex items-center justify-center ${isBadGuy ? 'btn-error' : 'btn-info'}`}
-                                                    disabled={isForcedDisabled}
+                                                    className="btn h-auto aspect-square p-0 flex items-center justify-center btn-primary"
                                                 >
-                                                    {/* 字體使用 vw 單位，螢幕越大數字越大 */}
                                                     <span className="text-[clamp(1.8rem,8vw,3.5rem)] leading-none">{num}</span>
                                                 </motion.button>
-                                            );
-                                        })}
+                                            ))}
                                     </div>
                                 </div>
                             )}
