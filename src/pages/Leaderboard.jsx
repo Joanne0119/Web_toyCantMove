@@ -75,7 +75,7 @@ const Leaderboard = () => {
               >
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               </button>
-              <h2 className={`card-title justify-center ${isFullscreen ? 'text-2xl' : 'text-lg'}`}>排行榜</h2>
+              <h2 className={`card-title justify-center ${isFullscreen ? 'text-4xl py-2' : 'text-lg'}`}>排行榜</h2>
               <button
                 onClick={() => setIsFullscreen(prev => !prev)}
                 className="btn btn-ghost btn-sm btn-circle"
@@ -85,11 +85,11 @@ const Leaderboard = () => {
             </div>
 
             {/* 關卡分頁 */}
-            <div className="tabs tabs-boxed bg-base-200 justify-center shrink-0">
+            <div className={`tabs tabs-boxed bg-base-200 justify-center shrink-0 ${isFullscreen ? 'gap-2' : ''}`}>
               {LEVEL_TABS.map(tab => (
                 <button
                   key={tab.key}
-                  className={`tab tab-sm ${activeTab === tab.key ? 'tab-active' : ''}`}
+                  className={`tab ${isFullscreen ? 'tab-lg text-lg' : 'tab-sm'} ${activeTab === tab.key ? 'tab-active' : ''}`}
                   onClick={() => setActiveTab(tab.key)}
                 >
                   {tab.label}
@@ -111,33 +111,33 @@ const Leaderboard = () => {
                 <table className={`table w-full ${isFullscreen ? 'table-lg' : ''}`}>
                   <thead>
                     <tr className="text-center">
-                      <th className={`bg-base-200/50 w-12 ${isFullscreen ? 'text-lg' : ''}`}>#</th>
-                      <th className={`bg-base-200/50 ${isFullscreen ? 'text-lg' : ''}`}>玩家</th>
-                      <th className={`bg-base-200/50 w-16 ${isFullscreen ? 'text-lg' : ''}`}>分數</th>
-                      <th className={`bg-base-200/50 w-24 ${isFullscreen ? 'text-lg' : ''}`}>日期</th>
+                      <th className={`bg-base-200/50 ${isFullscreen ? 'text-2xl py-4' : 'w-12'}`}>#</th>
+                      <th className={`bg-base-200/50 ${isFullscreen ? 'text-2xl py-4' : ''}`}>玩家</th>
+                      <th className={`bg-base-200/50 ${isFullscreen ? 'text-2xl py-4' : 'w-16'}`}>分數</th>
+                      <th className={`bg-base-200/50 ${isFullscreen ? 'text-2xl py-4' : 'w-24'}`}>日期</th>
                     </tr>
                   </thead>
                   <tbody>
                     {records.map((r, i) => (
-                      <tr key={i} className="text-center hover">
-                        <th className={`text-base-content/60 ${isFullscreen ? 'text-lg' : ''}`}>
+                      <tr key={i} className={`text-center hover ${isFullscreen ? 'text-xl' : ''}`}>
+                        <th className={`text-base-content/60 ${isFullscreen ? 'text-2xl py-4' : ''}`}>
                           {i < 3 ? ['\u{1F947}', '\u{1F948}', '\u{1F949}'][i] : i + 1}
                         </th>
-                        <td>
-                          <div className="flex items-center justify-center gap-2">
+                        <td className={isFullscreen ? 'py-4' : ''}>
+                          <div className={`flex items-center justify-center ${isFullscreen ? 'gap-4' : 'gap-2'}`}>
                             <div className="avatar">
-                              <div className={`${isFullscreen ? 'w-12' : 'w-8'} rounded-full`}>
+                              <div className={`${isFullscreen ? 'w-16' : 'w-8'} rounded-full`}>
                                 <LazyImage
                                   src={`/images/${r.color}_${r.skin}.png`}
                                   alt={r.name}
                                 />
                               </div>
                             </div>
-                            <span className={isFullscreen ? 'text-lg' : ''}>{r.name}</span>
+                            <span className={isFullscreen ? 'text-2xl font-bold' : ''}>{r.name}</span>
                           </div>
                         </td>
-                        <td className={`font-mono ${isFullscreen ? 'text-xl' : 'text-lg'}`}>{r.score}</td>
-                        <td className={`text-base-content/50 ${isFullscreen ? 'text-base' : 'text-xs'}`}>{r.date}</td>
+                        <td className={`font-mono ${isFullscreen ? 'text-3xl font-bold py-4' : 'text-lg'}`}>{r.score}</td>
+                        <td className={`text-base-content/50 ${isFullscreen ? 'text-lg py-4' : 'text-xs'}`}>{r.date}</td>
                       </tr>
                     ))}
                   </tbody>
