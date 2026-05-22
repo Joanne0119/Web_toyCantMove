@@ -392,7 +392,7 @@ const Playing = () => {
                                     <img
                                       src={localPlayer.color ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}.png` : `/images/gray_${localPlayer.avatar || 'wind-up'}.png`}
                                       alt="avatar"
-                                      className="w-full h-full object-contain opacity-30"
+                                      className="w-full h-full object-contain"
                                     />
                                   </div>
                                   <div className="flex items-center gap-1 text-base-content/40">
@@ -424,6 +424,9 @@ const Playing = () => {
                                   <h1 className={`font-extrabold text-[clamp(1.3rem,5vw,2rem)] ${isBadGuy ? 'text-error' : 'text-info'}`}>
                                     {isBadGuy ? '壞人' : '好人'}
                                   </h1>
+                                  <p className="text-[clamp(0.7rem,2.5vw,0.9rem)] text-base-content/50 mt-1">
+                                    {localPlayer.name || ''}
+                                  </p>
                                 </div>
                               </motion.div>
                             </div>
