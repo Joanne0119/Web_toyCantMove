@@ -156,6 +156,12 @@ const Tutorial = () => {
         // 如果收到教學指示
         if (msg.type === 'tutorial_instruction') {
           const stepName = msg.step;
+
+          // tap 教學：收到 backward 指令時切換到滑動步驟
+          if (inputType === 'tap' && stepName === 'backward') {
+            setUnityRequestedSwipe(true);
+          }
+
           if (gyroSupported === false || skippedTutorial) {
             // (不支援的玩家 或 已略過教學)
             const cheatVector = cheatVectors[stepName];
@@ -333,7 +339,7 @@ const Tutorial = () => {
     };
   }, [inputType, handleTutorialPointerDown, handleTutorialPointerUp]);
 
-  // 非陀螺儀關卡監聽 Unity 的教學步驟指令和 navigate 訊息
+  // 非陀螺儀關卡也要監聯 navigate 訊息
   useEffect(() => {
     if (inputType === 'gyro') return;
     if (lastMessage && lastMessage.timestamp > lastProcessedTimestamp.current) {
@@ -343,10 +349,6 @@ const Tutorial = () => {
         if (msg.type === 'navigate_to_playing') {
           sendWebRTCData(JSON.stringify({ type: "navigate_ack", target: "playing" }), unityPeerId || null);
           navigate('/playing');
-        }
-        // 收到 Unity 的步驟指令，切換到滑動步驟
-        if (msg.type === 'tutorial_instruction' && msg.step === 'backward' && inputType === 'tap') {
-          setUnityRequestedSwipe(true);
         }
       } catch (e) { }
     }
