@@ -62,11 +62,11 @@ const ChooseChar = () => {
               duration: 0.8
             }}
           >
-            <div className="card-body">
-              <h2 className="card-title">哈囉！{localPlayer.name || '...'}，請選擇角色</h2>
-              <div className="flex flex-col items-center mt-4">
+            <div className="card-body p-4">
+              <h2 className="card-title text-base justify-center">哈囉！{localPlayer.name || '...'}，請選擇角色</h2>
+              <div className="flex flex-col items-center mt-2">
                 <div className="avatar online">
-                  <div className={`w-42 h-42 rounded-full ring-gray-600/50 ring-4 ring-offset-base-100 ring-offset-2 flex justify-center items-center overflow-hidden`}>
+                  <div className={`w-28 h-28 rounded-full ring-gray-600/50 ring-4 ring-offset-base-100 ring-offset-2 flex justify-center items-center overflow-hidden`}>
                     <AnimatePresence mode="wait">
                       <motion.div
                         key={selectedChar.name}
@@ -85,33 +85,33 @@ const ChooseChar = () => {
                     </AnimatePresence>
                   </div>
                 </div>
-                <div className="text-xl font-bold capitalize mt-4">{selectedChar.charName}</div>
-                <div className="stats bg-transparent mt-2">
-                  <div className="stat">
-                    <div className="stat-title">速度</div>
-                    <div className="stat-value w-8">{fmt(selectedChar.speed)}</div>
+                <div className="text-lg font-bold capitalize mt-2">{selectedChar.charName}</div>
+                <div className="stats bg-transparent mt-1 stats-horizontal">
+                  <div className="stat px-3 py-1">
+                    <div className="stat-title text-xs">速度</div>
+                    <div className="stat-value text-lg w-8">{fmt(selectedChar.speed)}</div>
                   </div>
-                  <div className="stat">
-                    <div className="stat-title">力量</div>
-                    <div className="stat-value w-8">{fmt(selectedChar.power)}</div>
+                  <div className="stat px-3 py-1">
+                    <div className="stat-title text-xs">力量</div>
+                    <div className="stat-value text-lg w-8">{fmt(selectedChar.power)}</div>
                   </div>
-                  <div className="stat">
-                    <div className="stat-title">技巧</div>
-                    <div className="stat-value w-8">{fmt(selectedChar.skill)}</div>
+                  <div className="stat px-3 py-1">
+                    <div className="stat-title text-xs">技巧</div>
+                    <div className="stat-value text-lg w-8">{fmt(selectedChar.skill)}</div>
                   </div>
                 </div>
               </div>
 
               <div className="flex justify-center w-full">
-                <div className="w-64 flex flex-nowrap overflow-x-auto space-x-2 mb-4 p-4">
+                <div className="w-64 flex flex-nowrap overflow-x-auto space-x-2 mb-2 p-2">
                   {characters.map((char) => (
                     <motion.div
-                      whileTap={char.disable ? false : { scale: 0.9 }} 
+                      whileTap={char.disable ? false : { scale: 0.9 }}
                       key={char.name}
                       className={`avatar cursor-pointer flex-shrink-0 ${selectedChar.name === char.name ? `ring-gray-600/50 ring-offset-base-100 ring-offset-2 rounded-full` : ''}`}
                       onClick={() => handleSelectChar(char)}
                     >
-                      <div className="w-16 rounded-full">
+                      <div className="w-14 rounded-full">
                         <LazyImage src={char.src} alt={char.charName} eager/>
                       </div>
                     </motion.div>
