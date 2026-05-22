@@ -378,30 +378,34 @@ const Playing = () => {
 
         return (
             <div className="relative w-screen min-h-screen flex flex-col safe-area-bottom select-none overflow-hidden" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
-                <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(3px) saturate(80%)' }}></div> {/* */}
+                <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(3px) saturate(80%)' }}></div>
 
-                <div className="flex-1 flex flex-col items-center justify-center px-4 z-10">
-                    <motion.div className="card bg-base-100 shadow-xl w-full max-w-sm" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                        <div className="card-body items-center text-center p-6"> {/* */}
+                <div className="flex-1 flex flex-col items-center justify-center px-[5vw] z-10">
+                    {/* 1. 卡片寬度改為依據螢幕比例 w-[90vw]，並加上適當的最大寬度 max-w-lg */}
+                    <motion.div className="card bg-base-100 shadow-xl w-[90vw] max-w-lg" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+                        <div className="card-body items-center text-center p-[6vw] sm:p-8">
 
                             {/* 身分顯示區 */}
-                            <div className="mb-4">
-                                <h2 className="text-sm text-base-content/60 font-bold mb-1">你的身分</h2> {/* */}
+                            <div className="mb-[4vw] sm:mb-6">
+                                <h2 className="text-[clamp(0.8rem,3vw,1.2rem)] text-base-content/60 font-bold mb-1">你的身分</h2>
                                 {spyData.role ? (
-                                    <h1 className={`text-3xl font-extrabold ${isBadGuy ? 'text-error' : 'text-info'}`}>
+                                    // 使用 clamp 讓標題字體隨螢幕動態縮放
+                                    <h1 className={`font-extrabold text-[clamp(1.5rem,6vw,2.5rem)] ${isBadGuy ? 'text-error' : 'text-info'}`}>
                                         {isBadGuy ? '【我是壞人】' : '我是好人'}
                                     </h1>
                                 ) : (
-                                    <h1 className="text-xl font-bold text-base-content/50">分配中...</h1>
+                                    <h1 className="font-bold text-base-content/50 text-[clamp(1.2rem,5vw,2rem)]">分配中...</h1>
                                 )}
                             </div>
 
-                            {/* 🌟 4. 壞人秘密任務專屬提示訊息 UI */}
+                            {/* 壞人秘密任務專屬提示訊息 UI */}
                             {isBadGuy && (
-                                <div className="w-full bg-error/10 border border-error/20 rounded-xl p-3 mb-2 text-left text-xs space-y-1">
-                                    <p className="font-extrabold text-error flex items-center gap-1">壞人限制：</p>
-                                    <p className="text-base-content/80 font-medium">在 5 輪遊戲結束前，必須選擇過數字 <span className="font-bold text-error">1</span> 與 <span className="font-bold text-error">5</span> 各至少一次！</p>
-                                    <div className="flex gap-4 pt-1 font-bold">
+                                <div className="w-full bg-error/10 border border-error/20 rounded-xl p-[3vw] sm:p-4 mb-[2vw] text-left space-y-1">
+                                    <p className="font-extrabold text-error flex items-center gap-1 text-[clamp(0.8rem,3vw,1.1rem)]">壞人限制：</p>
+                                    <p className="text-base-content/80 font-medium text-[clamp(0.75rem,2.8vw,1rem)]">
+                                        在 5 輪遊戲結束前，必須選擇過數字 <span className="font-bold text-error">1</span> 與 <span className="font-bold text-error">5</span> 各至少一次！
+                                    </p>
+                                    <div className="flex gap-[4vw] sm:gap-6 pt-1 font-bold text-[clamp(0.75rem,2.8vw,1rem)]">
                                         <span className={hasSelectedOne ? "text-success" : "text-base-content/40"}>
                                             {hasSelectedOne ? "✅ 數字 1 (已達成)" : "❌ 數字 1 (未達成)"}
                                         </span>
@@ -412,34 +416,38 @@ const Playing = () => {
                                 </div>
                             )}
 
-                            <div className="divider my-0"></div> {/* */}
+                            <div className="divider my-0"></div>
 
                             {/* 狀態提示文字 */}
-                            <p className="text-lg font-bold my-4"> {/* */}
+                            <p className="font-bold my-[4vw] sm:my-6 text-[clamp(1rem,4vw,1.5rem)]">
                                 {hasSubmittedNumber && spyData.phase === 'selecting'
                                     ? '已選擇，等待其他人...'
                                     : hasSubmittedVote && spyData.phase === 'voting'
                                         ? '已投票，可查看遊戲螢幕開票結果'
-                                        : spyData.statusText} {/* */}
+                                        : spyData.statusText}
                             </p>
 
                             {/* 階段 1：選數字 (5顆按鈕) */}
                             {spyData.phase === 'selecting' && !hasSubmittedNumber && (
                                 <div className="w-full">
-                                    <p className="text-sm mb-3">目標區間: {spyData.minTarget} ~ {spyData.maxTarget}</p> {/* */}
-                                    <div className="grid grid-cols-3 gap-3"> {/* */}
+                                    <p className="mb-[3vw] sm:mb-4 text-[clamp(0.85rem,3.5vw,1.2rem)]">
+                                        目標區間: {spyData.minTarget} ~ {spyData.maxTarget}
+                                    </p>
+                                    {/* 2. 按鈕間距隨螢幕比例變化 gap-[3vw] */}
+                                    <div className="grid grid-cols-3 gap-[3vw] sm:gap-4">
                                         {[1, 2, 3, 4, 5].map(num => {
-                                            // 🌟 5. 計算此按鈕是否該被規則強制鎖定
                                             const isForcedDisabled = isButtonDisabledBySpyRule(num);
                                             return (
                                                 <motion.button
                                                     key={`num-${num}`}
                                                     whileTap={!isForcedDisabled ? { scale: 0.9 } : {}}
                                                     onClick={() => handleSubmitNumber(num)}
-                                                    className={`btn btn-lg ${isBadGuy ? 'btn-error' : 'btn-info'}`}
+                                                    // 3. 移除 btn-lg，加入 h-auto 與 aspect-square，讓按鈕永遠保持完美的正方形
+                                                    className={`btn h-auto aspect-square p-0 flex items-center justify-center ${isBadGuy ? 'btn-error' : 'btn-info'}`}
                                                     disabled={isForcedDisabled}
                                                 >
-                                                    <span className="text-2xl">{num}</span>
+                                                    {/* 字體使用 vw 單位，螢幕越大數字越大 */}
+                                                    <span className="text-[clamp(1.8rem,8vw,3.5rem)] leading-none">{num}</span>
                                                 </motion.button>
                                             );
                                         })}
@@ -449,24 +457,24 @@ const Playing = () => {
 
                             {/* 階段 2：最後投票 (4顆按鈕) */}
                             {spyData?.phase === 'voting' && !hasSubmittedVote && (
-                                <div className="w-full grid grid-cols-2 gap-3">
+                                <div className="w-full grid grid-cols-2 gap-[3vw] sm:gap-4">
                                     {[0, 1, 2, 3].map(pid => (
                                         <motion.button
                                             key={`vote-${pid}`}
                                             whileTap={{ scale: 0.9 }}
                                             onClick={() => handleSubmitVote(pid)}
-                                            className="btn btn-outline border-2 h-auto py-3"
-                                        // disabled={pid === spyData?.myPlayerId} // 不讓玩家投給自己
+                                            // 4. 使用 aspect-[4/3] 控制長寬比，確保不同裝置上比例不變
+                                            className="btn btn-outline border-2 h-auto aspect-[4/3] p-0 flex flex-col justify-center items-center"
                                         >
-                                            <div className="flex flex-col">
-                                                <span className="text-sm">投給</span>
-
-                                                {/*  利用陣列索引 pid 去撈取對應的暱稱 */}
-                                                <span className="text-xl font-bold">
+                                            <div className="flex flex-col items-center justify-center">
+                                                <span className="text-[clamp(0.75rem,2.5vw,1.1rem)]">投給</span>
+                                                {/* 名字根據螢幕大小動態縮放 */}
+                                                <span className="font-bold text-[clamp(1.1rem,4.5vw,1.8rem)] mt-1">
                                                     {spyData?.playerNames?.[pid] || `Player ${pid}`}
                                                 </span>
-
-                                                {pid === spyData.myPlayerId && <span className="text-xs mt-1 text-base-content/40">(你)</span>}
+                                                {pid === spyData.myPlayerId && (
+                                                    <span className="mt-1 text-base-content/40 text-[clamp(0.6rem,2vw,0.9rem)]">(你)</span>
+                                                )}
                                             </div>
                                         </motion.button>
                                     ))}
