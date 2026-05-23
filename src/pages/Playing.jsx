@@ -495,22 +495,22 @@ const Playing = () => {
                 <AnimatePresence>
                     {noteOpen ? (
                         <motion.div
-                            className="fixed bottom-6 right-4 z-50 w-64 bg-base-100 rounded-2xl shadow-2xl border border-base-300 overflow-hidden"
-                            initial={{ scale: 0, opacity: 0, originX: 1, originY: 1 }}
+                            className="fixed inset-3 z-50 bg-base-100 rounded-2xl shadow-2xl border border-base-300 overflow-hidden flex flex-col"
+                            initial={{ scale: 0, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0, opacity: 0 }}
                             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
                         >
-                            <div className="flex items-center justify-between px-3 py-2 bg-base-200">
-                                <span className="text-sm font-bold flex items-center gap-1">
-                                    <StickyNote className="w-4 h-4" /> 筆記
+                            <div className="flex items-center justify-between px-4 py-3 bg-base-200 shrink-0">
+                                <span className="text-base font-bold flex items-center gap-2">
+                                    <StickyNote className="w-5 h-5" /> 筆記
                                 </span>
-                                <button onClick={() => setNoteOpen(false)} className="btn btn-ghost btn-xs btn-circle">
-                                    <X className="w-3 h-3" />
+                                <button onClick={() => setNoteOpen(false)} className="btn btn-ghost btn-sm btn-circle">
+                                    <X className="w-4 h-4" />
                                 </button>
                             </div>
                             <textarea
-                                className="w-full h-32 p-3 text-sm bg-transparent resize-none focus:outline-none"
+                                className="w-full flex-1 p-4 text-base bg-transparent resize-none focus:outline-none"
                                 placeholder="記錄你的觀察..."
                                 value={noteText}
                                 onChange={(e) => setNoteText(e.target.value)}
@@ -518,14 +518,14 @@ const Playing = () => {
                         </motion.div>
                     ) : (
                         <motion.button
-                            className="fixed bottom-6 right-4 z-50 btn btn-circle btn-primary shadow-lg"
+                            className="fixed bottom-6 right-4 z-50 btn btn-circle btn-lg btn-primary shadow-lg"
                             onClick={() => setNoteOpen(true)}
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             exit={{ scale: 0 }}
                             whileTap={{ scale: 0.9 }}
                         >
-                            <StickyNote className="w-5 h-5" />
+                            <StickyNote className="w-6 h-6" />
                         </motion.button>
                     )}
                 </AnimatePresence>
