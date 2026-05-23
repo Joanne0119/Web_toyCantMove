@@ -4,7 +4,7 @@ import { motion, useSpring, useTransform, useMotionValue } from "framer-motion";
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import TapController from '@/components/controllers/TapController';
-import { Flame, Shield, Eye } from 'lucide-react';
+import { Flame, Shield, Eye, StickyNote, X } from 'lucide-react';
 
 
 const Playing = () => {
@@ -32,6 +32,8 @@ const Playing = () => {
         if (spyData?.phase === 'waiting') {
             setHasSubmittedNumber(false);
             setHasSubmittedVote(false);
+            setNoteText('');
+            setNoteOpen(false);
         }
 
     }, [spyData?.roundIndex, spyData?.phase]);
@@ -356,6 +358,8 @@ const Playing = () => {
     }
 
     const [roleRevealed, setRoleRevealed] = useState(false);
+    const [noteOpen, setNoteOpen] = useState(false);
+    const [noteText, setNoteText] = useState('');
 
     if (inputType === 'spy') {
         const isBadGuy = spyData?.role === 'BadGuy';
@@ -493,6 +497,45 @@ const Playing = () => {
                         </div>
                     </motion.div>
                 </div>
+
+                {/* 筆記浮動按鈕 */}
+                <AnimatePresence>
+                    {noteOpen ? (
+                        <motion.div
+                            className="fixed bottom-6 right-4 z-50 w-64 bg-base-100 rounded-2xl shadow-2xl border border-base-300 overflow-hidden"
+                            initial={{ scale: 0, opacity: 0, originX: 1, originY: 1 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0, opacity: 0 }}
+                            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                        >
+                            <div className="flex items-center justify-between px-3 py-2 bg-base-200">
+                                <span className="text-sm font-bold flex items-center gap-1">
+                                    <StickyNote className="w-4 h-4" /> 筆記
+                                </span>
+                                <button onClick={() => setNoteOpen(false)} className="btn btn-ghost btn-xs btn-circle">
+                                    <X className="w-3 h-3" />
+                                </button>
+                            </div>
+                            <textarea
+                                className="w-full h-32 p-3 text-sm bg-transparent resize-none focus:outline-none"
+                                placeholder="記錄你的觀察..."
+                                value={noteText}
+                                onChange={(e) => setNoteText(e.target.value)}
+                            />
+                        </motion.div>
+                    ) : (
+                        <motion.button
+                            className="fixed bottom-6 right-4 z-50 btn btn-circle btn-primary shadow-lg"
+                            onClick={() => setNoteOpen(true)}
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            exit={{ scale: 0 }}
+                            whileTap={{ scale: 0.9 }}
+                        >
+                            <StickyNote className="w-5 h-5" />
+                        </motion.button>
+                    )}
+                </AnimatePresence>
             </div>
         );
     }
