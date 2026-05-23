@@ -22,6 +22,9 @@ const Playing = () => {
     // 抓壞人專用的防呆狀態
     const [hasSubmittedNumber, setHasSubmittedNumber] = useState(false);
     const [hasSubmittedVote, setHasSubmittedVote] = useState(false);
+    const [roleRevealed, setRoleRevealed] = useState(false);
+    const [noteOpen, setNoteOpen] = useState(false);
+    const [noteText, setNoteText] = useState('');
 
 
     // 當回合或階段改變時，重置按鈕狀態
@@ -356,10 +359,6 @@ const Playing = () => {
     if (inputType === 'tap') {
         return <TapController />;
     }
-
-    const [roleRevealed, setRoleRevealed] = useState(false);
-    const [noteOpen, setNoteOpen] = useState(false);
-    const [noteText, setNoteText] = useState('');
 
     if (inputType === 'spy') {
         const isBadGuy = spyData?.role === 'BadGuy';
