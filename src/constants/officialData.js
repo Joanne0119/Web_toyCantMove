@@ -96,6 +96,14 @@ export const levels = [
     description: '在擺滿美食的餐桌上比拼手速！快速點擊螢幕來吃掉盤中的食物，看誰能在時間內吃完最多盤！',
     bgClass: 'bg-base-200',
   },
+  {
+    id: 3,
+    name: '數學作業',
+    engName: 'Math Homework',
+    image: '/images/spyLevel.png',
+    description: '隱藏在數學作業裡的諜報戰！每回合選擇數字，合力完成任務或暗中搗亂。觀察隊友的出牌，找出隱藏的內鬼！',
+    bgClass: 'bg-base-300',
+  },
 ];
 
 export const gameplaySteps = [

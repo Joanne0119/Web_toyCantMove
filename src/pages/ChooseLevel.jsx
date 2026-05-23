@@ -5,10 +5,10 @@ import { motion } from "framer-motion";
 import LazyImage from '@/components/LazyImage';
 
 const levels = [
-  { name: "瘋狂餐桌", sceneName: "4_TapEat", image: "/images/foodLevel.png", inputType: "tap", disable: false },
-  { name: "玩具紙箱", sceneName: "4_Toybox", image: "/images/toyboxLevel.png", inputType: "gyro", disable: false },
-  { name: "塗鴉畫紙", sceneName: "4_ColorPaper", image: "/images/tableLevel.png", inputType: "gyro", disable: false },
-  { name: "數學作業", sceneName: "4_SpyGame", image: "/images/spyLevel.png", inputType: "spy", disable: false },
+  { name: "瘋狂餐桌", sceneName: "4_TapEat", image: "/images/foodLevel.png", inputType: "tap", disable: false, desc: "快速點擊吃東西，滑動丟棄！" },
+  { name: "玩具紙箱", sceneName: "4_Toybox", image: "/images/toyboxLevel.png", inputType: "gyro", disable: false, desc: "傾斜手機控制移動，收集玩具！" },
+  { name: "塗鴉畫紙", sceneName: "4_ColorPaper", image: "/images/tableLevel.png", inputType: "gyro", disable: false, desc: "傾斜手機佔領畫紙，搶奪顏料！" },
+  { name: "數學作業", sceneName: "4_SpyGame", image: "/images/spyLevel.png", inputType: "spy", disable: false, desc: "選數字合力闖關，找出隱藏的內鬼！" },
 ];
 
 const CARD_WIDTH_PERCENT = 65; // 卡片佔容器寬度的百分比
@@ -210,6 +210,7 @@ const ChooseLevel = () => {
                     </figure>
                     <div className="p-2 text-center">
                       <h3 className="font-bold text-sm">{l.name}</h3>
+                      <p className="text-xs text-base-content/50 mt-0.5">{l.desc}</p>
                     </div>
                     {l.disable && (
                       <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-xl">
