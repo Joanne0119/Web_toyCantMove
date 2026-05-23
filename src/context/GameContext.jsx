@@ -2,7 +2,6 @@ import React, { createContext, useState, useContext, useMemo, useEffect, useRef 
 import { useWebRTC } from '../hooks/useWebRTC';
 import { useGyroscope } from '../hooks/useGyroscope';
 import { useScreenWakeLock } from '../hooks/useScreenWakeLock';
-import { color, m } from 'framer-motion';
 
 const GameContext = createContext();
 

@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useGame } from '../context/GameContext';
-import { motion, AnimatePresence, useSpring, useTransform, useMotionValue } from "framer-motion";
+import { motion, AnimatePresence, useSpring, useMotionValue } from "framer-motion";
 import { useNavigate } from 'react-router-dom';
-import { useLocation } from 'react-router-dom';
 import TapController from '@/components/controllers/TapController';
 import { Flame, Shield, Eye, StickyNote, X } from 'lucide-react';
 
@@ -64,9 +63,6 @@ const Playing = () => {
     const springConfig = { stiffness: 300, damping: 30 };
     const smoothX = useSpring(50, springConfig);
     const smoothY = useSpring(50, springConfig);
-
-    const transformedX = useTransform(smoothX, (v) => `calc(${v}% - 16px)`);
-    const transformedY = useTransform(smoothY, (v) => `calc(${v}% - 16px)`);
 
     const rotation = useSpring(0, { stiffness: 300, damping: 30 });
 
@@ -139,8 +135,6 @@ const Playing = () => {
 
     // 上次發送時間
     const lastSentTimeRef = useRef(0);
-    // 上次方向
-    const lastVectorRef = useRef({ x: 0, y: 0 });
 
     useEffect(() => {
         // 只有在 1. 陀螺儀可用 且 2. 手指 "沒有" 放在搖桿上時 才運作
