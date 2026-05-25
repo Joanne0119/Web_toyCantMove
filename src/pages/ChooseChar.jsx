@@ -42,7 +42,7 @@ const ChooseChar = () => {
 
       // 如果已連線（重新選角色），重新發送 identify
       if (connectionStatus) {
-        resendIdentify();
+        resendIdentify(selectedChar.name);
       }
 
       navigate('/waiting-room');

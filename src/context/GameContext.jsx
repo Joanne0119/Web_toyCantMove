@@ -423,9 +423,19 @@ export const GameProvider = ({ children }) => {
     unityDisconnected,
     spyData,
     totalPlayerCount,
-    resendIdentify: () => {
-      setLocalPlayer(prev => ({ ...prev, color: null }));
+    resendIdentify: (newAvatar) => {
       identifiedUnityRef.current = null;
+      setLocalPlayer(prev => ({ ...prev, color: null }));
+      // 直接發送 identify，不依賴 effect 觸發
+      if (unityPeerId && webRTC.dataChannelConnections.includes(unityPeerId)) {
+        const identifyMsg = {
+          type: "identify",
+          nickname: localPlayer.name || `Player ${peerId.substring(0, 4)}`,
+          characterName: newAvatar || localPlayer.avatar || "wind_up"
+        };
+        webRTC.sendData(JSON.stringify(identifyMsg), unityPeerId);
+        console.log("[GameContext] resendIdentify 已發送:", identifyMsg.characterName);
+      }
     },
     resetGameState: () => {
       const newPeerId = generatePeerId();
