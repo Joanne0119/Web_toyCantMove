@@ -180,32 +180,60 @@ const Award = () => {
     }
   }, [terminateImageLink, finalResults, loadImage]);
 
-  // 收到 terminateImageLink 時自動產生明信片預覽
+  // 收到 terminateImageLink 時自動產生明信片
+  // 高階手機：顯示 canvas 合成的明信片；低階手機：fallback 顯示原始截圖
   useEffect(() => {
     if (!terminateImageLink) return;
     setIsGenerating(true);
+
+    // 設定 8 秒超時，超過就放棄 canvas 合成
+    let cancelled = false;
+    const timeout = setTimeout(() => {
+      cancelled = true;
+      console.warn('Postcard generation timeout, using original screenshot');
+      setPostcardDataUrl(null);
+      setIsGenerating(false);
+      setShowPostcardModal(true);
+    }, 8000);
+
     generatePostcard()
       .then(dataUrl => {
+        if (cancelled) return;
+        clearTimeout(timeout);
         if (dataUrl) {
           setPostcardDataUrl(dataUrl);
-          setShowPostcardModal(true);
         }
+        setShowPostcardModal(true);
       })
-      .catch(err => console.warn('Postcard generation failed:', err))
-      .finally(() => setIsGenerating(false));
+      .catch(err => {
+        if (cancelled) return;
+        clearTimeout(timeout);
+        console.warn('Postcard generation failed, using original screenshot:', err);
+        setPostcardDataUrl(null);
+        setShowPostcardModal(true);
+      })
+      .finally(() => {
+        if (!cancelled) setIsGenerating(false);
+      });
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
   }, [terminateImageLink, generatePostcard]);
 
   // 下載明信片（支援手機儲存）
   const handleDownloadPostcard = useCallback(async () => {
-    if (!postcardDataUrl) return;
+    const imgSrc = postcardDataUrl || terminateImageLink;
+    if (!imgSrc) return;
     const today = new Date();
     const dateStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
     const fileName = `postcard-${dateStr}.jpg`;
 
-    // 將 data URL 轉為 Blob
-    const res = await fetch(postcardDataUrl);
+    // 將圖片轉為 Blob
+    const res = await fetch(imgSrc);
     const blob = await res.blob();
-    const file = new File([blob], fileName, { type: 'image/jpeg' });
+    const file = new File([blob], fileName, { type: blob.type || 'image/jpeg' });
 
     // 優先使用 Web Share API（手機可直接儲存到相簿）
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -224,7 +252,7 @@ const Award = () => {
     a.href = blobUrl;
     a.click();
     URL.revokeObjectURL(blobUrl);
-  }, [postcardDataUrl]);
+  }, [postcardDataUrl, terminateImageLink]);
 
   const results = useMemo(() => {
     if (!finalResults || finalResults.length === 0) {
@@ -333,7 +361,7 @@ const Award = () => {
                 <div className="card-actions justify-center mt-6">
                   <button
                     onClick={() => setShowPostcardModal(true)}
-                    disabled={isGenerating || !postcardDataUrl}
+                    disabled={isGenerating}
                     className="btn btn-primary"
                   >
                     {isGenerating ? (
@@ -353,7 +381,7 @@ const Award = () => {
       </div>
       {/* 明信片預覽彈窗 */}
       <AnimatePresence>
-        {showPostcardModal && postcardDataUrl && (
+        {showPostcardModal && (postcardDataUrl || terminateImageLink) && (
           <motion.div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
             initial={{ opacity: 0 }}
@@ -379,12 +407,13 @@ const Award = () => {
                 </button>
               </div>
 
-              {/* 明信片預覽圖 */}
+              {/* 明信片預覽圖（有合成就用合成，沒有就用原始截圖） */}
               <div className="px-4 pb-2">
                 <img
-                  src={postcardDataUrl}
+                  src={postcardDataUrl || terminateImageLink}
                   alt="明信片預覽"
                   className="w-full rounded-lg"
+                  crossOrigin="anonymous"
                 />
               </div>
 
