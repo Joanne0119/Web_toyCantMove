@@ -15,7 +15,7 @@ const characters = [
 const fmt = (v) => String(v).padStart(2, '\u00A0');
 
 const ChooseChar = () => {
-  const { localPlayer, setLocalPlayer, webRTC, gyroscope, connectionStatus, screenWakeLock } = useGame();
+  const { localPlayer, setLocalPlayer, webRTC, gyroscope, connectionStatus, screenWakeLock, resendIdentify } = useGame();
   const [selectedChar, setSelectedChar] = useState(characters[0]);
   const navigate = useNavigate();
 
@@ -34,11 +34,16 @@ const ChooseChar = () => {
       await screenWakeLock.request();
       console.log('Wake Lock enabled');
 
-      setLocalPlayer(prev => ({ 
+      setLocalPlayer(prev => ({
         ...prev,
         avatar: selectedChar.name,
-        characterData: selectedChar 
+        characterData: selectedChar
       }));
+
+      // 如果已連線（重新選角色），重新發送 identify
+      if (connectionStatus) {
+        resendIdentify();
+      }
 
       navigate('/waiting-room');
     } catch (err) {

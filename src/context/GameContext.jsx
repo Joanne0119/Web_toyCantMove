@@ -423,6 +423,10 @@ export const GameProvider = ({ children }) => {
     unityDisconnected,
     spyData,
     totalPlayerCount,
+    resendIdentify: () => {
+      setLocalPlayer(prev => ({ ...prev, color: null }));
+      identifiedUnityRef.current = null;
+    },
     resetGameState: () => {
       const newPeerId = generatePeerId();
       setPeerId(newPeerId);
