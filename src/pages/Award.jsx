@@ -81,97 +81,103 @@ const Award = () => {
   const generatePostcard = useCallback(async () => {
     if (!terminateImageLink) return null;
 
-    const FRAME_COUNT = 4;
-    const frameIndex = Math.floor(Math.random() * FRAME_COUNT) + 1;
+    try {
+      const FRAME_COUNT = 4;
+      const frameIndex = Math.floor(Math.random() * FRAME_COUNT) + 1;
 
-    const screenshotPromise = loadImage(terminateImageLink, true).catch(() => null);
-    const frameBottomPromise = loadImage(`/images/postcard_frame${frameIndex}.png`).catch(() => null);
-    const frameTopPromise = loadImage('/images/postcard_frame_top.png').catch(() => null);
-    const characterPromises = (finalResults || []).map(r =>
-      loadImage(`/images/${r.color}_${r.skin}.png`).catch(() => null)
-    );
+      const screenshotPromise = loadImage(terminateImageLink, true).catch(() => null);
+      const frameBottomPromise = loadImage(`/images/postcard_frame${frameIndex}.png`).catch(() => null);
+      const frameTopPromise = loadImage('/images/postcard_frame_top.png').catch(() => null);
+      const characterPromises = (finalResults || []).map(r =>
+        loadImage(`/images/${r.color}_${r.skin}.png`).catch(() => null)
+      );
 
-    const [screenshotImg, frameBottomImg, frameTopImg, ...charImgs] = await Promise.all([
-      screenshotPromise,
-      frameBottomPromise,
-      frameTopPromise,
-      ...characterPromises,
-    ]);
+      const [screenshotImg, frameBottomImg, frameTopImg, ...charImgs] = await Promise.all([
+        screenshotPromise,
+        frameBottomPromise,
+        frameTopPromise,
+        ...characterPromises,
+      ]);
 
-    // 截圖載入失敗就不產生明信片
-    if (!screenshotImg) return null;
+      // 截圖載入失敗就不產生明信片
+      if (!screenshotImg) return null;
 
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return null;
 
-    // 限制 canvas 大小，避免 Android 低階裝置記憶體不足 crash
-    const MAX_WIDTH = 1200;
-    const MAX_HEIGHT = 900;
-    if (frameBottomImg) {
-      const scale = Math.min(1, MAX_WIDTH / frameBottomImg.width, MAX_HEIGHT / frameBottomImg.height);
-      canvas.width = Math.round(frameBottomImg.width * scale);
-      canvas.height = Math.round(frameBottomImg.height * scale);
-    } else {
-      canvas.width = MAX_WIDTH;
-      canvas.height = MAX_HEIGHT;
-    }
+      // 限制 canvas 大小，避免低階裝置記憶體不足
+      const MAX_WIDTH = 1024;
+      const MAX_HEIGHT = 768;
+      if (frameBottomImg) {
+        const scale = Math.min(1, MAX_WIDTH / frameBottomImg.width, MAX_HEIGHT / frameBottomImg.height);
+        canvas.width = Math.round(frameBottomImg.width * scale);
+        canvas.height = Math.round(frameBottomImg.height * scale);
+      } else {
+        canvas.width = MAX_WIDTH;
+        canvas.height = MAX_HEIGHT;
+      }
 
-    const W = canvas.width;
-    const H = canvas.height;
+      const W = canvas.width;
+      const H = canvas.height;
 
-    // 底層外框
-    if (frameBottomImg) {
-      ctx.drawImage(frameBottomImg, 0, 0, W, H);
-    } else {
-      ctx.fillStyle = '#faf3e8';
-      ctx.fillRect(0, 0, W, H);
-    }
+      // 底層外框
+      if (frameBottomImg) {
+        ctx.drawImage(frameBottomImg, 0, 0, W, H);
+      } else {
+        ctx.fillStyle = '#faf3e8';
+        ctx.fillRect(0, 0, W, H);
+      }
 
-    // Unity 截圖（中央，旋轉）
-    ctx.save();
-    const shotW = W * 0.62;
-    const shotH = H * 0.55;
-    const shotX = W * 0.44;
-    const shotY = H * 0.54;
-    const shotAngle = -11 * (Math.PI / 180);
-    ctx.translate(shotX, shotY);
-    ctx.rotate(shotAngle);
-    ctx.drawImage(screenshotImg, -shotW / 2, -shotH / 2, shotW, shotH);
-    ctx.restore();
-
-    // 上層外框
-    if (frameTopImg) {
-      ctx.drawImage(frameTopImg, 0, 0, W, H);
-    }
-
-    // 角色圖片
-    const validChars = charImgs.filter(Boolean);
-    validChars.forEach((charImg, i) => {
-      if (i >= CHARACTER_POSITIONS.length) return;
-      const pos = CHARACTER_POSITIONS[i];
-      const charSize = W * pos.size;
-      const ratio = charImg.width / charImg.height;
-      const drawW = charSize * ratio;
-      const drawH = charSize;
-      const cx = W * pos.x + drawW / 2;
-      const cy = H * pos.y + drawH / 2;
+      // Unity 截圖（中央，旋轉）
       ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate((pos.angle || 0) * (Math.PI / 180));
-      ctx.drawImage(charImg, -drawW / 2, -drawH / 2, drawW, drawH);
+      const shotW = W * 0.62;
+      const shotH = H * 0.55;
+      const shotX = W * 0.44;
+      const shotY = H * 0.54;
+      const shotAngle = -11 * (Math.PI / 180);
+      ctx.translate(shotX, shotY);
+      ctx.rotate(shotAngle);
+      ctx.drawImage(screenshotImg, -shotW / 2, -shotH / 2, shotW, shotH);
       ctx.restore();
-    });
 
-    // 日期文字
-    const today = new Date();
-    const dateStr = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
-    const fontSize = Math.round(W * 0.022);
-    ctx.font = `${fontSize}px sans-serif`;
-    ctx.fillStyle = '#5a5a5a';
-    ctx.textAlign = 'right';
-    ctx.fillText(dateStr, W * 0.92, H * 0.95);
+      // 上層外框
+      if (frameTopImg) {
+        ctx.drawImage(frameTopImg, 0, 0, W, H);
+      }
 
-    return canvas.toDataURL('image/jpeg', 0.85);
+      // 角色圖片
+      const validChars = charImgs.filter(Boolean);
+      validChars.forEach((charImg, i) => {
+        if (i >= CHARACTER_POSITIONS.length) return;
+        const pos = CHARACTER_POSITIONS[i];
+        const charSize = W * pos.size;
+        const ratio = charImg.width / charImg.height;
+        const drawW = charSize * ratio;
+        const drawH = charSize;
+        const cx = W * pos.x + drawW / 2;
+        const cy = H * pos.y + drawH / 2;
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate((pos.angle || 0) * (Math.PI / 180));
+        ctx.drawImage(charImg, -drawW / 2, -drawH / 2, drawW, drawH);
+        ctx.restore();
+      });
+
+      // 日期文字
+      const today = new Date();
+      const dateStr = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
+      const fontSize = Math.round(W * 0.022);
+      ctx.font = `${fontSize}px sans-serif`;
+      ctx.fillStyle = '#5a5a5a';
+      ctx.textAlign = 'right';
+      ctx.fillText(dateStr, W * 0.92, H * 0.95);
+
+      return canvas.toDataURL('image/jpeg', 0.8);
+    } catch (err) {
+      console.warn('Postcard canvas error:', err);
+      return null;
+    }
   }, [terminateImageLink, finalResults, loadImage]);
 
   // 收到 terminateImageLink 時自動產生明信片預覽
@@ -185,7 +191,7 @@ const Award = () => {
           setShowPostcardModal(true);
         }
       })
-      .catch(err => console.error('Postcard generation failed:', err))
+      .catch(err => console.warn('Postcard generation failed:', err))
       .finally(() => setIsGenerating(false));
   }, [terminateImageLink, generatePostcard]);
 
