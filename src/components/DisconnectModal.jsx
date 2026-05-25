@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 
-const COUNTDOWN_SECONDS = 10;
+const COUNTDOWN_SECONDS = 30;
 const CIRCLE_SIZE = 80;
 const STROKE_WIDTH = 5;
 const RADIUS = (CIRCLE_SIZE - STROKE_WIDTH) / 2;

@@ -358,12 +358,22 @@ export const GameProvider = ({ children }) => {
 
     if (isConnectedToUnity) {
       wasConnectedRef.current = true;
+      // 重連成功 → 清除斷線狀態
+      if (unityDisconnected) {
+        console.log("✅ [GameContext] Unity 重新連線成功，清除斷線狀態");
+        setUnityDisconnected(false);
+      }
     }
 
-    // 曾經連上但現在斷了，且不是正常結束（Awards / ReturnToLobby 時會主動斷線）
+    // 曾經連上但現在斷了，且不是正常結束 → 延遲 15 秒再標記斷線，給重連時間
     if (wasConnectedRef.current && !isConnectedToUnity && unityPeerId && gameScene !== 'Awards' && gameScene !== 'ReturnToLobby') {
-      console.log("⚠️ [GameContext] Unity 連線中斷！");
-      setUnityDisconnected(true);
+      const disconnectTimer = setTimeout(() => {
+        if (!webRTC.dataChannelConnections.includes(unityPeerId)) {
+          console.log("⚠️ [GameContext] Unity 連線中斷超過 15 秒！");
+          setUnityDisconnected(true);
+        }
+      }, 15000);
+      return () => clearTimeout(disconnectTimer);
     }
   }, [webRTC.dataChannelConnections, unityPeerId, gameScene]);
 
