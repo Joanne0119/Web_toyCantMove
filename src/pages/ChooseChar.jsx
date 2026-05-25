@@ -33,22 +33,22 @@ const ChooseChar = () => {
     try {
       await screenWakeLock.request();
       console.log('Wake Lock enabled');
-
-      setLocalPlayer(prev => ({
-        ...prev,
-        avatar: selectedChar.name,
-        characterData: selectedChar
-      }));
-
-      // 如果已連線（重新選角色），重新發送 identify
-      if (connectionStatus) {
-        resendIdentify(selectedChar.name);
-      }
-
-      navigate('/waiting-room');
     } catch (err) {
-      console.error('Failed to enable Wake Lock or connect:', err);
+      console.warn('Wake Lock failed, continuing:', err.message);
     }
+
+    setLocalPlayer(prev => ({
+      ...prev,
+      avatar: selectedChar.name,
+      characterData: selectedChar
+    }));
+
+    // 如果已連線（重新選角色），重新發送 identify
+    if (connectionStatus) {
+      resendIdentify(selectedChar.name);
+    }
+
+    navigate('/waiting-room');
   }, [screenWakeLock.request, setLocalPlayer, selectedChar, navigate]);
 
   return (
