@@ -84,7 +84,7 @@ const Award = () => {
     const FRAME_COUNT = 4;
     const frameIndex = Math.floor(Math.random() * FRAME_COUNT) + 1;
 
-    const screenshotPromise = loadImage(terminateImageLink, true);
+    const screenshotPromise = loadImage(terminateImageLink, true).catch(() => null);
     const frameBottomPromise = loadImage(`/images/postcard_frame${frameIndex}.png`).catch(() => null);
     const frameTopPromise = loadImage('/images/postcard_frame_top.png').catch(() => null);
     const characterPromises = (finalResults || []).map(r =>
@@ -98,15 +98,22 @@ const Award = () => {
       ...characterPromises,
     ]);
 
+    // 截圖載入失敗就不產生明信片
+    if (!screenshotImg) return null;
+
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
 
+    // 限制 canvas 大小，避免 Android 低階裝置記憶體不足 crash
+    const MAX_WIDTH = 1200;
+    const MAX_HEIGHT = 900;
     if (frameBottomImg) {
-      canvas.width = frameBottomImg.width;
-      canvas.height = frameBottomImg.height;
+      const scale = Math.min(1, MAX_WIDTH / frameBottomImg.width, MAX_HEIGHT / frameBottomImg.height);
+      canvas.width = Math.round(frameBottomImg.width * scale);
+      canvas.height = Math.round(frameBottomImg.height * scale);
     } else {
-      canvas.width = 1200;
-      canvas.height = 900;
+      canvas.width = MAX_WIDTH;
+      canvas.height = MAX_HEIGHT;
     }
 
     const W = canvas.width;
@@ -164,7 +171,7 @@ const Award = () => {
     ctx.textAlign = 'right';
     ctx.fillText(dateStr, W * 0.92, H * 0.95);
 
-    return canvas.toDataURL('image/png');
+    return canvas.toDataURL('image/jpeg', 0.85);
   }, [terminateImageLink, finalResults, loadImage]);
 
   // 收到 terminateImageLink 時自動產生明信片預覽
@@ -187,12 +194,12 @@ const Award = () => {
     if (!postcardDataUrl) return;
     const today = new Date();
     const dateStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
-    const fileName = `postcard-${dateStr}.png`;
+    const fileName = `postcard-${dateStr}.jpg`;
 
     // 將 data URL 轉為 Blob
     const res = await fetch(postcardDataUrl);
     const blob = await res.blob();
-    const file = new File([blob], fileName, { type: 'image/png' });
+    const file = new File([blob], fileName, { type: 'image/jpeg' });
 
     // 優先使用 Web Share API（手機可直接儲存到相簿）
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
