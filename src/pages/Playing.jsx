@@ -24,6 +24,7 @@ const Playing = () => {
     const [roleRevealed, setRoleRevealed] = useState(false);
     const [noteOpen, setNoteOpen] = useState(false);
     const [noteText, setNoteText] = useState('');
+    const [selectedNumber, setSelectedNumber] = useState(null);
 
 
     // 當回合或階段改變時，重置按鈕狀態
@@ -31,11 +32,13 @@ const Playing = () => {
         if (spyData?.phase === 'selecting') setHasSubmittedNumber(false);
         if (spyData?.phase === 'voting') setHasSubmittedVote(false);
 
-        if (spyData?.phase === 'waiting') {
+        if (spyData?.phase === 'waiting' || spyData?.phase === 'assigning') {
             setHasSubmittedNumber(false);
             setHasSubmittedVote(false);
+            setSelectedNumber(null);
             setNoteText('');
             setNoteOpen(false);
+            setRoleRevealed(false);
         }
 
     }, [spyData?.roundIndex, spyData?.phase]);
@@ -90,6 +93,7 @@ const Playing = () => {
             navigate('/waiting-room');
         }
     }, [gameScene, navigate]);
+
 
     useEffect(() => {
         const updateRotation = () => {
@@ -362,70 +366,78 @@ const Playing = () => {
                 <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(3px) saturate(80%)' }}></div>
 
                 <div className="flex-1 flex flex-col items-center justify-center px-[5vw] z-10">
-                    {/* 1. 卡片寬度改為依據螢幕比例 w-[90vw]，並加上適當的最大寬度 max-w-lg */}
                     <motion.div className="card bg-base-100 shadow-xl w-[90vw] max-w-lg" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
                         <div className="card-body items-center text-center p-[6vw] sm:p-8">
 
-                            {/* 身分翻牌區 */}
+                            {/* 1. 身分翻牌區 (整合載入中與可翻牌狀態) */}
                             <div
-                              className="mb-[4vw] sm:mb-6 w-full cursor-pointer"
-                              style={{ perspective: '600px' }}
-                              onPointerDown={() => spyData.role && setRoleRevealed(true)}
-                              onPointerUp={() => setRoleRevealed(false)}
-                              onPointerLeave={() => setRoleRevealed(false)}
+                                className="mb-[4vw] sm:mb-6 w-full cursor-pointer"
+                                style={{ perspective: '600px' }}
+                                onPointerDown={() => spyData?.role && setRoleRevealed(true)}
+                                onPointerUp={() => setRoleRevealed(false)}
+                                onPointerLeave={() => setRoleRevealed(false)}
                             >
-                              <motion.div
-                                className="relative w-full"
-                                style={{ transformStyle: 'preserve-3d' }}
-                                animate={{ rotateY: roleRevealed ? 180 : 0 }}
-                                transition={{ duration: 0.3 }}
-                              >
-                                {/* 牌背（預設顯示） */}
-                                <div
-                                  className="w-full rounded-xl py-[5vw] sm:py-8 bg-base-200 border-2 border-base-300 flex flex-col items-center justify-center"
-                                  style={{ backfaceVisibility: 'hidden' }}
+                                <motion.div
+                                    className="relative w-full"
+                                    style={{ transformStyle: 'preserve-3d' }}
+                                    animate={{ rotateY: roleRevealed ? 180 : 0 }}
+                                    transition={{ duration: 0.3 }}
                                 >
-                                  <div className="relative w-[15vw] h-[15vw] max-w-[72px] max-h-[72px] mb-2">
-                                    <img
-                                      src={localPlayer.color ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}.png` : `/images/gray_${localPlayer.avatar || 'wind-up'}.png`}
-                                      alt="avatar"
-                                      className="w-full h-full object-contain"
-                                    />
-                                  </div>
-                                  <div className="flex items-center gap-1 text-base-content/40">
-                                    <Eye className="w-[clamp(0.8rem,3vw,1rem)] h-[clamp(0.8rem,3vw,1rem)]" />
-                                    <p className="text-[clamp(0.7rem,2.5vw,0.9rem)]">按住查看身分</p>
-                                  </div>
-                                </div>
-                                {/* 牌面（翻轉後顯示） */}
-                                <div
-                                  className="absolute inset-0 w-full rounded-xl py-[5vw] sm:py-8 flex flex-col items-center justify-center bg-base-200 border-2 border-base-300"
-                                  style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
-                                >
-                                  <div className="relative w-[18vw] h-[18vw] max-w-[80px] max-h-[80px] mb-2">
-                                    <img
-                                      src={localPlayer.color ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}.png` : `/images/gray_${localPlayer.avatar || 'wind-up'}.png`}
-                                      alt="avatar"
-                                      className="w-full h-full object-contain"
-                                    />
-                                    {isBadGuy ? (
-                                      <div className="absolute -top-2 -right-2 bg-error rounded-full p-1 shadow-md">
-                                        <Flame className="w-[clamp(0.8rem,3vw,1.2rem)] h-[clamp(0.8rem,3vw,1.2rem)] text-white" />
-                                      </div>
-                                    ) : (
-                                      <div className="absolute -top-2 -right-2 bg-info rounded-full p-1 shadow-md">
-                                        <Shield className="w-[clamp(0.8rem,3vw,1.2rem)] h-[clamp(0.8rem,3vw,1.2rem)] text-white" />
-                                      </div>
-                                    )}
-                                  </div>
-                                  <h1 className={`font-extrabold text-[clamp(1.3rem,5vw,2rem)] ${isBadGuy ? 'text-error' : 'text-info'}`}>
-                                    {isBadGuy ? '壞人' : '好人'}
-                                  </h1>
-                                  <p className="text-[clamp(0.7rem,2.5vw,0.9rem)] text-base-content/50 mt-1">
-                                    {localPlayer.name || ''}
-                                  </p>
-                                </div>
-                              </motion.div>
+                                    {/* 牌背（預設顯示） */}
+                                    <div
+                                        className={`w-full rounded-xl py-[5vw] sm:py-8 bg-base-200 border-2 border-base-300 flex flex-col items-center justify-center transition-opacity duration-300 ${!spyData?.role ? 'opacity-80' : 'opacity-100'}`}
+                                        style={{ backfaceVisibility: 'hidden' }}
+                                    >
+                                        <div className="relative w-[15vw] h-[15vw] max-w-[72px] max-h-[72px] mb-2">
+                                            <img
+                                                src={localPlayer.color ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}.png` : `/images/gray_${localPlayer.avatar || 'wind-up'}.png`}
+                                                alt="avatar"
+                                                className="w-full h-full object-contain"
+                                            />
+                                        </div>
+                                        {/* 根據是否有身分，動態切換提示文字 */}
+                                        {spyData?.role ? (
+                                            <div className="flex items-center gap-1 text-base-content/40">
+                                                <Eye className="w-[clamp(0.8rem,3vw,1rem)] h-[clamp(0.8rem,3vw,1rem)]" />
+                                                <p className="text-[clamp(0.7rem,2.5vw,0.9rem)]">按住查看身分</p>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-2 text-primary/70">
+                                                <span className="loading loading-spinner loading-xs"></span>
+                                                <p className="text-[clamp(0.7rem,2.5vw,0.9rem)] font-bold">身分分配中...</p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* 牌面（翻轉後顯示） */}
+                                    <div
+                                        className="absolute inset-0 w-full rounded-xl py-[5vw] sm:py-8 flex flex-col items-center justify-center bg-base-200 border-2 border-base-300"
+                                        style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+                                    >
+                                        <div className="relative w-[18vw] h-[18vw] max-w-[80px] max-h-[80px] mb-2">
+                                            <img
+                                                src={localPlayer.color ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}.png` : `/images/gray_${localPlayer.avatar || 'wind-up'}.png`}
+                                                alt="avatar"
+                                                className="w-full h-full object-contain"
+                                            />
+                                            {isBadGuy ? (
+                                                <div className="absolute -top-2 -right-2 bg-error rounded-full p-1 shadow-md">
+                                                    <Flame className="w-[clamp(0.8rem,3vw,1.2rem)] h-[clamp(0.8rem,3vw,1.2rem)] text-white" />
+                                                </div>
+                                            ) : (
+                                                <div className="absolute -top-2 -right-2 bg-info rounded-full p-1 shadow-md">
+                                                    <Shield className="w-[clamp(0.8rem,3vw,1.2rem)] h-[clamp(0.8rem,3vw,1.2rem)] text-white" />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <h1 className={`font-extrabold text-[clamp(1.3rem,5vw,2rem)] ${isBadGuy ? 'text-error' : 'text-info'}`}>
+                                            {isBadGuy ? '壞人' : '好人'}
+                                        </h1>
+                                        <p className="text-[clamp(0.7rem,2.5vw,0.9rem)] text-base-content/50 mt-1">
+                                            {localPlayer.name || ''}
+                                        </p>
+                                    </div>
+                                </motion.div>
                             </div>
 
                             <div className="divider my-0"></div>
@@ -433,49 +445,65 @@ const Playing = () => {
                             {/* 狀態提示文字 */}
                             <p className="font-bold my-[4vw] sm:my-6 text-[clamp(1rem,4vw,1.5rem)]">
                                 {hasSubmittedNumber && spyData.phase === 'selecting'
-                                    ? '已選擇，等待其他人...'
+                                    ? '已送出，等待其他人...'
                                     : hasSubmittedVote && spyData.phase === 'voting'
-                                        ? '已投票，可查看遊戲螢幕開票結果'
+                                        ? '已投票，可查看螢幕開票'
                                         : spyData.statusText}
                             </p>
 
-                            {/* 階段 1：選數字 (5顆按鈕) */}
+                            {/* 2. 階段 1：選數字 */}
                             {spyData.phase === 'selecting' && !hasSubmittedNumber && (
                                 <div className="w-full">
-                                    <p className="mb-[3vw] sm:mb-4 text-[clamp(0.85rem,3.5vw,1.2rem)]">
+                                    <p className="mb-[3vw] sm:mb-4 text-[clamp(0.85rem,3.5vw,1.2rem)] text-base-content/70">
                                         目標區間: {spyData.minTarget} ~ {spyData.maxTarget}
                                     </p>
-                                    {/* 2. 按鈕間距隨螢幕比例變化 gap-[3vw] */}
-                                    <div className="grid grid-cols-3 gap-[3vw] sm:gap-4">
-                                        {[1, 2, 3, 4, 5].map(num => (
+                                    <div className="grid grid-cols-3 gap-[3vw] sm:gap-4 max-w-[260px] mx-auto">
+                                        {[1, 2, 3, 4, 'submit', 5].map((item, idx) => {
+                                            if (item === 'submit') {
+                                                return (
+                                                    <motion.button
+                                                        key="submit-btn"
+                                                        whileTap={{ scale: selectedNumber ? 0.9 : 1 }}
+                                                        onClick={() => selectedNumber && handleSubmitNumber(selectedNumber)}
+                                                        disabled={!selectedNumber}
+                                                        className={`btn h-auto aspect-square p-0 flex items-center justify-center shadow-sm 
+                                                        ${selectedNumber ? 'btn-success text-white font-bold' : 'btn-disabled bg-base-300'}`}
+                                                    >
+                                                        <span className="text-[clamp(1rem,4.5vw,1.3rem)]">送出</span>
+                                                    </motion.button>
+                                                );
+                                            }
+
+                                            const isSelected = selectedNumber === item;
+                                            return (
                                                 <motion.button
-                                                    key={`num-${num}`}
+                                                    key={`num-${item}`}
                                                     whileTap={{ scale: 0.9 }}
-                                                    onClick={() => handleSubmitNumber(num)}
-                                                    className="btn h-auto aspect-square p-0 flex items-center justify-center btn-primary"
+                                                    onClick={() => setSelectedNumber(item)}
+                                                    className={`btn h-auto aspect-square p-0 flex items-center justify-center transition-all 
+                                                    ${isSelected ? 'btn-primary scale-105 shadow-lg ring-4 ring-primary/30' : 'btn-outline border-2 border-base-300'}`}
                                                 >
-                                                    <span className="text-[clamp(1.8rem,8vw,3.5rem)] leading-none">{num}</span>
+                                                    <span className="text-[clamp(1.5rem,6vw,2.5rem)] leading-none">{item}</span>
                                                 </motion.button>
-                                            ))}
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             )}
 
-                            {/* 階段 2：最後投票 (4顆按鈕) */}
+                            {/* 階段 2：最後投票 */}
                             {spyData?.phase === 'voting' && !hasSubmittedVote && (
-                                <div className="w-full grid grid-cols-2 gap-[3vw] sm:gap-4">
+                                <div className="w-full grid grid-cols-2 gap-[3vw] sm:gap-4 max-w-[300px] mx-auto">
                                     {[0, 1, 2, 3].map(pid => (
                                         <motion.button
                                             key={`vote-${pid}`}
                                             whileTap={{ scale: 0.9 }}
                                             onClick={() => handleSubmitVote(pid)}
-                                            // 4. 使用 aspect-[4/3] 控制長寬比，確保不同裝置上比例不變
                                             className="btn btn-outline border-2 h-auto aspect-[4/3] p-0 flex flex-col justify-center items-center"
                                         >
                                             <div className="flex flex-col items-center justify-center">
-                                                <span className="text-[clamp(0.75rem,2.5vw,1.1rem)]">投給</span>
-                                                {/* 名字根據螢幕大小動態縮放 */}
-                                                <span className="font-bold text-[clamp(1.1rem,4.5vw,1.8rem)] mt-1">
+                                                <span className="text-[clamp(0.7rem,2vw,1rem)]">投給</span>
+                                                <span className="font-bold text-[clamp(1rem,4vw,1.5rem)] mt-1">
                                                     {spyData?.playerNames?.[pid] || `Player ${pid}`}
                                                 </span>
                                                 {pid === spyData.myPlayerId && (
