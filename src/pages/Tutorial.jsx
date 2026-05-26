@@ -38,6 +38,7 @@ const Tutorial = () => {
   const [isSlideMode, setIsSlideMode] = useState(false);
   const [slideDisabled, setSlideDisabled] = useState(false);
   const [slideData, setSlideData] = useState({ index: 0, title: '', desc: '' });
+  const slideStateRef = useRef({ index: -1, disabled: false });
 
   const [gyroSupported, setGyroSupported] = useState(null);
   const [isSensorSetupInProgress, setIsSensorSetupInProgress] = useState(false);
@@ -209,11 +210,22 @@ const Tutorial = () => {
         const msg = JSON.parse(lastMessage.message);
         if (msg.type === 'tutorial_instruction') {
           const stepName = msg.step;
+
           if (stepName === 'slide') {
+
             setIsSlideMode(true);
-            setSlideDisabled(false);
-            setSlideData({ index: msg.slideIndex, title: tutorialInfo[inputType]?.title || '遊戲教學', desc: msg.message });
             setCurrentStep('slide');
+
+            if (slideStateRef.current.index !== msg.slideIndex) {
+              // 新的幻燈片：解除按鈕鎖定
+              slideStateRef.current = { index: msg.slideIndex, disabled: false };
+              setSlideDisabled(false);
+              setSlideData({ index: msg.slideIndex, title: tutorialInfo[inputType]?.title || '遊戲教學', desc: msg.message });
+            } else if (slideStateRef.current.disabled) {
+              // 同一頁，且玩家已點過：Unity 再次廣播代表它漏接了玩家的訊號，自動在背景補發！
+              const retryMsg = { type: "tutorial_slide_next" };
+              sendWebRTCData(JSON.stringify(retryMsg), unityPeerId || null);
+            }
           } else {
             setIsSlideMode(false);
             setCurrentStep(stepName);
@@ -359,6 +371,7 @@ const Tutorial = () => {
                 e.stopPropagation();
                 if (slideDisabled) return;
                 setSlideDisabled(true);
+                slideStateRef.current.disabled = true;
                 const msg = { type: "tutorial_slide_next" };
                 sendWebRTCData(JSON.stringify(msg), unityPeerId || null);
               }}
