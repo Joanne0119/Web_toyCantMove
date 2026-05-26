@@ -49,7 +49,7 @@ const ChooseChar = () => {
     }
 
     navigate('/waiting-room');
-  }, [screenWakeLock.request, setLocalPlayer, selectedChar, navigate]);
+  }, [screenWakeLock.request, setLocalPlayer, selectedChar, navigate, connectionStatus, resendIdentify]);
 
   return (
     <div className="hero min-h-screen bg-base-200 safe-area-bottom overflow-x-hidden select-none" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}>
