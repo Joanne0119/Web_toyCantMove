@@ -340,7 +340,7 @@ export const GameProvider = ({ children }) => {
             roundIndex: 0,
             minTarget: 0,
             maxTarget: 0,
-            phase: 'waiting',
+            phase: 'assigning',
             statusText: '正在分配玩家身分...',
             playerNames: []
           });
