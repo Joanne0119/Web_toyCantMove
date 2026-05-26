@@ -24,6 +24,7 @@ const Playing = () => {
     const [roleRevealed, setRoleRevealed] = useState(false);
     const [noteOpen, setNoteOpen] = useState(false);
     const [noteText, setNoteText] = useState('');
+    const [selectedNumber, setSelectedNumber] = useState(null);
 
 
     // 當回合或階段改變時，重置按鈕狀態
@@ -356,112 +357,141 @@ const Playing = () => {
 
     if (inputType === 'spy') {
         const isBadGuy = spyData?.role === 'BadGuy';
+        // 假設你在分配身分時的 phase 叫做 'assigning'，可依據你的實際狀態字串調整
+        const isAssigning = spyData?.phase === 'assigning';
 
         return (
             <div className="relative w-screen min-h-screen flex flex-col safe-area-bottom select-none overflow-hidden" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center' }}>
                 <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(3px) saturate(80%)' }}></div>
 
                 <div className="flex-1 flex flex-col items-center justify-center px-[5vw] z-10">
-                    {/* 1. 卡片寬度改為依據螢幕比例 w-[90vw]，並加上適當的最大寬度 max-w-lg */}
                     <motion.div className="card bg-base-100 shadow-xl w-[90vw] max-w-lg" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
                         <div className="card-body items-center text-center p-[6vw] sm:p-8">
 
-                            {/* 身分翻牌區 */}
-                            <div
-                              className="mb-[4vw] sm:mb-6 w-full cursor-pointer"
-                              style={{ perspective: '600px' }}
-                              onPointerDown={() => spyData.role && setRoleRevealed(true)}
-                              onPointerUp={() => setRoleRevealed(false)}
-                              onPointerLeave={() => setRoleRevealed(false)}
-                            >
-                              <motion.div
-                                className="relative w-full"
-                                style={{ transformStyle: 'preserve-3d' }}
-                                animate={{ rotateY: roleRevealed ? 180 : 0 }}
-                                transition={{ duration: 0.3 }}
-                              >
-                                {/* 牌背（預設顯示） */}
-                                <div
-                                  className="w-full rounded-xl py-[5vw] sm:py-8 bg-base-200 border-2 border-base-300 flex flex-col items-center justify-center"
-                                  style={{ backfaceVisibility: 'hidden' }}
-                                >
-                                  <div className="relative w-[15vw] h-[15vw] max-w-[72px] max-h-[72px] mb-2">
-                                    <img
-                                      src={localPlayer.color ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}.png` : `/images/gray_${localPlayer.avatar || 'wind-up'}.png`}
-                                      alt="avatar"
-                                      className="w-full h-full object-contain"
-                                    />
-                                  </div>
-                                  <div className="flex items-center gap-1 text-base-content/40">
-                                    <Eye className="w-[clamp(0.8rem,3vw,1rem)] h-[clamp(0.8rem,3vw,1rem)]" />
-                                    <p className="text-[clamp(0.7rem,2.5vw,0.9rem)]">按住查看身分</p>
-                                  </div>
+                            {/* 1. 身分翻牌區 (修改為分配中不可翻牌) */}
+                            {isAssigning ? (
+                                <div className="mb-[4vw] sm:mb-6 w-full">
+                                    <div className="w-full rounded-xl py-[5vw] sm:py-8 bg-base-200 border-2 border-base-300 flex flex-col items-center justify-center opacity-80">
+                                        <span className="loading loading-spinner loading-lg text-primary mb-2"></span>
+                                        <p className="text-[clamp(0.9rem,3vw,1.1rem)] text-base-content/60 font-bold">身分分配中...</p>
+                                    </div>
                                 </div>
-                                {/* 牌面（翻轉後顯示） */}
+                            ) : (
                                 <div
-                                  className="absolute inset-0 w-full rounded-xl py-[5vw] sm:py-8 flex flex-col items-center justify-center bg-base-200 border-2 border-base-300"
-                                  style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+                                    className="mb-[4vw] sm:mb-6 w-full cursor-pointer"
+                                    style={{ perspective: '600px' }}
+                                    onPointerDown={() => spyData.role && setRoleRevealed(true)}
+                                    onPointerUp={() => setRoleRevealed(false)}
+                                    onPointerLeave={() => setRoleRevealed(false)}
                                 >
-                                  <div className="relative w-[18vw] h-[18vw] max-w-[80px] max-h-[80px] mb-2">
-                                    <img
-                                      src={localPlayer.color ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}.png` : `/images/gray_${localPlayer.avatar || 'wind-up'}.png`}
-                                      alt="avatar"
-                                      className="w-full h-full object-contain"
-                                    />
-                                    {isBadGuy ? (
-                                      <div className="absolute -top-2 -right-2 bg-error rounded-full p-1 shadow-md">
-                                        <Flame className="w-[clamp(0.8rem,3vw,1.2rem)] h-[clamp(0.8rem,3vw,1.2rem)] text-white" />
-                                      </div>
-                                    ) : (
-                                      <div className="absolute -top-2 -right-2 bg-info rounded-full p-1 shadow-md">
-                                        <Shield className="w-[clamp(0.8rem,3vw,1.2rem)] h-[clamp(0.8rem,3vw,1.2rem)] text-white" />
-                                      </div>
-                                    )}
-                                  </div>
-                                  <h1 className={`font-extrabold text-[clamp(1.3rem,5vw,2rem)] ${isBadGuy ? 'text-error' : 'text-info'}`}>
-                                    {isBadGuy ? '壞人' : '好人'}
-                                  </h1>
-                                  <p className="text-[clamp(0.7rem,2.5vw,0.9rem)] text-base-content/50 mt-1">
-                                    {localPlayer.name || ''}
-                                  </p>
+                                    <motion.div
+                                        className="relative w-full"
+                                        style={{ transformStyle: 'preserve-3d' }}
+                                        animate={{ rotateY: roleRevealed ? 180 : 0 }}
+                                        transition={{ duration: 0.3 }}
+                                    >
+                                        {/* 牌背（預設顯示） */}
+                                        <div
+                                            className="w-full rounded-xl py-[5vw] sm:py-8 bg-base-200 border-2 border-base-300 flex flex-col items-center justify-center"
+                                            style={{ backfaceVisibility: 'hidden' }}
+                                        >
+                                            <div className="relative w-[15vw] h-[15vw] max-w-[72px] max-h-[72px] mb-2">
+                                                <img
+                                                    src={localPlayer.color ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}.png` : `/images/gray_${localPlayer.avatar || 'wind-up'}.png`}
+                                                    alt="avatar"
+                                                    className="w-full h-full object-contain"
+                                                />
+                                            </div>
+                                            <div className="flex items-center gap-1 text-base-content/40">
+                                                <Eye className="w-[clamp(0.8rem,3vw,1rem)] h-[clamp(0.8rem,3vw,1rem)]" />
+                                                <p className="text-[clamp(0.7rem,2.5vw,0.9rem)]">按住查看身分</p>
+                                            </div>
+                                        </div>
+                                        {/* 牌面（翻轉後顯示） */}
+                                        <div
+                                            className="absolute inset-0 w-full rounded-xl py-[5vw] sm:py-8 flex flex-col items-center justify-center bg-base-200 border-2 border-base-300"
+                                            style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+                                        >
+                                            <div className="relative w-[18vw] h-[18vw] max-w-[80px] max-h-[80px] mb-2">
+                                                <img
+                                                    src={localPlayer.color ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}.png` : `/images/gray_${localPlayer.avatar || 'wind-up'}.png`}
+                                                    alt="avatar"
+                                                    className="w-full h-full object-contain"
+                                                />
+                                                {isBadGuy ? (
+                                                    <div className="absolute -top-2 -right-2 bg-error rounded-full p-1 shadow-md">
+                                                        <Flame className="w-[clamp(0.8rem,3vw,1.2rem)] h-[clamp(0.8rem,3vw,1.2rem)] text-white" />
+                                                    </div>
+                                                ) : (
+                                                    <div className="absolute -top-2 -right-2 bg-info rounded-full p-1 shadow-md">
+                                                        <Shield className="w-[clamp(0.8rem,3vw,1.2rem)] h-[clamp(0.8rem,3vw,1.2rem)] text-white" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <h1 className={`font-extrabold text-[clamp(1.3rem,5vw,2rem)] ${isBadGuy ? 'text-error' : 'text-info'}`}>
+                                                {isBadGuy ? '壞人' : '好人'}
+                                            </h1>
+                                            <p className="text-[clamp(0.7rem,2.5vw,0.9rem)] text-base-content/50 mt-1">
+                                                {localPlayer.name || ''}
+                                            </p>
+                                        </div>
+                                    </motion.div>
                                 </div>
-                              </motion.div>
-                            </div>
+                            )}
 
                             <div className="divider my-0"></div>
 
                             {/* 狀態提示文字 */}
                             <p className="font-bold my-[4vw] sm:my-6 text-[clamp(1rem,4vw,1.5rem)]">
                                 {hasSubmittedNumber && spyData.phase === 'selecting'
-                                    ? '已選擇，等待其他人...'
+                                    ? '已送出，等待其他人...'
                                     : hasSubmittedVote && spyData.phase === 'voting'
                                         ? '已投票，可查看遊戲螢幕開票結果'
                                         : spyData.statusText}
                             </p>
 
-                            {/* 階段 1：選數字 (5顆按鈕) */}
+                            {/* 2. 階段 1：選數字 (先選取再送出) */}
                             {spyData.phase === 'selecting' && !hasSubmittedNumber && (
                                 <div className="w-full">
-                                    <p className="mb-[3vw] sm:mb-4 text-[clamp(0.85rem,3.5vw,1.2rem)]">
+                                    <p className="mb-[3vw] sm:mb-4 text-[clamp(0.85rem,3.5vw,1.2rem)] text-base-content/70">
                                         目標區間: {spyData.minTarget} ~ {spyData.maxTarget}
                                     </p>
-                                    {/* 2. 按鈕間距隨螢幕比例變化 gap-[3vw] */}
                                     <div className="grid grid-cols-3 gap-[3vw] sm:gap-4">
-                                        {[1, 2, 3, 4, 5].map(num => (
+                                        {/* 巧妙利用陣列順序，將送出按鈕安插在 4 和 5 之間 */}
+                                        {[1, 2, 3, 4, 'submit', 5].map((item, idx) => {
+                                            if (item === 'submit') {
+                                                return (
+                                                    <motion.button
+                                                        key="submit-btn"
+                                                        whileTap={{ scale: selectedNumber ? 0.9 : 1 }}
+                                                        onClick={() => selectedNumber && handleSubmitNumber(selectedNumber)}
+                                                        disabled={!selectedNumber}
+                                                        className={`btn h-auto aspect-square p-0 flex items-center justify-center shadow-sm 
+                                                        ${selectedNumber ? 'btn-success text-white font-bold' : 'btn-disabled bg-base-300'}`}
+                                                    >
+                                                        <span className="text-[clamp(1.2rem,5vw,1.8rem)]">送出</span>
+                                                    </motion.button>
+                                                );
+                                            }
+
+                                            const isSelected = selectedNumber === item;
+                                            return (
                                                 <motion.button
-                                                    key={`num-${num}`}
+                                                    key={`num-${item}`}
                                                     whileTap={{ scale: 0.9 }}
-                                                    onClick={() => handleSubmitNumber(num)}
-                                                    className="btn h-auto aspect-square p-0 flex items-center justify-center btn-primary"
+                                                    onClick={() => setSelectedNumber(item)}
+                                                    className={`btn h-auto aspect-square p-0 flex items-center justify-center transition-all 
+                                                    ${isSelected ? 'btn-primary scale-105 shadow-lg ring-4 ring-primary/30' : 'btn-outline border-2 border-base-300'}`}
                                                 >
-                                                    <span className="text-[clamp(1.8rem,8vw,3.5rem)] leading-none">{num}</span>
+                                                    <span className="text-[clamp(1.8rem,8vw,3.5rem)] leading-none">{item}</span>
                                                 </motion.button>
-                                            ))}
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             )}
 
-                            {/* 階段 2：最後投票 (4顆按鈕) */}
+                            {/* 階段 2：最後投票 (維持原樣) */}
                             {spyData?.phase === 'voting' && !hasSubmittedVote && (
                                 <div className="w-full grid grid-cols-2 gap-[3vw] sm:gap-4">
                                     {[0, 1, 2, 3].map(pid => (
@@ -469,12 +499,10 @@ const Playing = () => {
                                             key={`vote-${pid}`}
                                             whileTap={{ scale: 0.9 }}
                                             onClick={() => handleSubmitVote(pid)}
-                                            // 4. 使用 aspect-[4/3] 控制長寬比，確保不同裝置上比例不變
                                             className="btn btn-outline border-2 h-auto aspect-[4/3] p-0 flex flex-col justify-center items-center"
                                         >
                                             <div className="flex flex-col items-center justify-center">
                                                 <span className="text-[clamp(0.75rem,2.5vw,1.1rem)]">投給</span>
-                                                {/* 名字根據螢幕大小動態縮放 */}
                                                 <span className="font-bold text-[clamp(1.1rem,4.5vw,1.8rem)] mt-1">
                                                     {spyData?.playerNames?.[pid] || `Player ${pid}`}
                                                 </span>
@@ -533,124 +561,126 @@ const Playing = () => {
         );
     }
 
-    // 陀螺儀關卡（原有邏輯）
-    return (
-        <div className="relative w-screen min-h-screen flex flex-col safe-area-bottom" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}>
-            <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
+}
 
-            {/* 上方區域：搖桿 */}
-            <div className="flex-1 flex flex-col items-center justify-center px-6 z-10">
-                <motion.button
-                    whileTap={{ scale: 0.9 }}
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{
-                        type: "spring",
-                        stiffness: 120,
-                        damping: 15,
-                        duration: 0.8
-                    }}
-                    className={`btn btn-sm btn-primary text-base mb-4 ${isInitialized ? 'visible' : 'invisible'}`}
-                    onClick={calibrateGyroscope}
-                    disabled={!isInitialized}
-                >
-                    重新校正
-                </motion.button>
+// 陀螺儀關卡（原有邏輯）
+return (
+    <div className="relative w-screen min-h-screen flex flex-col safe-area-bottom" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}>
+        <div className='absolute top-0 left-0 w-full h-full' style={{ backdropFilter: 'blur(1px) saturate(80%)' }}></div>
 
-                <motion.div
-                    className="card bg-base-100 shadow-xl px-6 py-2"
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{
-                        type: "spring",
-                        stiffness: 120,
-                        damping: 15,
-                        duration: 0.8,
-                        delay: 0.3
-                    }}
-                >
-                    <div className="card-body items-center text-center py-4">
-                        <h2 className="card-title">控制器</h2>
+        {/* 上方區域：搖桿 */}
+        <div className="flex-1 flex flex-col items-center justify-center px-6 z-10">
+            <motion.button
+                whileTap={{ scale: 0.9 }}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{
+                    type: "spring",
+                    stiffness: 120,
+                    damping: 15,
+                    duration: 0.8
+                }}
+                className={`btn btn-sm btn-primary text-base mb-4 ${isInitialized ? 'visible' : 'invisible'}`}
+                onClick={calibrateGyroscope}
+                disabled={!isInitialized}
+            >
+                重新校正
+            </motion.button>
 
-                        <div className="flex flex-col justify-center items-center w-full select-none mt-4">
-                            {/* 搖桿 */}
-                            <div
-                                ref={joystickBaseRef}
-                                className="relative w-52 h-52 bg-primary/20 rounded-full flex items-center justify-center text-primary-content/40"
-                                style={{ touchAction: 'none' }}
-                                onPointerDown={handlePointerDown}
-                            >
-                                <svg className="w-6 h-6 absolute top-5 left-1/2 -translate-x-1/2" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
-                                <svg className="w-6 h-6 absolute right-5 top-1/2 -translate-y-1/2 rotate-90" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
-                                <svg className="w-6 h-6 absolute bottom-5 left-1/2 -translate-x-1/2 rotate-180" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
-                                <svg className="w-6 h-6 absolute left-5 top-1/2 -translate-y-1/2 -rotate-90" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
+            <motion.div
+                className="card bg-base-100 shadow-xl px-6 py-2"
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{
+                    type: "spring",
+                    stiffness: 120,
+                    damping: 15,
+                    duration: 0.8,
+                    delay: 0.3
+                }}
+            >
+                <div className="card-body items-center text-center py-4">
+                    <h2 className="card-title">控制器</h2>
 
-                                <motion.div
-                                    className="w-20 h-20 cursor-grab"
-                                    style={{
-                                        x: knobX,
-                                        y: knobY,
-                                        backgroundImage: `url(${localPlayer.color
-                                            ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}Pin.png`
-                                            : `/images/gray_${localPlayer.avatar || 'wind-up'}Pin.png`
-                                            })`,
-                                        backgroundSize: 'contain',
-                                        backgroundPosition: 'center',
-                                        backgroundRepeat: 'no-repeat'
-                                    }}
-                                    whileTap={{ cursor: 'grabbing' }}
-                                    rotate={rotation}
-                                />
-                            </div>
+                    <div className="flex flex-col justify-center items-center w-full select-none mt-4">
+                        {/* 搖桿 */}
+                        <div
+                            ref={joystickBaseRef}
+                            className="relative w-52 h-52 bg-primary/20 rounded-full flex items-center justify-center text-primary-content/40"
+                            style={{ touchAction: 'none' }}
+                            onPointerDown={handlePointerDown}
+                        >
+                            <svg className="w-6 h-6 absolute top-5 left-1/2 -translate-x-1/2" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
+                            <svg className="w-6 h-6 absolute right-5 top-1/2 -translate-y-1/2 rotate-90" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
+                            <svg className="w-6 h-6 absolute bottom-5 left-1/2 -translate-x-1/2 rotate-180" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
+                            <svg className="w-6 h-6 absolute left-5 top-1/2 -translate-y-1/2 -rotate-90" viewBox="0 0 10 10" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><polygon points="5,1 9,9 1,9" /></svg>
+
+                            <motion.div
+                                className="w-20 h-20 cursor-grab"
+                                style={{
+                                    x: knobX,
+                                    y: knobY,
+                                    backgroundImage: `url(${localPlayer.color
+                                        ? `/images/${localPlayer.color}_${localPlayer.avatar || 'wind-up'}Pin.png`
+                                        : `/images/gray_${localPlayer.avatar || 'wind-up'}Pin.png`
+                                        })`,
+                                    backgroundSize: 'contain',
+                                    backgroundPosition: 'center',
+                                    backgroundRepeat: 'no-repeat'
+                                }}
+                                whileTap={{ cursor: 'grabbing' }}
+                                rotate={rotation}
+                            />
                         </div>
                     </div>
-                </motion.div>
-            </div>
-
-            {/* 下方獨立區塊：技能/繪圖按鈕 */}
-            <motion.div
-                className="w-full px-4 z-20 flex items-center justify-center transition-all duration-150"
-                style={{
-                    touchAction: 'none',
-                    backdropFilter: 'blur(10px)',
-                    borderTopLeftRadius: '1.5rem',
-                    borderTopRightRadius: '1.5rem',
-                    minHeight: '30vh',
-                    paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))',
-                    paddingTop: '1.5rem',
-                    backgroundColor: isPressing
-                        ? ({ red: 'rgba(239,68,68,0.8)', blue: 'rgba(59,130,246,0.8)', green: 'rgba(34,197,94,0.8)', yellow: 'rgba(234,179,8,0.8)' }[localPlayer.color] || 'rgba(0,0,0,0.6)')
-                        : 'rgba(0,0,0,0.4)',
-                }}
-                {...(isToybox
-                    ? { onClick: handleSkillTap }
-                    : {
-                        onPointerDown: handlePressStart,
-                        onPointerUp: handlePressEnd,
-                        onPointerLeave: handlePressEnd,
-                        onPointerCancel: handlePressEnd,
-                    }
-                )}
-            >
-                <div className="flex items-center gap-3 text-white">
-                    {isToybox ? (
-                        <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M13 10h7l-9 13v-9H4l9-13v9z" />
-                        </svg>
-                    ) : (
-                        <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M19.228 18.732l1.768-1.768 1.767 1.768a2.5 2.5 0 1 1-3.535 0zM8.878 1.08l11.314 11.313a1 1 0 0 1 0 1.415l-8.485 8.485a1 1 0 0 1-1.414 0l-8.485-8.485a1 1 0 0 1 0-1.415l7.778-7.778-2.122-2.121L8.88 1.08zM11 6.03L3.929 13.1 11 20.173l7.071-7.071L11 6.029z" />
-                        </svg>
-                    )}
-                    <span className="text-lg font-bold">
-                        {isToybox
-                            ? (isPressing ? '使用中...' : '點擊使用技能')
-                            : (isPressing ? '繪圖中...' : '按住繪圖')
-                        }
-                    </span>
                 </div>
             </motion.div>
         </div>
-    )
+
+        {/* 下方獨立區塊：技能/繪圖按鈕 */}
+        <motion.div
+            className="w-full px-4 z-20 flex items-center justify-center transition-all duration-150"
+            style={{
+                touchAction: 'none',
+                backdropFilter: 'blur(10px)',
+                borderTopLeftRadius: '1.5rem',
+                borderTopRightRadius: '1.5rem',
+                minHeight: '30vh',
+                paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))',
+                paddingTop: '1.5rem',
+                backgroundColor: isPressing
+                    ? ({ red: 'rgba(239,68,68,0.8)', blue: 'rgba(59,130,246,0.8)', green: 'rgba(34,197,94,0.8)', yellow: 'rgba(234,179,8,0.8)' }[localPlayer.color] || 'rgba(0,0,0,0.6)')
+                    : 'rgba(0,0,0,0.4)',
+            }}
+            {...(isToybox
+                ? { onClick: handleSkillTap }
+                : {
+                    onPointerDown: handlePressStart,
+                    onPointerUp: handlePressEnd,
+                    onPointerLeave: handlePressEnd,
+                    onPointerCancel: handlePressEnd,
+                }
+            )}
+        >
+            <div className="flex items-center gap-3 text-white">
+                {isToybox ? (
+                    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M13 10h7l-9 13v-9H4l9-13v9z" />
+                    </svg>
+                ) : (
+                    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19.228 18.732l1.768-1.768 1.767 1.768a2.5 2.5 0 1 1-3.535 0zM8.878 1.08l11.314 11.313a1 1 0 0 1 0 1.415l-8.485 8.485a1 1 0 0 1-1.414 0l-8.485-8.485a1 1 0 0 1 0-1.415l7.778-7.778-2.122-2.121L8.88 1.08zM11 6.03L3.929 13.1 11 20.173l7.071-7.071L11 6.029z" />
+                    </svg>
+                )}
+                <span className="text-lg font-bold">
+                    {isToybox
+                        ? (isPressing ? '使用中...' : '點擊使用技能')
+                        : (isPressing ? '繪圖中...' : '按住繪圖')
+                    }
+                </span>
+            </div>
+        </motion.div>
+    </div>
+)
 }
 
 export default Playing;
