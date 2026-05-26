@@ -125,25 +125,13 @@ const ChooseChar = () => {
               </div>
 
               <div className="card-actions justify-center">
-                {!connectionStatus ? 
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={handleConfirm}
                   className="btn btn-primary text-base"
-                  disabled={connectionStatus} // Disable if already connected
                 >
-                  確定
+                  {connectionStatus ? '下一步' : '確定'}
                 </motion.button>
-                :
-                <motion.button
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => {navigate('/waiting-room');}}
-                  className="btn btn-primary text-base"
-                  disabled={ !connectionStatus} 
-                >
-                  下一步
-                </motion.button>
-                }
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={disconnectWebRTC}
