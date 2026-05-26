@@ -78,7 +78,7 @@ const Tutorial = () => {
     tap: { title: '瘋狂餐桌', desc: '快速點擊螢幕來吃東西！' },
     shake: { title: '搖動賽跑', desc: '上下搖動手機來前進！' },
     count: { title: '數數挑戰', desc: '數數看有幾隻角色跑過去！' },
-    spy: { title: '抓出內鬼', desc: '考驗你的演技與推理能力！' }
+    spy: { title: '數學作業', desc: '考驗你的演技與推理能力！' }
   };
 
   // ==========================================
@@ -184,14 +184,14 @@ const Tutorial = () => {
     return () => clearTimeout(timer);
   }, [isSupported]);
 
-  useEffect(() => {
-    if (inputType !== 'gyro') return;
-    if (gyroSupported === false && dataChannelConnections?.length > 0 && !hasSentCalibratedRef.current) {
-      hasSentCalibratedRef.current = true;
-      const calibratedMessage = { type: "tutorial_step_complete", step: "calibrate" };
-      sendWebRTCData(JSON.stringify(calibratedMessage), unityPeerId || null);
-    }
-  }, [inputType, gyroSupported, dataChannelConnections, sendWebRTCData, unityPeerId]);
+  // useEffect(() => {
+  //   if (inputType !== 'gyro') return;
+  //   if (gyroSupported === false && dataChannelConnections?.length > 0 && !hasSentCalibratedRef.current) {
+  //     hasSentCalibratedRef.current = true;
+  //     const calibratedMessage = { type: "tutorial_step_complete", step: "calibrate" };
+  //     sendWebRTCData(JSON.stringify(calibratedMessage), unityPeerId || null);
+  //   }
+  // }, [inputType, gyroSupported, dataChannelConnections, sendWebRTCData, unityPeerId]);
 
   useEffect(() => {
     if (screenWakeLock) screenWakeLock.request();
@@ -222,12 +222,18 @@ const Tutorial = () => {
               setUnityRequestedSwipe(true);
             }
             if (gyroSupported === false || skippedTutorial) {
-              const cheatVector = cheatVectors[stepName];
-              if (cheatVector) {
+              if (stepName === 'calibrate') {
+                const calibratedMsg = { type: "tutorial_step_complete", step: "calibrate" };
+                sendWebRTCData(JSON.stringify(calibratedMsg), unityPeerId || null);
                 setInstructionText('等待其他玩家...');
-                setCompletedSteps(prev => ({ ...prev, [stepName]: true }));
-                const cheatMessage = { type: "move", vector: cheatVector };
-                sendWebRTCData(JSON.stringify(cheatMessage), unityPeerId || null);
+              } else {
+                const cheatVector = cheatVectors[stepName];
+                if (cheatVector) {
+                  setInstructionText('等待其他玩家...');
+                  setCompletedSteps(prev => ({ ...prev, [stepName]: true }));
+                  const cheatMessage = { type: "move", vector: cheatVector };
+                  sendWebRTCData(JSON.stringify(cheatMessage), unityPeerId || null);
+                }
               }
             }
           }
@@ -285,7 +291,7 @@ const Tutorial = () => {
   }, [inputType, sendWebRTCData, unityPeerId, isSlideMode]);
 
   useEffect(() => {
-    if (inputType !== 'tap') return;
+    if (inputType !== 'tap' || isSlideMode) return;
     if (tapDoneRef.current && swipeDoneRef.current) return;
     document.addEventListener('touchstart', handleTutorialTouchStart, { passive: false });
     document.addEventListener('touchmove', handleTutorialTouchMove, { passive: false });
