@@ -305,7 +305,7 @@ const Tutorial = () => {
       document.removeEventListener('mousedown', handleTutorialMouseDown);
       document.removeEventListener('mouseup', handleTutorialMouseUp);
     };
-  }, [inputType, handleTutorialTouchStart, handleTutorialTouchEnd, handleTutorialMouseDown, handleTutorialMouseUp]);
+  }, [inputType, handleTutorialTouchStart, handleTutorialTouchEnd, handleTutorialMouseDown, handleTutorialMouseUp, isSlideMode]);
 
   useEffect(() => {
     if (inputType === 'gyro') return;
