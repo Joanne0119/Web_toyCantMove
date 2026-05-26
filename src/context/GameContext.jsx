@@ -424,8 +424,6 @@ export const GameProvider = ({ children }) => {
     spyData,
     totalPlayerCount,
     resendIdentify: (newAvatar, newName) => {
-      identifiedUnityRef.current = null;
-      setLocalPlayer(prev => ({ ...prev, color: null }));
       // 直接發送 identify，不依賴 effect 觸發
       if (unityPeerId && webRTC.dataChannelConnections.includes(unityPeerId)) {
         const identifyMsg = {
@@ -435,7 +433,10 @@ export const GameProvider = ({ children }) => {
         };
         webRTC.sendData(JSON.stringify(identifyMsg), unityPeerId);
         console.log("[GameContext] resendIdentify 已發送:", identifyMsg.nickname, identifyMsg.characterName);
+        // 標記已 identify，防止 useEffect 用舊 avatar 再發一次覆蓋
+        identifiedUnityRef.current = unityPeerId;
       }
+      setLocalPlayer(prev => ({ ...prev, color: null }));
     },
     resetGameState: () => {
       const newPeerId = generatePeerId();
