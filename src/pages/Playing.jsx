@@ -29,7 +29,7 @@ const Playing = () => {
 
     // 當回合或階段改變時，重置按鈕狀態
     useEffect(() => {
-        if (spyData?.phase === 'selecting') setHasSubmittedNumber(false);
+        if (spyData?.phase === 'selecting') { setHasSubmittedNumber(false); setSelectedNumber(null); }
         if (spyData?.phase === 'voting') setHasSubmittedVote(false);
 
         if (spyData?.phase === 'waiting' || spyData?.phase === 'assigning') {
