@@ -45,11 +45,11 @@ const ChooseChar = () => {
 
     // 如果已連線（重新選角色），重新發送 identify
     if (connectionStatus) {
-      resendIdentify(selectedChar.name);
+      resendIdentify(selectedChar.name, localPlayer.name);
     }
 
     navigate('/waiting-room');
-  }, [screenWakeLock.request, setLocalPlayer, selectedChar, navigate, connectionStatus, resendIdentify]);
+  }, [screenWakeLock.request, setLocalPlayer, selectedChar, navigate, connectionStatus, resendIdentify, localPlayer.name]);
 
   return (
     <div className="hero min-h-screen bg-base-200 safe-area-bottom overflow-x-hidden select-none" style={{ backgroundImage: "url('/images/coverLarge.png')", backgroundSize: 'cover', backgroundPosition: 'left 47% center', minHeight: '100dvh' }}>

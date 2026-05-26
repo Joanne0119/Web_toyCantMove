@@ -185,8 +185,8 @@ const WaitingRoom = () => {
                       ) : (
                         <p className='text-center'>等待房主開始遊戲...</p>
                       )}
-                      <button onClick={() => navigate('/choose-char')} className="btn btn-outline btn-sm">
-                        更換角色
+                      <button onClick={() => navigate('/enter-name')} className="btn btn-outline btn-sm">
+                        更換名稱 / 角色
                       </button>
                       <button onClick={handleLeave} className="btn btn-ghost">
                         離開房間
