@@ -356,9 +356,9 @@ const Tutorial = () => {
                 const msg = { type: "tutorial_slide_next" };
                 sendWebRTCData(JSON.stringify(msg), unityPeerId || null);
               }}
-              className={`btn btn-primary w-full h-20 text-xl rounded-2xl shadow-lg transition-all ${slideDisabled ? 'opacity-50 cursor-not-allowed bg-base-300 border-none text-base-content/50' : ''}`}
+              className={`btn btn-primary w-full h-14 text-base rounded-xl shadow-lg transition-all ${slideDisabled ? 'opacity-50 cursor-not-allowed bg-base-300 border-none text-base-content/50' : ''}`}
             >
-              {slideDisabled ? '等待其他玩家...' : '下一頁 ❯'}
+              {slideDisabled ? '等待其他玩家...' : '下一步 ❯'}
             </motion.button>
             <p className="text-xs text-base-content/40 mt-4">閱讀完規則，點擊下一步</p>
           </div>
