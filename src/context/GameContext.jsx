@@ -152,7 +152,7 @@ export const GameProvider = ({ children }) => {
         const identifyMsg = {
           type: "identify",
           nickname: localPlayer.name || `Player ${peerId.substring(0, 4)}`,
-          characterName: localPlayer.avatar || "wind_up"
+          characterName: localPlayer.avatar || "wind-up"
         };
 
         webRTC.sendData(JSON.stringify(identifyMsg), unityPeerId);
@@ -433,7 +433,7 @@ export const GameProvider = ({ children }) => {
         const identifyMsg = {
           type: "identify",
           nickname: newName || localPlayer.name || `Player ${peerId.substring(0, 4)}`,
-          characterName: newAvatar || localPlayer.avatar || "wind_up"
+          characterName: newAvatar || localPlayer.avatar || "wind-up"
         };
         webRTC.sendData(JSON.stringify(identifyMsg), unityPeerId);
         console.log("[GameContext] resendIdentify 已發送:", identifyMsg.nickname, identifyMsg.characterName);
