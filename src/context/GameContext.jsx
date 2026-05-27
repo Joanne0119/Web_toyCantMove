@@ -84,7 +84,9 @@ export const GameProvider = ({ children }) => {
     maxTarget: 0,
     phase: 'waiting', // waiting, selecting, voting
     statusText: '等待遊戲開始...',
-    playerNames: []
+    playerNames: [],
+    playerSkins: [],
+    playerColors: [],
   });
 
   // 每次 URL 變化時重新讀取 unityPeerId（支援離開後重新掃 QR code）
@@ -306,6 +308,8 @@ export const GameProvider = ({ children }) => {
               role: msg.role,
               myPlayerId: msg.myPlayerId,
               playerNames: msg.playerNames || [],
+              playerSkins: msg.playerSkins || [],
+              playerColors: msg.playerColors || [],
               ...(alreadyStarted ? {} : {
                 phase: 'waiting',
                 statusText: '等待回合開始...',

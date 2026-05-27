@@ -494,24 +494,32 @@ const Playing = () => {
                             {/* 階段 2：最後投票 */}
                             {spyData?.phase === 'voting' && !hasSubmittedVote && (
                                 <div className="w-full grid grid-cols-2 gap-[3vw] sm:gap-4 max-w-[300px] mx-auto">
-                                    {[0, 1, 2, 3].map(pid => (
-                                        <motion.button
-                                            key={`vote-${pid}`}
-                                            whileTap={{ scale: 0.9 }}
-                                            onClick={() => handleSubmitVote(pid)}
-                                            className="btn btn-outline border-2 h-auto aspect-[4/3] p-0 flex flex-col justify-center items-center"
-                                        >
-                                            <div className="flex flex-col items-center justify-center">
-                                                <span className="text-[clamp(0.7rem,2vw,1rem)]">投給</span>
-                                                <span className="font-bold text-[clamp(1rem,4vw,1.5rem)] mt-1">
-                                                    {spyData?.playerNames?.[pid] || `Player ${pid}`}
-                                                </span>
-                                                {pid === spyData.myPlayerId && (
-                                                    <span className="mt-1 text-base-content/40 text-[clamp(0.6rem,2vw,0.9rem)]">(你)</span>
-                                                )}
-                                            </div>
-                                        </motion.button>
-                                    ))}
+                                    {[0, 1, 2, 3].map(pid => {
+                                        const skin = spyData?.playerSkins?.[pid] || 'wind-up';
+                                        const color = spyData?.playerColors?.[pid] || 'gray';
+                                        return (
+                                            <motion.button
+                                                key={`vote-${pid}`}
+                                                whileTap={{ scale: 0.9 }}
+                                                onClick={() => handleSubmitVote(pid)}
+                                                className="btn btn-outline border-2 h-auto py-3 p-0 flex flex-col justify-center items-center"
+                                            >
+                                                <div className="flex flex-col items-center justify-center">
+                                                    <img
+                                                        src={`/images/${color}_${skin}.png`}
+                                                        alt={spyData?.playerNames?.[pid]}
+                                                        className="w-[10vw] max-w-[48px] h-[10vw] max-h-[48px] object-contain"
+                                                    />
+                                                    <span className="font-bold text-[clamp(0.85rem,3.5vw,1.2rem)] mt-1">
+                                                        {spyData?.playerNames?.[pid] || `Player ${pid}`}
+                                                    </span>
+                                                    {pid === spyData.myPlayerId && (
+                                                        <span className="text-base-content/40 text-[clamp(0.55rem,1.8vw,0.75rem)]">(你)</span>
+                                                    )}
+                                                </div>
+                                            </motion.button>
+                                        );
+                                    })}
                                 </div>
                             )}
 
