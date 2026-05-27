@@ -46,11 +46,18 @@ const ChooseLevel = () => {
     }
   }, [gameScene, navigate]);
 
-  // 取得容器寬度
+  // 取得容器寬度，並在首次取得後滾動到預設位置
+  const hasInitialScrolled = useRef(false);
   useEffect(() => {
     if (!scrollRef.current) return;
     const observer = new ResizeObserver(([entry]) => {
-      setContainerWidth(entry.contentRect.width);
+      const w = entry.contentRect.width;
+      setContainerWidth(w);
+      // 首次取得寬度後，強制滾動到 index 0
+      if (!hasInitialScrolled.current && w > 0) {
+        hasInitialScrolled.current = true;
+        scrollRef.current.scrollTo({ left: 0, behavior: 'instant' });
+      }
     });
     observer.observe(scrollRef.current);
     return () => observer.disconnect();
@@ -73,7 +80,7 @@ const ChooseLevel = () => {
     scrollRef.current.scrollTo({ left: scrollTarget, behavior: 'smooth' });
   }, [cardWidth]);
 
-  // 偵測滾動位置更新 currentIndex（debounce 防止抖動）
+  // 偵測滾動位置更新 currentIndex（debounce 防止抖動和閃爍）
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -81,17 +88,15 @@ const ChooseLevel = () => {
     let timer;
     const onScroll = () => {
       if (!cardWidth) return;
-      const index = Math.round(el.scrollLeft / (cardWidth + GAP));
-      const clamped = Math.max(0, Math.min(index, levels.length - 1));
-      setCurrentIndex(clamped);
-
-      // debounce 選關卡，等滾動穩定後才發送
       clearTimeout(timer);
       timer = setTimeout(() => {
+        const index = Math.round(el.scrollLeft / (cardWidth + GAP));
+        const clamped = Math.max(0, Math.min(index, levels.length - 1));
+        setCurrentIndex(clamped);
         if (isHost && !levels[clamped].disable) {
           selectLevel(levels[clamped]);
         }
-      }, 200);
+      }, 100);
     };
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => {
