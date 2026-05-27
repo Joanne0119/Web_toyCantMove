@@ -46,25 +46,32 @@ const ChooseLevel = () => {
     }
   }, [gameScene, navigate]);
 
-  // 取得容器寬度，並在首次取得後滾動到預設位置
-  const hasInitialScrolled = useRef(false);
+  // 取得容器寬度
   useEffect(() => {
     if (!scrollRef.current) return;
     const observer = new ResizeObserver(([entry]) => {
-      const w = entry.contentRect.width;
-      setContainerWidth(w);
-      // 首次取得寬度後，強制滾動到 index 0
-      if (!hasInitialScrolled.current && w > 0) {
-        hasInitialScrolled.current = true;
-        scrollRef.current.scrollTo({ left: 0, behavior: 'instant' });
-      }
+      setContainerWidth(entry.contentRect.width);
     });
     observer.observe(scrollRef.current);
     return () => observer.disconnect();
   }, []);
 
-  // 同步非房主的選擇
+  // 進入頁面時強制滾動到第一個關卡
+  const hasInitialScrolled = useRef(false);
   useEffect(() => {
+    if (!scrollRef.current || !cardWidth || hasInitialScrolled.current) return;
+    hasInitialScrolled.current = true;
+    setCurrentIndex(0);
+    scrollRef.current.scrollTo({ left: 0, behavior: 'instant' });
+  }, [cardWidth]);
+
+  // 同步非房主的選擇（只在房主切換關卡時觸發，不在初始化時覆蓋）
+  const isInitialMount = useRef(true);
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
     if (level?.sceneName) {
       const idx = levels.findIndex(l => l.sceneName === level.sceneName);
       if (idx !== -1 && idx !== currentIndex) {
